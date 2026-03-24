@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Membros</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item active" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Membros <span>da Equipa</span></div>
+      <div class="page-sub" id="membros-page-sub">A carregar...</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" id="btn-novo-membro">+ Novo Membro</button>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filters-bar">
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">⌕</span>
+      <input class="filter-search" id="mf-search" type="text" placeholder="Pesquisar membros...">
+    </div>
+    <select class="filter-select" id="mf-dept">
+      <option value="">Departamento</option>
+    </select>
+    <select class="filter-select" id="mf-status">
+      <option value="">Estado</option>
+      <option value="ativo">Ativo</option>
+      <option value="inativo">Inativo</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" id="btn-clear-mf" style="display:none">✕ Limpar filtros</button>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="tasks-stats-row" id="membros-stats-row"></div>
+
+  <!-- MEMBERS GRID -->
+  <div class="members-grid" id="membros-grid"></div>
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── CONFIRM DELETE POPUP ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Eliminar membro</div>
+    <div class="confirm-msg" id="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Novo / Editar Membro ─── -->
+<div class="modal-overlay" id="membro-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="membro-modal-title">Novo Membro</div>
+      <button class="modal-close" id="membro-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome Completo <span class="form-required">*</span></label>
+          <input class="form-input" id="f-m-name" type="text" placeholder="Ex: Ana Ferreira">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Iniciais <span class="form-required">*</span></label>
+          <input class="form-input" id="f-m-initials" type="text" maxlength="2" placeholder="Ex: AF" style="text-transform:uppercase">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cargo <span class="form-required">*</span></label>
+          <input class="form-input" id="f-m-role" type="text" placeholder="Ex: Designer de Produto">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Departamento</label>
+          <input class="form-input" id="f-m-dept" type="text" placeholder="Ex: Design">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="f-m-email" type="email" placeholder="ana@empresa.pt">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input class="form-input" id="f-m-phone" type="tel" placeholder="+351 9XX XXX XXX">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-m-status">
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cor do Avatar</label>
+          <input class="form-input" id="f-m-color" type="color" value="#05668d" style="padding:4px 8px;height:38px;cursor:pointer">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data de Início</label>
+          <input class="form-input" id="f-m-start" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Taxa Horária (€/h)</label>
+          <input class="form-input" id="f-m-rate" type="number" min="0" step="0.5" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Localização</label>
+          <input class="form-input" id="f-m-location" type="text" placeholder="Ex: Lisboa, Portugal">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Competências</label>
+          <input class="form-input" id="f-m-skills" type="text" placeholder="Ex: Figma, UX Research, Prototipagem (separadas por vírgulas)">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Bio</label>
+          <textarea class="form-textarea" id="f-m-bio" rows="3" placeholder="Breve descrição do membro..."></textarea>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="membro-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="membro-modal-save">+ Criar Membro</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let MEMBROS = [];
+let editingId = null;
+let pendingDeleteId = null;
+
+// ─── HELPERS ───
+function darkenHex(hex, amount = 0.3) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
+  const g = Math.max(0, Math.round(((n >>  8) & 0xff) * (1 - amount)));
+  const b = Math.max(0, Math.round(( n        & 0xff) * (1 - amount)));
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function avatarStyle(color) {
+  return `background: linear-gradient(135deg, ${color}, ${darkenHex(color)})`;
+}
+
+// ─── LOAD ───
+async function loadMembros() {
+  const { data, error } = await sb.from('membros').select('*').order('name');
+  if (error) { console.error('Erro ao carregar membros:', error); return; }
+  MEMBROS = data || [];
+}
+
+// ─── RENDER ───
+function renderMembros() {
+  const search = document.getElementById('mf-search').value.toLowerCase().trim();
+  const dept   = document.getElementById('mf-dept').value;
+  const status = document.getElementById('mf-status').value;
+
+  // Populate dept filter options dynamically
+  const depts = [...new Set(MEMBROS.map(m => m.department).filter(Boolean))].sort();
+  const deptSel = document.getElementById('mf-dept');
+  const curDept = deptSel.value;
+  deptSel.innerHTML = '<option value="">Departamento</option>' +
+    depts.map(d => `<option value="${d}"${d === curDept ? ' selected' : ''}>${d}</option>`).join('');
+
+  let filtered = MEMBROS;
+  if (search) filtered = filtered.filter(m =>
+    m.name.toLowerCase().includes(search) ||
+    (m.role && m.role.toLowerCase().includes(search)) ||
+    (m.department && m.department.toLowerCase().includes(search))
+  );
+  if (dept)   filtered = filtered.filter(m => m.department === dept);
+  if (status) filtered = filtered.filter(m => m.status === status);
+
+  // Stats row
+  const ativos   = MEMBROS.filter(m => m.status === 'ativo').length;
+  const inativos = MEMBROS.filter(m => m.status === 'inativo').length;
+  document.getElementById('membros-page-sub').textContent =
+    `${MEMBROS.length} membro${MEMBROS.length !== 1 ? 's' : ''} · ${ativos} ativo${ativos !== 1 ? 's' : ''}`;
+  document.getElementById('membros-stats-row').innerHTML = `
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--text-muted)"></div> Total: <strong>${MEMBROS.length}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--success)"></div> Ativos: <strong>${ativos}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--text-muted)"></div> Inativos: <strong>${inativos}</strong></div>
+  `;
+
+  // Show/hide clear button
+  const hasFilter = search || dept || status;
+  document.getElementById('btn-clear-mf').style.display = hasFilter ? '' : 'none';
+  if (dept) document.getElementById('mf-dept').classList.add('has-value');
+  else document.getElementById('mf-dept').classList.remove('has-value');
+  if (status) document.getElementById('mf-status').classList.add('has-value');
+  else document.getElementById('mf-status').classList.remove('has-value');
+
+  const grid = document.getElementById('membros-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text-muted)">
+      <div style="font-size:32px;opacity:0.25;margin-bottom:10px">👥</div>
+      <div style="font-size:13px">Nenhum membro encontrado</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((m, i) => `
+    <div class="member-card" data-id="${m.id}" style="animation-delay:${i * 0.04}s" onclick="goToProfile('${m.id}')">
+      <div class="member-card-actions" onclick="event.stopPropagation()">
+        <div style="position:relative">
+          <button class="dots-btn" onclick="openDots(event,'${m.id}')">···</button>
+          <div class="row-dropdown" id="mdrop-${m.id}">
+            <button class="row-dropdown-item" onclick="openEditModal(event,'${m.id}')">✎ Editar</button>
+            <button class="row-dropdown-item delete" onclick="openConfirmDelete(event,'${m.id}')">✕ Eliminar</button>
+          </div>
+        </div>
+      </div>
+      <div class="member-avatar" style="${avatarStyle(m.avatar_color || '#05668d')}">${m.initials}</div>
+      <div class="member-name">${m.name}</div>
+      <div class="member-role">${m.role}</div>
+      ${m.department ? `<div class="member-dept">${m.department}</div>` : ''}
+      <span class="sbadge ${m.status}">${m.status === 'ativo' ? 'Ativo' : 'Inativo'}</span>
+    </div>
+  `).join('');
+}
+
+// ─── NAVIGATION ───
+function goToProfile(id) {
+  window.location.href = `membro.html?id=${id}`;
+}
+
+// ─── DROPDOWN ───
+function openDots(e, id) {
+  e.stopPropagation();
+  document.querySelectorAll('.row-dropdown.open').forEach(d => {
+    if (d.id !== `mdrop-${id}`) d.classList.remove('open');
+  });
+  document.getElementById(`mdrop-${id}`).classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+});
+
+// ─── MODAL ───
+function openNewModal() {
+  editingId = null;
+  document.getElementById('membro-modal-title').textContent = 'Novo Membro';
+  document.getElementById('membro-modal-save').textContent  = '+ Criar Membro';
+  ['f-m-name','f-m-initials','f-m-role','f-m-dept','f-m-email','f-m-phone',
+   'f-m-location','f-m-skills','f-m-bio','f-m-start','f-m-rate']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('f-m-status').value = 'ativo';
+  document.getElementById('f-m-color').value  = '#05668d';
+  document.querySelectorAll('#membro-modal-overlay .f-error')
+    .forEach(el => el.classList.remove('f-error'));
+  document.getElementById('membro-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-m-name').focus(), 80);
+}
+
+function openEditModal(e, id) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+  const m = MEMBROS.find(x => x.id === id);
+  if (!m) return;
+  editingId = id;
+  document.getElementById('membro-modal-title').textContent = 'Editar Membro';
+  document.getElementById('membro-modal-save').textContent  = 'Guardar Alterações';
+  document.getElementById('f-m-name').value       = m.name         || '';
+  document.getElementById('f-m-initials').value   = m.initials     || '';
+  document.getElementById('f-m-role').value       = m.role         || '';
+  document.getElementById('f-m-dept').value       = m.department   || '';
+  document.getElementById('f-m-email').value      = m.email        || '';
+  document.getElementById('f-m-phone').value      = m.phone        || '';
+  document.getElementById('f-m-status').value     = m.status       || 'ativo';
+  document.getElementById('f-m-color').value      = m.avatar_color || '#05668d';
+  document.getElementById('f-m-start').value      = m.start_date   || '';
+  document.getElementById('f-m-rate').value       = m.hourly_rate != null ? m.hourly_rate : '';
+  document.getElementById('f-m-location').value   = m.location     || '';
+  document.getElementById('f-m-skills').value     = m.skills       || '';
+  document.getElementById('f-m-bio').value        = m.bio          || '';
+  document.querySelectorAll('#membro-modal-overlay .f-error')
+    .forEach(el => el.classList.remove('f-error'));
+  document.getElementById('membro-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-m-name').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('membro-modal-overlay').classList.remove('open');
+}
+
+// Auto-fill initials from name
+document.getElementById('f-m-name').addEventListener('input', () => {
+  const initialsEl = document.getElementById('f-m-initials');
+  if (initialsEl.value.length === 0) {
+    const words = document.getElementById('f-m-name').value.trim().split(/\s+/);
+    initialsEl.value = words.map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
+  }
+});
+
+// Save
+document.getElementById('membro-modal-save').addEventListener('click', async () => {
+  const nameEl     = document.getElementById('f-m-name');
+  const initialsEl = document.getElementById('f-m-initials');
+  const roleEl     = document.getElementById('f-m-role');
+  const name     = nameEl.value.trim();
+  const initials = initialsEl.value.trim().toUpperCase().slice(0, 2);
+  const role     = roleEl.value.trim();
+  nameEl.classList.toggle('f-error', !name);
+  initialsEl.classList.toggle('f-error', !initials);
+  roleEl.classList.toggle('f-error', !role);
+  if (!name || !initials || !role) return;
+
+  const payload = {
+    name,
+    initials,
+    role,
+    department:   document.getElementById('f-m-dept').value.trim()    || null,
+    email:        document.getElementById('f-m-email').value.trim()   || null,
+    phone:        document.getElementById('f-m-phone').value.trim()   || null,
+    status:       document.getElementById('f-m-status').value,
+    avatar_color: document.getElementById('f-m-color').value,
+    start_date:   document.getElementById('f-m-start').value          || null,
+    hourly_rate:  document.getElementById('f-m-rate').value !== ''
+                    ? parseFloat(document.getElementById('f-m-rate').value) : null,
+    location:     document.getElementById('f-m-location').value.trim()|| null,
+    skills:       document.getElementById('f-m-skills').value.trim()  || null,
+    bio:          document.getElementById('f-m-bio').value.trim()     || null,
+  };
+
+  if (editingId) {
+    const { error } = await sb.from('membros').update(payload).eq('id', editingId);
+    if (error) { console.error('Erro ao atualizar:', error); return; }
+  } else {
+    const { error } = await sb.from('membros').insert(payload);
+    if (error) { console.error('Erro ao criar:', error); return; }
+  }
+  closeModal();
+  await loadMembros();
+  renderMembros();
+});
+
+// ─── CONFIRM DELETE ───
+function openConfirmDelete(e, id) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+  const m = MEMBROS.find(x => x.id === id);
+  pendingDeleteId = id;
+  document.getElementById('confirm-title').textContent = 'Eliminar membro';
+  document.getElementById('confirm-msg').textContent   =
+    `Tens a certeza que queres eliminar "${m ? m.name : 'este membro'}"? Esta ação não pode ser desfeita.`;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  await sb.from('membros').delete().eq('id', pendingDeleteId);
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+  await loadMembros();
+  renderMembros();
+});
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+});
+
+// ─── EVENT LISTENERS ───
+document.getElementById('btn-novo-membro').addEventListener('click', openNewModal);
+document.getElementById('membro-modal-close').addEventListener('click', closeModal);
+document.getElementById('membro-modal-cancel').addEventListener('click', closeModal);
+document.getElementById('membro-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('membro-modal-overlay')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    document.getElementById('confirm-overlay').classList.remove('open');
+  }
+});
+
+document.getElementById('mf-search').addEventListener('input', renderMembros);
+document.getElementById('mf-dept').addEventListener('change', renderMembros);
+document.getElementById('mf-status').addEventListener('change', renderMembros);
+document.getElementById('btn-clear-mf').addEventListener('click', () => {
+  document.getElementById('mf-search').value = '';
+  document.getElementById('mf-dept').value   = '';
+  document.getElementById('mf-status').value = '';
+  renderMembros();
+});
+
+// ─── INIT ───
+(async () => {
+  await loadMembros();
+  renderMembros();
+
+  // Auto-open edit modal if ?edit=UUID in URL (from profile page "Editar Perfil")
+  const editParam = new URLSearchParams(window.location.search).get('edit');
+  if (editParam) {
+    const target = MEMBROS.find(m => m.id === editParam);
+    if (target) openEditModal(null, editParam);
+  }
+})();
+</script>
+</body>
+</html>

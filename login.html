@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+</head>
+<body>
+<div class="login-bg">
+  <div class="login-card">
+
+    <div class="login-logo">
+      <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    </div>
+
+    <div class="login-title">Bem-vindo de volta</div>
+    <div class="login-sub">Inicia sessão para acederes ao painel</div>
+
+    <div class="login-error" id="login-error"></div>
+
+    <div class="form-group">
+      <label class="form-label" for="login-email">Email</label>
+      <input class="form-input" type="email" id="login-email" placeholder="o-teu@email.com" autocomplete="email" required>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="login-password">Password</label>
+      <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+    </div>
+
+    <label class="login-remember">
+      <input type="checkbox" id="login-remember"> Manter sessão iniciada
+    </label>
+
+    <div class="form-group" style="margin-top: 22px; margin-bottom: 0;">
+      <button class="btn btn-primary" id="login-btn" onclick="doLogin()" style="width: 100%; padding: 11px;">
+        Entrar
+      </button>
+    </div>
+
+    <button class="login-forgot" onclick="doForgot()">Esqueceste a password?</button>
+
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Se já tiver sessão ativa, redireciona para o dashboard
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) window.location.replace('index.html');
+});
+
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideError() {
+  document.getElementById('login-error').classList.remove('show');
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('login-btn');
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? '<span class="btn-spinner"></span> A verificar...'
+    : 'Entrar';
+}
+
+async function doLogin() {
+  hideError();
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const remember = document.getElementById('login-remember').checked;
+
+  if (!email) { showError('Introduz o teu email.'); return; }
+  if (!password) { showError('Introduz a tua password.'); return; }
+
+  setLoading(true);
+
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      if (error.message && error.message.toLowerCase().includes('invalid')) {
+        showError('Email ou password incorretos. Tenta novamente.');
+      } else {
+        showError('Erro de ligação. Tenta novamente mais tarde.');
+      }
+      setLoading(false);
+      return;
+    }
+
+    // Sucesso — redireciona para o dashboard
+    window.location.replace('index.html');
+
+  } catch (e) {
+    showError('Erro de ligação. Tenta novamente mais tarde.');
+    setLoading(false);
+  }
+}
+
+async function doForgot() {
+  hideError();
+  const email = document.getElementById('login-email').value.trim();
+
+  if (!email) {
+    showError('Introduz o teu email para recuperar a password.');
+    return;
+  }
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/login.html'
+  });
+
+  if (error) {
+    showError('Erro ao enviar email. Verifica o endereço e tenta novamente.');
+  } else {
+    const el = document.getElementById('login-error');
+    el.style.background = 'rgba(45,212,160,0.1)';
+    el.style.borderColor = 'rgba(45,212,160,0.25)';
+    el.style.color = '#2dd4a0';
+    el.textContent = 'Email de recuperação enviado. Verifica a tua caixa de entrada.';
+    el.classList.add('show');
+  }
+}
+
+// Submete com Enter
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>

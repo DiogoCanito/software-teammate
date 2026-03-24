@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Clientes</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item active" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Clientes</div>
+      <div class="page-sub" id="clientes-page-sub">A carregar...</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" id="btn-novo-cliente">+ Novo Cliente</button>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filters-bar">
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">⌕</span>
+      <input class="filter-search" id="cf-search" type="text" placeholder="Pesquisar clientes...">
+    </div>
+    <select class="filter-select" id="cf-sector">
+      <option value="">Setor</option>
+    </select>
+    <select class="filter-select" id="cf-status">
+      <option value="">Estado</option>
+      <option value="ativo">Ativo</option>
+      <option value="inativo">Inativo</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" id="btn-clear-cf" style="display:none">✕ Limpar filtros</button>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="tasks-stats-row" id="clientes-stats-row"></div>
+
+  <!-- CLIENTS GRID -->
+  <div class="clients-grid" id="clientes-grid"></div>
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── CONFIRM DELETE POPUP ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Eliminar cliente</div>
+    <div class="confirm-msg" id="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Novo / Editar Cliente ─── -->
+<div class="modal-overlay" id="cliente-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="cliente-modal-title">Novo Cliente</div>
+      <button class="modal-close" id="cliente-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome da Empresa <span class="form-required">*</span></label>
+          <input class="form-input" id="f-c-name" type="text" placeholder="Ex: Nexus Tecnologia">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Iniciais <span class="form-required">*</span></label>
+          <input class="form-input" id="f-c-initials" type="text" maxlength="2" placeholder="Ex: NT" style="text-transform:uppercase">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Setor</label>
+          <input class="form-input" id="f-c-sector" type="text" placeholder="Ex: Tecnologia">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pessoa de Contacto</label>
+          <input class="form-input" id="f-c-contact" type="text" placeholder="Ex: Ricardo Fonseca">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="f-c-email" type="email" placeholder="contacto@empresa.pt">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input class="form-input" id="f-c-phone" type="tel" placeholder="+351 21 XXX XXXX">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-c-status">
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cor do Avatar</label>
+          <input class="form-input" id="f-c-color" type="color" value="#ff956b" style="padding:4px 8px;height:38px;cursor:pointer">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Website</label>
+          <input class="form-input" id="f-c-website" type="text" placeholder="https://empresa.pt">
+        </div>
+        <div class="form-group">
+          <label class="form-label">NIF</label>
+          <input class="form-input" id="f-c-nif" type="text" placeholder="Ex: 512345678">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Localização</label>
+          <input class="form-input" id="f-c-location" type="text" placeholder="Ex: Lisboa, Portugal">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Notas</label>
+          <textarea class="form-textarea" id="f-c-notes" rows="3" placeholder="Notas sobre o cliente..."></textarea>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cliente-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="cliente-modal-save">+ Criar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let CLIENTES = [];
+let editingId = null;
+let pendingDeleteId = null;
+
+// ─── HELPERS ───
+function darkenHex(hex, amount = 0.3) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
+  const g = Math.max(0, Math.round(((n >>  8) & 0xff) * (1 - amount)));
+  const b = Math.max(0, Math.round(( n        & 0xff) * (1 - amount)));
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function avatarStyle(color) {
+  return `background: linear-gradient(135deg, ${color}, ${darkenHex(color)})`;
+}
+
+// ─── LOAD ───
+async function loadClientes() {
+  const { data, error } = await sb.from('clientes').select('*').order('name');
+  if (error) { console.error('Erro ao carregar clientes:', error); return; }
+  CLIENTES = data || [];
+}
+
+// ─── RENDER ───
+function renderClientes() {
+  const search = document.getElementById('cf-search').value.toLowerCase().trim();
+  const sector = document.getElementById('cf-sector').value;
+  const status = document.getElementById('cf-status').value;
+
+  // Populate sector filter options dynamically
+  const sectors = [...new Set(CLIENTES.map(c => c.sector).filter(Boolean))].sort();
+  const sectorSel = document.getElementById('cf-sector');
+  const curSector = sectorSel.value;
+  sectorSel.innerHTML = '<option value="">Setor</option>' +
+    sectors.map(s => `<option value="${s}"${s === curSector ? ' selected' : ''}>${s}</option>`).join('');
+
+  let filtered = CLIENTES;
+  if (search) filtered = filtered.filter(c =>
+    c.name.toLowerCase().includes(search) ||
+    (c.sector && c.sector.toLowerCase().includes(search)) ||
+    (c.contact_name && c.contact_name.toLowerCase().includes(search))
+  );
+  if (sector) filtered = filtered.filter(c => c.sector === sector);
+  if (status) filtered = filtered.filter(c => c.status === status);
+
+  // Stats row
+  const ativos   = CLIENTES.filter(c => c.status === 'ativo').length;
+  const inativos = CLIENTES.filter(c => c.status === 'inativo').length;
+  document.getElementById('clientes-page-sub').textContent =
+    `${CLIENTES.length} cliente${CLIENTES.length !== 1 ? 's' : ''} · ${ativos} ativo${ativos !== 1 ? 's' : ''}`;
+  document.getElementById('clientes-stats-row').innerHTML = `
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--text-muted)"></div> Total: <strong>${CLIENTES.length}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--success)"></div> Ativos: <strong>${ativos}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--text-muted)"></div> Inativos: <strong>${inativos}</strong></div>
+  `;
+
+  // Show/hide clear button
+  const hasFilter = search || sector || status;
+  document.getElementById('btn-clear-cf').style.display = hasFilter ? '' : 'none';
+  if (sector) document.getElementById('cf-sector').classList.add('has-value');
+  else document.getElementById('cf-sector').classList.remove('has-value');
+  if (status) document.getElementById('cf-status').classList.add('has-value');
+  else document.getElementById('cf-status').classList.remove('has-value');
+
+  const grid = document.getElementById('clientes-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text-muted)">
+      <div style="font-size:32px;opacity:0.25;margin-bottom:10px">👤</div>
+      <div style="font-size:13px">Nenhum cliente encontrado</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((c, i) => `
+    <div class="member-card" data-id="${c.id}" style="animation-delay:${i * 0.04}s" onclick="goToProfile('${c.id}')">
+      <div class="member-card-actions" onclick="event.stopPropagation()">
+        <div style="position:relative">
+          <button class="dots-btn" onclick="openDots(event,'${c.id}')">···</button>
+          <div class="row-dropdown" id="cdrop-${c.id}">
+            <button class="row-dropdown-item" onclick="openEditModal(event,'${c.id}')">✎ Editar</button>
+            <button class="row-dropdown-item delete" onclick="openConfirmDelete(event,'${c.id}')">✕ Eliminar</button>
+          </div>
+        </div>
+      </div>
+      <div class="member-avatar" style="${avatarStyle(c.avatar_color || '#ff956b')}">${c.initials}</div>
+      <div class="member-name">${c.name}</div>
+      ${c.sector ? `<div class="member-role">${c.sector}</div>` : ''}
+      ${c.contact_name ? `<div class="member-dept">${c.contact_name}</div>` : ''}
+      <span class="sbadge ${c.status}">${c.status === 'ativo' ? 'Ativo' : 'Inativo'}</span>
+    </div>
+  `).join('');
+}
+
+// ─── NAVIGATION ───
+function goToProfile(id) {
+  window.location.href = `cliente.html?id=${id}`;
+}
+
+// ─── DROPDOWN ───
+function openDots(e, id) {
+  e.stopPropagation();
+  document.querySelectorAll('.row-dropdown.open').forEach(d => {
+    if (d.id !== `cdrop-${id}`) d.classList.remove('open');
+  });
+  document.getElementById(`cdrop-${id}`).classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+});
+
+// ─── MODAL ───
+function openNewModal() {
+  editingId = null;
+  document.getElementById('cliente-modal-title').textContent = 'Novo Cliente';
+  document.getElementById('cliente-modal-save').textContent  = '+ Criar Cliente';
+  ['f-c-name','f-c-initials','f-c-sector','f-c-contact','f-c-email','f-c-phone',
+   'f-c-website','f-c-nif','f-c-location','f-c-notes']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('f-c-status').value = 'ativo';
+  document.getElementById('f-c-color').value  = '#ff956b';
+  document.querySelectorAll('#cliente-modal-overlay .f-error')
+    .forEach(el => el.classList.remove('f-error'));
+  document.getElementById('cliente-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-c-name').focus(), 80);
+}
+
+function openEditModal(e, id) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+  const c = CLIENTES.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+  document.getElementById('cliente-modal-title').textContent = 'Editar Cliente';
+  document.getElementById('cliente-modal-save').textContent  = 'Guardar Alterações';
+  document.getElementById('f-c-name').value     = c.name         || '';
+  document.getElementById('f-c-initials').value = c.initials     || '';
+  document.getElementById('f-c-sector').value   = c.sector       || '';
+  document.getElementById('f-c-contact').value  = c.contact_name || '';
+  document.getElementById('f-c-email').value    = c.email        || '';
+  document.getElementById('f-c-phone').value    = c.phone        || '';
+  document.getElementById('f-c-status').value   = c.status       || 'ativo';
+  document.getElementById('f-c-color').value    = c.avatar_color || '#ff956b';
+  document.getElementById('f-c-website').value  = c.website      || '';
+  document.getElementById('f-c-nif').value      = c.nif          || '';
+  document.getElementById('f-c-location').value = c.location     || '';
+  document.getElementById('f-c-notes').value    = c.notes        || '';
+  document.querySelectorAll('#cliente-modal-overlay .f-error')
+    .forEach(el => el.classList.remove('f-error'));
+  document.getElementById('cliente-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-c-name').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('cliente-modal-overlay').classList.remove('open');
+}
+
+// Auto-fill initials from name
+document.getElementById('f-c-name').addEventListener('input', () => {
+  const initialsEl = document.getElementById('f-c-initials');
+  if (initialsEl.value.length === 0) {
+    const words = document.getElementById('f-c-name').value.trim().split(/\s+/);
+    initialsEl.value = words.map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
+  }
+});
+
+// Save
+document.getElementById('cliente-modal-save').addEventListener('click', async () => {
+  const nameEl     = document.getElementById('f-c-name');
+  const initialsEl = document.getElementById('f-c-initials');
+  const name     = nameEl.value.trim();
+  const initials = initialsEl.value.trim().toUpperCase().slice(0, 2);
+  nameEl.classList.toggle('f-error', !name);
+  initialsEl.classList.toggle('f-error', !initials);
+  if (!name || !initials) return;
+
+  const payload = {
+    name,
+    initials,
+    sector:       document.getElementById('f-c-sector').value.trim()   || null,
+    contact_name: document.getElementById('f-c-contact').value.trim()  || null,
+    email:        document.getElementById('f-c-email').value.trim()    || null,
+    phone:        document.getElementById('f-c-phone').value.trim()    || null,
+    status:       document.getElementById('f-c-status').value,
+    avatar_color: document.getElementById('f-c-color').value,
+    website:      document.getElementById('f-c-website').value.trim()  || null,
+    nif:          document.getElementById('f-c-nif').value.trim()      || null,
+    location:     document.getElementById('f-c-location').value.trim() || null,
+    notes:        document.getElementById('f-c-notes').value.trim()    || null,
+  };
+
+  if (editingId) {
+    const { error } = await sb.from('clientes').update(payload).eq('id', editingId);
+    if (error) { console.error('Erro ao atualizar:', error); return; }
+  } else {
+    const { error } = await sb.from('clientes').insert(payload);
+    if (error) { console.error('Erro ao criar:', error); return; }
+  }
+  closeModal();
+  await loadClientes();
+  renderClientes();
+});
+
+// ─── CONFIRM DELETE ───
+function openConfirmDelete(e, id) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+  const c = CLIENTES.find(x => x.id === id);
+  pendingDeleteId = id;
+  document.getElementById('confirm-title').textContent = 'Eliminar cliente';
+  document.getElementById('confirm-msg').textContent   =
+    `Tens a certeza que queres eliminar "${c ? c.name : 'este cliente'}"? Esta ação não pode ser desfeita.`;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  await sb.from('clientes').delete().eq('id', pendingDeleteId);
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+  await loadClientes();
+  renderClientes();
+});
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+});
+
+// ─── EVENT LISTENERS ───
+document.getElementById('btn-novo-cliente').addEventListener('click', openNewModal);
+document.getElementById('cliente-modal-close').addEventListener('click', closeModal);
+document.getElementById('cliente-modal-cancel').addEventListener('click', closeModal);
+document.getElementById('cliente-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('cliente-modal-overlay')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    document.getElementById('confirm-overlay').classList.remove('open');
+  }
+});
+
+document.getElementById('cf-search').addEventListener('input', renderClientes);
+document.getElementById('cf-sector').addEventListener('change', renderClientes);
+document.getElementById('cf-status').addEventListener('change', renderClientes);
+document.getElementById('btn-clear-cf').addEventListener('click', () => {
+  document.getElementById('cf-search').value = '';
+  document.getElementById('cf-sector').value = '';
+  document.getElementById('cf-status').value = '';
+  renderClientes();
+});
+
+// ─── INIT ───
+(async () => {
+  await loadClientes();
+  renderClientes();
+
+  // Auto-open edit modal if ?edit=UUID in URL
+  const editParam = new URLSearchParams(window.location.search).get('edit');
+  if (editParam) {
+    const target = CLIENTES.find(c => c.id === editParam);
+    if (target) openEditModal(null, editParam);
+  }
+})();
+</script>
+</body>
+</html>

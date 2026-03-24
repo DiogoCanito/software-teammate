@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Custos</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item active" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Custos</div>
+      <div class="page-sub">Monitoriza e gere todas as despesas do negócio</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" id="btn-novo-custo">+ Novo Custo</button>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid" id="custos-kpis"></div>
+
+  <!-- FILTER BAR -->
+  <div class="filters-bar">
+    <select class="filter-select" id="cf-periodo">
+      <option value="">Este Mês</option>
+      <option value="mes-anterior">Mês Anterior</option>
+      <option value="este-ano">Este Ano</option>
+      <option value="tudo">Tudo</option>
+      <option value="personalizado">Personalizado</option>
+    </select>
+    <select class="filter-select" id="cf-categoria">
+      <option value="">Categoria</option>
+      <option value="software">Software</option>
+      <option value="marketing">Marketing</option>
+      <option value="equipa">Equipa</option>
+      <option value="escritorio">Escritório</option>
+      <option value="infraestrutura">Infraestrutura</option>
+      <option value="fornecedores">Fornecedores</option>
+      <option value="outros">Outros</option>
+    </select>
+    <select class="filter-select" id="cf-tipo">
+      <option value="">Tipo</option>
+      <option value="fixo">Fixo</option>
+      <option value="variavel">Variável</option>
+      <option value="unico">Único</option>
+    </select>
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">⌕</span>
+      <input class="filter-search" id="cf-search" type="text" placeholder="Pesquisar custos...">
+    </div>
+    <button class="btn btn-ghost btn-sm" id="btn-clear-cf" style="display:none">✕ Limpar filtros</button>
+  </div>
+
+  <!-- CUSTOM DATE RANGE -->
+  <div id="cf-custom-range" style="display:none;gap:10px;align-items:center;margin-bottom:12px">
+    <input class="form-input" id="cf-date-from" type="date" style="width:160px">
+    <span style="color:var(--text-muted);font-size:13px">até</span>
+    <input class="form-input" id="cf-date-to" type="date" style="width:160px">
+  </div>
+
+  <!-- COSTS TABLE -->
+  <div class="leads-table-wrap">
+    <table class="leads-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Categoria</th>
+          <th>Tipo</th>
+          <th>Valor</th>
+          <th>Frequência</th>
+          <th>Data</th>
+          <th>Próximo Pagamento</th>
+          <th>Método</th>
+          <th>Notas</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="custos-tbody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── CONFIRM DELETE POPUP ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Eliminar custo</div>
+    <div class="confirm-msg" id="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Novo / Editar Custo ─── -->
+<div class="modal-overlay" id="custo-modal-overlay">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title" id="custo-modal-title">Novo Custo</div>
+      <button class="modal-close" id="custo-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-section-label">Informação Básica</div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Nome do Custo <span class="form-required">*</span></label>
+          <input class="form-input" id="f-c-nome" type="text" placeholder="Ex: Vercel, Meta Ads — Março">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Descrição</label>
+          <input class="form-input" id="f-c-descricao" type="text" placeholder="Breve descrição opcional">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor (€) <span class="form-required">*</span></label>
+          <input class="form-input" id="f-c-valor" type="number" placeholder="Ex: 20.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <select class="form-select" id="f-c-categoria">
+            <option value="">Selecionar...</option>
+            <option value="software">Software</option>
+            <option value="marketing">Marketing</option>
+            <option value="equipa">Equipa</option>
+            <option value="escritorio">Escritório</option>
+            <option value="infraestrutura">Infraestrutura</option>
+            <option value="fornecedores">Fornecedores</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-label">Tipo e Frequência</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="f-c-tipo">
+            <option value="fixo">Fixo</option>
+            <option value="variavel">Variável</option>
+            <option value="unico">Único</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Frequência</label>
+          <select class="form-select" id="f-c-frequencia">
+            <option value="mensal">Mensal</option>
+            <option value="semanal">Semanal</option>
+            <option value="anual">Anual</option>
+            <option value="diario">Diário</option>
+            <option value="unico">Único</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data do Custo / Início <span class="form-required">*</span></label>
+          <input class="form-input" id="f-c-data" type="date">
+        </div>
+        <div class="form-group" id="f-c-proximo-grupo">
+          <label class="form-label">Próximo Pagamento</label>
+          <input class="form-input" id="f-c-proximo" type="date">
+        </div>
+      </div>
+
+      <div class="form-section-label">Pagamento</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Método de Pagamento</label>
+          <select class="form-select" id="f-c-metodo">
+            <option value="">Selecionar...</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Cartão de Débito">Cartão de Débito</option>
+            <option value="Transferência Bancária">Transferência Bancária</option>
+            <option value="Débito Direto">Débito Direto</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fornecedor / Plataforma</label>
+          <input class="form-input" id="f-c-fornecedor" type="text" placeholder="Ex: Stripe, GoDaddy, CGD">
+        </div>
+      </div>
+
+      <div class="form-section-label">Notas</div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Notas Internas</label>
+          <textarea class="form-textarea" id="f-c-notas" rows="3" placeholder="Informação adicional sobre este custo..."></textarea>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="custo-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="custo-modal-save">Guardar Custo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── MOCK DATA ───
+let CUSTOS = [
+  {
+    id: 1,
+    nome: 'Vercel',
+    descricao: 'Hosting projetos clientes',
+    valor: 20,
+    categoria: 'software',
+    tipo: 'fixo',
+    frequencia: 'mensal',
+    data: '2026-01-01',
+    proximo_pagamento: '2026-04-01',
+    metodo: 'Cartão de Crédito',
+    fornecedor: 'Vercel Inc.',
+    notas: 'Plano Pro. Inclui 3 projetos e deployments ilimitados.'
+  },
+  {
+    id: 2,
+    nome: 'Claude Pro',
+    descricao: 'IA para desenvolvimento e automações',
+    valor: 18,
+    categoria: 'software',
+    tipo: 'fixo',
+    frequencia: 'mensal',
+    data: '2026-01-01',
+    proximo_pagamento: '2026-04-01',
+    metodo: 'Cartão de Crédito',
+    fornecedor: 'Anthropic',
+    notas: 'Conta pessoal de uso profissional. Renovação automática.'
+  },
+  {
+    id: 3,
+    nome: 'Google Workspace',
+    descricao: 'Email corporativo e colaboração',
+    valor: 12,
+    categoria: 'software',
+    tipo: 'fixo',
+    frequencia: 'mensal',
+    data: '2026-01-01',
+    proximo_pagamento: '2026-04-01',
+    metodo: 'Cartão de Crédito',
+    fornecedor: 'Google',
+    notas: '2 licenças × €6. Renovação automática ativa.'
+  },
+  {
+    id: 4,
+    nome: 'Meta Ads — Março',
+    descricao: 'Campanha geração de leads',
+    valor: 400,
+    categoria: 'marketing',
+    tipo: 'variavel',
+    frequencia: 'unico',
+    data: '2026-03-01',
+    proximo_pagamento: null,
+    metodo: 'Cartão de Crédito',
+    fornecedor: 'Meta',
+    notas: 'Campanha de remarketing + aquisição. ROAS estimado 4x. Duração: março completo.'
+  },
+  {
+    id: 5,
+    nome: 'Domínio TeamMate.pt',
+    descricao: 'Registo anual do domínio',
+    valor: 15,
+    categoria: 'infraestrutura',
+    tipo: 'unico',
+    frequencia: 'anual',
+    data: '2026-01-15',
+    proximo_pagamento: '2027-01-15',
+    metodo: 'Cartão de Crédito',
+    fornecedor: 'GoDaddy',
+    notas: 'Renovação automática ativa. Transferência para Cloudflare a considerar.'
+  },
+  {
+    id: 6,
+    nome: 'Contabilista',
+    descricao: 'Serviços de contabilidade mensal',
+    valor: 150,
+    categoria: 'fornecedores',
+    tipo: 'fixo',
+    frequencia: 'mensal',
+    data: '2026-01-01',
+    proximo_pagamento: '2026-04-01',
+    metodo: 'Transferência Bancária',
+    fornecedor: 'Bento & Associados',
+    notas: 'Inclui declarações fiscais trimestrais e IRS anual.'
+  },
+  {
+    id: 7,
+    nome: 'Figma',
+    descricao: 'Design e prototipagem de interfaces',
+    valor: 15,
+    categoria: 'software',
+    tipo: 'fixo',
+    frequencia: 'mensal',
+    data: '2026-01-01',
+    proximo_pagamento: '2026-04-01',
+    metodo: 'Cartão de Crédito',
+    fornecedor: 'Figma Inc.',
+    notas: 'Plano Professional. 1 editor seat.'
+  },
+  {
+    id: 8,
+    nome: 'Material de Escritório',
+    descricao: 'Papel, canetas e organização',
+    valor: 45,
+    categoria: 'escritorio',
+    tipo: 'variavel',
+    frequencia: 'unico',
+    data: '2026-03-20',
+    proximo_pagamento: null,
+    metodo: 'Outro',
+    fornecedor: null,
+    notas: 'Compra pontual para reorganização do espaço de trabalho.'
+  }
+];
+
+let editingId = null;
+let pendingDeleteId = null;
+let nextId = 9;
+
+// ─── HELPERS ───
+const CAT_LABELS = {
+  software: 'Software', marketing: 'Marketing', equipa: 'Equipa',
+  escritorio: 'Escritório', infraestrutura: 'Infraestrutura',
+  fornecedores: 'Fornecedores', outros: 'Outros'
+};
+const TIPO_LABELS = { fixo: 'Fixo', variavel: 'Variável', unico: 'Único' };
+const FREQ_LABELS = { diario: 'Diário', semanal: 'Semanal', mensal: 'Mensal', anual: 'Anual', unico: 'Único' };
+
+function formatCurrency(val) {
+  if (val == null) return '—';
+  return '€\u00a0' + val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T12:00:00');
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr + 'T23:59:59') < new Date();
+}
+
+// ─── KPI CALCULATION ───
+function calcKPIs() {
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear  = now.getFullYear();
+
+  let totalMes = 0;
+  CUSTOS.forEach(c => {
+    const f = c.frequencia;
+    if      (f === 'mensal')  totalMes += c.valor;
+    else if (f === 'semanal') totalMes += c.valor * 4;
+    else if (f === 'diario')  totalMes += c.valor * 30;
+    else if (f === 'anual')   totalMes += c.valor / 12;
+    else if (f === 'unico') {
+      const d = new Date(c.data + 'T12:00:00');
+      if (d.getMonth() === thisMonth && d.getFullYear() === thisYear) totalMes += c.valor;
+    }
+  });
+
+  let totalAno = 0;
+  CUSTOS.forEach(c => {
+    const f = c.frequencia;
+    if      (f === 'mensal')  totalAno += c.valor * 12;
+    else if (f === 'semanal') totalAno += c.valor * 52;
+    else if (f === 'diario')  totalAno += c.valor * 365;
+    else if (f === 'anual')   totalAno += c.valor;
+    else if (f === 'unico') {
+      const d = new Date(c.data + 'T12:00:00');
+      if (d.getFullYear() === thisYear) totalAno += c.valor;
+    }
+  });
+
+  const fixosMensais = CUSTOS
+    .filter(c => c.tipo === 'fixo' && c.frequencia === 'mensal')
+    .reduce((s, c) => s + c.valor, 0);
+
+  const maiorCusto = CUSTOS.reduce((max, c) => (!max || c.valor > max.valor) ? c : max, null);
+
+  return { totalMes, totalAno, fixosMensais, maiorCusto };
+}
+
+function renderKPIs() {
+  const { totalMes, totalAno, fixosMensais, maiorCusto } = calcKPIs();
+  document.getElementById('custos-kpis').innerHTML = `
+    <div class="kpi-card blue">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-label">Total Este Mês</div>
+      <div class="kpi-value">${formatCurrency(totalMes)}</div>
+      <div class="kpi-delta neutral"><span>custos acumulados</span></div>
+    </div>
+    <div class="kpi-card coral">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-label">Total Este Ano</div>
+      <div class="kpi-value">${formatCurrency(totalAno)}</div>
+      <div class="kpi-delta neutral"><span>projeção anual</span></div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">↺</div>
+      <div class="kpi-label">Custos Fixos Mensais</div>
+      <div class="kpi-value">${formatCurrency(fixosMensais)}</div>
+      <div class="kpi-delta neutral"><span>recorrentes / mês</span></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-icon">↑</div>
+      <div class="kpi-label">Maior Despesa</div>
+      <div class="kpi-value">${maiorCusto ? formatCurrency(maiorCusto.valor) : '—'}</div>
+      <div class="kpi-delta neutral"><span>${maiorCusto ? maiorCusto.nome : '—'}</span></div>
+    </div>
+  `;
+}
+
+// ─── PERIOD FILTER ───
+function isInPeriod(c) {
+  const periodo = document.getElementById('cf-periodo').value;
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear  = now.getFullYear();
+
+  if (!periodo || periodo === 'tudo') return true;
+
+  if (periodo === 'personalizado') {
+    const from = document.getElementById('cf-date-from').value;
+    const to   = document.getElementById('cf-date-to').value;
+    if (!from && !to) return true;
+    const d = new Date(c.data + 'T12:00:00');
+    if (from && d < new Date(from + 'T00:00:00')) return false;
+    if (to   && d > new Date(to   + 'T23:59:59')) return false;
+    return true;
+  }
+
+  if (periodo === 'este-mes') {
+    if (c.frequencia !== 'unico' && c.frequencia !== 'anual') return true;
+    const d = new Date(c.data + 'T12:00:00');
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+  }
+
+  if (periodo === 'mes-anterior') {
+    const pm = thisMonth === 0 ? 11 : thisMonth - 1;
+    const py = thisMonth === 0 ? thisYear - 1 : thisYear;
+    if (c.frequencia !== 'unico' && c.frequencia !== 'anual') return true;
+    const d = new Date(c.data + 'T12:00:00');
+    return d.getMonth() === pm && d.getFullYear() === py;
+  }
+
+  if (periodo === 'este-ano') {
+    if (c.frequencia !== 'unico') return true;
+    const d = new Date(c.data + 'T12:00:00');
+    return d.getFullYear() === thisYear;
+  }
+
+  return true;
+}
+
+// ─── RENDER ───
+function renderCustos() {
+  const search    = document.getElementById('cf-search').value.toLowerCase().trim();
+  const categoria = document.getElementById('cf-categoria').value;
+  const tipo      = document.getElementById('cf-tipo').value;
+  const periodo   = document.getElementById('cf-periodo').value;
+
+  let filtered = CUSTOS.filter(c => isInPeriod(c));
+  if (search)    filtered = filtered.filter(c =>
+    c.nome.toLowerCase().includes(search) ||
+    (c.descricao  && c.descricao.toLowerCase().includes(search))  ||
+    (c.fornecedor && c.fornecedor.toLowerCase().includes(search))
+  );
+  if (categoria) filtered = filtered.filter(c => c.categoria === categoria);
+  if (tipo)      filtered = filtered.filter(c => c.tipo === tipo);
+
+  const hasFilter = search || categoria || tipo || periodo;
+  document.getElementById('btn-clear-cf').style.display = hasFilter ? '' : 'none';
+  document.getElementById('cf-categoria').classList.toggle('has-value', !!categoria);
+  document.getElementById('cf-tipo').classList.toggle('has-value', !!tipo);
+
+  // Custom date range visibility
+  const customRange = document.getElementById('cf-custom-range');
+  customRange.style.display = periodo === 'personalizado' ? 'flex' : 'none';
+
+  renderKPIs();
+
+  const tbody = document.getElementById('custos-tbody');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:56px 0;color:var(--text-muted)">
+      <div style="font-size:30px;opacity:0.2;margin-bottom:10px">💸</div>
+      <div style="font-size:13px">Nenhum custo encontrado</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(c => `
+    <tr>
+      <td>
+        <div class="lead-name">${c.nome}</div>
+        ${c.descricao ? `<div class="lead-sub">${c.descricao}</div>` : ''}
+      </td>
+      <td>${c.categoria
+        ? `<span class="cbadge ${c.categoria}">${CAT_LABELS[c.categoria] || c.categoria}</span>`
+        : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td><span class="type-badge ${c.tipo}">${TIPO_LABELS[c.tipo] || c.tipo}</span></td>
+      <td class="cost-value">${formatCurrency(c.valor)}</td>
+      <td style="font-size:12.5px;color:var(--text-dim)">${FREQ_LABELS[c.frequencia] || c.frequencia}</td>
+      <td style="font-size:12.5px;white-space:nowrap;color:var(--text-dim)">${formatDate(c.data)}</td>
+      <td style="font-size:12.5px;white-space:nowrap">${c.proximo_pagamento
+        ? `<span style="color:${isOverdue(c.proximo_pagamento) ? 'var(--danger)' : 'var(--text-dim)'}">${formatDate(c.proximo_pagamento)}</span>`
+        : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>${c.metodo
+        ? `<span class="canal-tag" style="white-space:nowrap;font-size:11px">${c.metodo}</span>`
+        : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>
+        ${c.notas
+          ? `<div class="note-wrap">
+               <button class="note-icon-btn" title="Ver nota">📝</button>
+               <div class="note-tooltip">${c.notas}</div>
+             </div>`
+          : `<span style="color:var(--text-muted);font-size:13px">—</span>`}
+      </td>
+      <td>
+        <div class="table-actions">
+          <button class="tact-btn" onclick="openEditModal(${c.id})" title="Editar">✎</button>
+          <button class="tact-btn del" onclick="openConfirmDelete(${c.id})" title="Eliminar">✕</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ─── MODAL ───
+function toggleProximoPagamento() {
+  const freq = document.getElementById('f-c-frequencia').value;
+  document.getElementById('f-c-proximo-grupo').style.display = freq === 'unico' ? 'none' : '';
+}
+
+function openNewModal() {
+  editingId = null;
+  document.getElementById('custo-modal-title').textContent = 'Novo Custo';
+  document.getElementById('custo-modal-save').textContent  = 'Guardar Custo';
+  ['f-c-nome','f-c-descricao','f-c-valor','f-c-data','f-c-proximo','f-c-fornecedor','f-c-notas']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  ['f-c-categoria','f-c-metodo'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('f-c-tipo').value       = 'fixo';
+  document.getElementById('f-c-frequencia').value = 'mensal';
+  toggleProximoPagamento();
+  document.querySelectorAll('#custo-modal-overlay .f-error')
+    .forEach(el => el.classList.remove('f-error'));
+  document.getElementById('custo-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-c-nome').focus(), 80);
+}
+
+function openEditModal(id) {
+  const c = CUSTOS.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+  document.getElementById('custo-modal-title').textContent = 'Editar Custo';
+  document.getElementById('custo-modal-save').textContent  = 'Guardar Alterações';
+  document.getElementById('f-c-nome').value         = c.nome               || '';
+  document.getElementById('f-c-descricao').value    = c.descricao          || '';
+  document.getElementById('f-c-valor').value        = c.valor              || '';
+  document.getElementById('f-c-categoria').value    = c.categoria          || '';
+  document.getElementById('f-c-tipo').value         = c.tipo               || 'fixo';
+  document.getElementById('f-c-frequencia').value   = c.frequencia         || 'mensal';
+  document.getElementById('f-c-data').value         = c.data               || '';
+  document.getElementById('f-c-proximo').value      = c.proximo_pagamento  || '';
+  document.getElementById('f-c-metodo').value       = c.metodo             || '';
+  document.getElementById('f-c-fornecedor').value   = c.fornecedor         || '';
+  document.getElementById('f-c-notas').value        = c.notas              || '';
+  toggleProximoPagamento();
+  document.querySelectorAll('#custo-modal-overlay .f-error')
+    .forEach(el => el.classList.remove('f-error'));
+  document.getElementById('custo-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-c-nome').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('custo-modal-overlay').classList.remove('open');
+}
+
+// Tipo → Frequência sync
+document.getElementById('f-c-tipo').addEventListener('change', function() {
+  if (this.value === 'unico') document.getElementById('f-c-frequencia').value = 'unico';
+  toggleProximoPagamento();
+});
+document.getElementById('f-c-frequencia').addEventListener('change', toggleProximoPagamento);
+
+// Save
+document.getElementById('custo-modal-save').addEventListener('click', () => {
+  const nomeEl  = document.getElementById('f-c-nome');
+  const valorEl = document.getElementById('f-c-valor');
+  const nome    = nomeEl.value.trim();
+  const valor   = parseFloat(valorEl.value);
+
+  nomeEl.classList.toggle('f-error', !nome);
+  valorEl.classList.toggle('f-error', isNaN(valor) || valor <= 0);
+  if (!nome || isNaN(valor) || valor <= 0) {
+    if (!nome) nomeEl.focus(); else valorEl.focus();
+    return;
+  }
+
+  const payload = {
+    nome,
+    descricao:         document.getElementById('f-c-descricao').value.trim()  || null,
+    valor,
+    categoria:         document.getElementById('f-c-categoria').value          || null,
+    tipo:              document.getElementById('f-c-tipo').value,
+    frequencia:        document.getElementById('f-c-frequencia').value,
+    data:              document.getElementById('f-c-data').value               || null,
+    proximo_pagamento: document.getElementById('f-c-proximo').value            || null,
+    metodo:            document.getElementById('f-c-metodo').value             || null,
+    fornecedor:        document.getElementById('f-c-fornecedor').value.trim()  || null,
+    notas:             document.getElementById('f-c-notas').value.trim()       || null,
+  };
+
+  if (editingId !== null) {
+    const idx = CUSTOS.findIndex(c => c.id === editingId);
+    if (idx !== -1) CUSTOS[idx] = { ...CUSTOS[idx], ...payload };
+  } else {
+    CUSTOS.unshift({ id: nextId++, ...payload });
+  }
+
+  closeModal();
+  renderCustos();
+});
+
+// ─── CONFIRM DELETE ───
+function openConfirmDelete(id) {
+  const c = CUSTOS.find(x => x.id === id);
+  pendingDeleteId = id;
+  document.getElementById('confirm-title').textContent = 'Eliminar custo';
+  document.getElementById('confirm-msg').textContent   =
+    `Tens a certeza que queres eliminar "${c ? c.nome : 'este custo'}"? Esta ação não pode ser desfeita.`;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+document.getElementById('confirm-ok').addEventListener('click', () => {
+  if (pendingDeleteId === null) return;
+  CUSTOS = CUSTOS.filter(c => c.id !== pendingDeleteId);
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+  renderCustos();
+});
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+});
+
+// ─── EVENT LISTENERS ───
+document.getElementById('btn-novo-custo').addEventListener('click', openNewModal);
+document.getElementById('custo-modal-close').addEventListener('click', closeModal);
+document.getElementById('custo-modal-cancel').addEventListener('click', closeModal);
+document.getElementById('custo-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('custo-modal-overlay')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    document.getElementById('confirm-overlay').classList.remove('open');
+  }
+});
+
+document.getElementById('cf-search').addEventListener('input', renderCustos);
+document.getElementById('cf-categoria').addEventListener('change', renderCustos);
+document.getElementById('cf-tipo').addEventListener('change', renderCustos);
+document.getElementById('cf-periodo').addEventListener('change', renderCustos);
+document.getElementById('cf-date-from').addEventListener('change', renderCustos);
+document.getElementById('cf-date-to').addEventListener('change', renderCustos);
+document.getElementById('btn-clear-cf').addEventListener('click', () => {
+  document.getElementById('cf-search').value    = '';
+  document.getElementById('cf-categoria').value = '';
+  document.getElementById('cf-tipo').value      = '';
+  document.getElementById('cf-periodo').value   = '';
+  document.getElementById('cf-date-from').value = '';
+  document.getElementById('cf-date-to').value   = '';
+  renderCustos();
+});
+
+// ─── INIT ───
+renderCustos();
+</script>
+</body>
+</html>

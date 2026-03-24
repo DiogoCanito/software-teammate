@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Projetos</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item active" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue" id="proj-nav-badge">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Projetos</div>
+      <div class="page-sub" id="proj-page-sub">10 projetos · Março 2026</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-proj-list">≡ Lista</button>
+        <button class="view-btn" id="btn-proj-kanban">⊞ Kanban</button>
+      </div>
+      <button class="btn btn-coral open-new-task-modal">+ Nova Tarefa</button>
+      <button class="btn btn-primary" id="btn-open-modal-proj">+ Novo Projeto</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="proj-content"></div>
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── CONFIRM POPUP ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Confirmar ação</div>
+    <div class="confirm-msg" id="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Novo Projeto ─── -->
+<div class="modal-overlay" id="modal-projeto">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Novo Projeto</div>
+      <button class="modal-close" id="btn-close-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nome do Projeto <span class="form-required">*</span></label>
+        <input class="form-input" id="f-name" type="text" placeholder="Ex: Redesign Web Corporativo">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cliente <span class="form-required">*</span></label>
+          <select class="form-select" id="f-client">
+            <option value="">Selecionar...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fase</label>
+          <select class="form-select" id="f-phase">
+            <option value="lead">Lead</option>
+            <option value="primeira-reuniao">Primeira Reunião</option>
+            <option value="proposta">Proposta</option>
+            <option value="contrato">Contrato</option>
+            <option value="credenciais">Credenciais</option>
+            <option value="desenvolvimento" selected>Desenvolvimento</option>
+            <option value="testes">Testes</option>
+            <option value="lancamento">Lançamento</option>
+            <option value="followup">Follow Up</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor (€)</label>
+          <input class="form-input" id="f-value" type="number" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prazo</label>
+          <input class="form-input" id="f-deadline" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prioridade</label>
+        <select class="form-select" id="f-priority">
+          <option value="alta">Alta</option>
+          <option value="media" selected>Média</option>
+          <option value="baixa">Baixa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-textarea" id="f-desc" placeholder="Descrição opcional do projeto..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-modal">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-proj">Criar Projeto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Nova Tarefa ─── -->
+<div class="modal-overlay" id="task-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nova Tarefa</div>
+      <button class="modal-close" id="task-modal-close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Título <span class="form-required">*</span></label>
+          <input class="form-input" id="f-task-title" type="text" placeholder="Descreve a tarefa...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Responsável <span class="form-required">*</span></label>
+          <select class="form-select" id="f-task-assignee">
+            <option value="">Selecionar...</option>
+            <option value="Diogo M.">Diogo M.</option>
+            <option value="Ana S.">Ana S.</option>
+            <option value="Pedro R.">Pedro R.</option>
+            <option value="Miguel T.">Miguel T.</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridade</label>
+          <select class="form-select" id="f-task-priority">
+            <option value="alta">Alta</option>
+            <option value="media" selected>Média</option>
+            <option value="baixa">Baixa</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Projeto</label>
+          <select class="form-select" id="f-task-project">
+            <option value="">Selecionar...</option>
+            <option value="Redesign Web Corporativo">Redesign Web Corporativo</option>
+            <option value="Campanha de Lançamento">Campanha de Lançamento</option>
+            <option value="App Mobile v2.0">App Mobile v2.0</option>
+            <option value="Identidade Visual">Identidade Visual</option>
+            <option value="Automação CRM">Automação CRM</option>
+            <option value="Finanças">Finanças</option>
+            <option value="Interno">Interno</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <select class="form-select" id="f-task-client">
+            <option value="">Selecionar...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-task-status">
+            <option value="a-fazer" selected>A Fazer</option>
+            <option value="em-curso">Em Curso</option>
+            <option value="em-revisao">Em Revisão</option>
+            <option value="bloqueada">Bloqueada</option>
+            <option value="concluida">Concluída</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prazo</label>
+          <input class="form-input" id="f-task-due" type="date">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="task-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="task-modal-save">+ Criar Tarefa</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// PROJECTS PAGE — Supabase
+// ═══════════════════════════════════════════════
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let projects = [];
+let CLIENTES = [];
+
+async function loadClientes() {
+  const { data } = await sb.from('clientes').select('id,name').eq('status','ativo').order('name');
+  CLIENTES = data || [];
+  const opts = CLIENTES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  document.getElementById('f-client').innerHTML      = '<option value="">Selecionar...</option>' + opts;
+  document.getElementById('f-task-client').innerHTML = '<option value="">Selecionar...</option>' + opts;
+}
+
+async function loadProjects() {
+  const { data, error } = await sb.from('projects').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('Erro ao carregar projetos:', error); return; }
+  projects = data.map(p => ({ ...p, desc: p.description || '' }));
+}
+
+const PHASES = [
+  { id: 'lead',             label: 'Lead',            color: '#6b7280' },
+  { id: 'primeira-reuniao', label: 'Primeira Reunião', color: '#8b5cf6' },
+  { id: 'proposta',         label: 'Proposta',         color: '#3b82f6' },
+  { id: 'contrato',         label: 'Contrato',         color: '#0a8ab8' },
+  { id: 'credenciais',      label: 'Credenciais',      color: '#f59e0b' },
+  { id: 'desenvolvimento',  label: 'Desenvolvimento',  color: '#05668d' },
+  { id: 'testes',           label: 'Testes',           color: '#f5c518' },
+  { id: 'lancamento',       label: 'Lançamento',       color: '#2dd4a0' },
+  { id: 'followup',         label: 'Follow Up',        color: '#ff956b' },
+  { id: 'cancelado',        label: 'Cancelado',        color: '#ff4d6d' },
+];
+
+
+let projView = 'list';
+
+function projFormatDeadline(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  const mths = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${mths[d.getMonth()]}`;
+}
+
+function projIsLate(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr + 'T23:59:59') < new Date();
+}
+
+function renderProjListView() {
+  const prioStyles = {
+    alta:  { bg:'rgba(255,77,109,0.12)',  text:'var(--danger)'  },
+    media: { bg:'rgba(245,197,24,0.1)',   text:'var(--warning)' },
+    baixa: { bg:'rgba(45,212,160,0.08)', text:'var(--success)' },
+  };
+  const prioLabels = { alta:'Alta', media:'Média', baixa:'Baixa' };
+
+  const rows = projects.map(p => {
+    const phase = PHASES.find(ph => ph.id === p.phase) || PHASES[0];
+    const dl    = p.deadline ? projFormatDeadline(p.deadline) : '—';
+    const late  = projIsLate(p.deadline);
+    const val   = p.value != null ? `€${p.value.toLocaleString('pt-PT')}` : '—';
+    const ps    = prioStyles[p.priority] || prioStyles.media;
+    const pl    = prioLabels[p.priority] || p.priority;
+    return `<tr>
+      <td>
+        <div class="proj-name">${p.name}</div>
+        <div class="proj-client">${p.client}</div>
+      </td>
+      <td><span class="phase-badge" style="background:${phase.color}1a;color:${phase.color};border:1px solid ${phase.color}33">${phase.label}</span></td>
+      <td style="font-size:11.5px;color:${late?'var(--danger)':'var(--text-muted)'};${late?'font-weight:600':''}">${late?dl+' ⚠':dl}</td>
+      <td style="font-weight:600;color:var(--success);font-size:12px">${val}</td>
+      <td><span class="sbadge" style="background:${ps.bg};color:${ps.text}">${pl}</span></td>
+      <td class="row-actions-cell">
+        <div class="row-actions-wrap">
+          <button class="dots-btn" data-id="${p.id}" title="Ações">···</button>
+          <div class="row-dropdown" id="pdrop-${p.id}">
+            <button class="row-dropdown-item" data-action="edit" data-id="${p.id}">✎ Editar</button>
+            <button class="row-dropdown-item delete" data-action="delete" data-id="${p.id}">✕ Eliminar</button>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="tasks-table-wrap">
+      <table class="tasks-table">
+        <thead><tr>
+          <th style="min-width:200px">Projeto / Cliente</th>
+          <th>Fase</th><th>Prazo</th><th>Valor</th><th>Prioridade</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderProjKanbanView() {
+  const cols = PHASES.map(phase => {
+    const cards = projects.filter(p => p.phase === phase.id);
+    const cardsHtml = cards.map(p => {
+      const dl   = p.deadline ? projFormatDeadline(p.deadline) : null;
+      const late = projIsLate(p.deadline);
+      const val  = p.value != null ? `€${p.value.toLocaleString('pt-PT')}` : null;
+      const prioColor = p.priority==='alta' ? '#ff4d6d' : p.priority==='media' ? '#f5c518' : '#2dd4a0';
+      return `<div class="proj-kcard" data-id="${p.id}">
+        <button class="proj-kcard-trash-btn" data-id="${p.id}" title="Eliminar">🗑</button>
+        <div class="proj-kcard-name">${p.name}</div>
+        <div class="proj-kcard-client">${p.client}</div>
+        <div class="proj-kcard-footer">
+          ${val ? `<span class="proj-kcard-value">${val}</span>` : ''}
+          ${dl  ? `<span class="proj-kcard-dl${late?' late':''}">${dl}${late?' ⚠':''}</span>` : ''}
+          <span class="proj-kcard-prio" style="background:${prioColor}"></span>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="proj-kcol">
+      <div class="proj-kcol-header">
+        <div class="proj-kcol-title">
+          <span class="proj-kcol-dot" style="background:${phase.color}"></span>
+          ${phase.label}
+        </div>
+        <span class="proj-kcol-count">${cards.length}</span>
+      </div>
+      <div class="proj-kcol-cards">${cardsHtml}</div>
+    </div>`;
+  }).join('');
+  return `<div class="proj-kanban-board">${cols}</div>`;
+}
+
+function renderProjectsPage() {
+  const total = projects.length;
+  const sub = document.getElementById('proj-page-sub');
+  if (sub) sub.textContent = `${total} projeto${total !== 1 ? 's' : ''} · Março 2026`;
+  const badge = document.getElementById('proj-nav-badge');
+  if (badge) badge.textContent = projects.filter(p => p.phase !== 'cancelado').length;
+  const content = document.getElementById('proj-content');
+  if (content) content.innerHTML = projView === 'list' ? renderProjListView() : renderProjKanbanView();
+
+  if (projView === 'list') {
+    document.querySelectorAll('#proj-content .dots-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        document.querySelectorAll('.row-dropdown.open').forEach(d => {
+          if (d.id !== `pdrop-${id}`) d.classList.remove('open');
+        });
+        document.getElementById(`pdrop-${id}`).classList.toggle('open');
+      });
+    });
+    document.querySelectorAll('#proj-content .row-dropdown-item').forEach(item => {
+      item.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = parseInt(item.dataset.id);
+        document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('open'));
+        if (item.dataset.action === 'edit') openEditProjModal(id);
+        else if (item.dataset.action === 'delete') showConfirm('Eliminar projeto?', 'Esta ação não pode ser desfeita.', () => deleteProject(id));
+      });
+    });
+  } else {
+    document.querySelectorAll('#proj-content .proj-kcard-trash-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = parseInt(btn.dataset.id);
+        showConfirm('Eliminar projeto?', 'Esta ação não pode ser desfeita.', () => deleteProject(id));
+      });
+    });
+  }
+}
+
+// ─── PROJECTS VIEW TOGGLE ───
+document.getElementById('btn-proj-list').addEventListener('click', () => {
+  projView = 'list';
+  document.getElementById('btn-proj-list').classList.add('active');
+  document.getElementById('btn-proj-kanban').classList.remove('active');
+  renderProjectsPage();
+});
+document.getElementById('btn-proj-kanban').addEventListener('click', () => {
+  projView = 'kanban';
+  document.getElementById('btn-proj-kanban').classList.add('active');
+  document.getElementById('btn-proj-list').classList.remove('active');
+  renderProjectsPage();
+});
+
+// ─── PROJECT MODAL ───
+let editingProjId = null;
+
+function openProjModal() {
+  editingProjId = null;
+  document.querySelector('#modal-projeto .modal-title').textContent = 'Novo Projeto';
+  document.getElementById('btn-save-proj').textContent = 'Criar Projeto';
+  document.getElementById('modal-projeto').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openEditProjModal(id) {
+  const proj = projects.find(p => p.id === id);
+  if (!proj) return;
+  editingProjId = id;
+  document.querySelector('#modal-projeto .modal-title').textContent = 'Editar Projeto';
+  document.getElementById('btn-save-proj').textContent = 'Guardar Alterações';
+  document.getElementById('f-name').value     = proj.name;
+  document.getElementById('f-client').value   = proj.client;
+  document.getElementById('f-phase').value    = proj.phase;
+  document.getElementById('f-value').value    = proj.value != null ? proj.value : '';
+  document.getElementById('f-deadline').value = proj.deadline || '';
+  document.getElementById('f-priority').value = proj.priority;
+  document.getElementById('f-desc').value     = proj.desc || '';
+  document.getElementById('f-name').style.borderColor = '';
+  document.getElementById('modal-projeto').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProjModal() {
+  document.getElementById('modal-projeto').classList.remove('open');
+  document.body.style.overflow = '';
+  editingProjId = null;
+  document.querySelector('#modal-projeto .modal-title').textContent = 'Novo Projeto';
+  document.getElementById('btn-save-proj').textContent = 'Criar Projeto';
+}
+
+function resetProjForm() {
+  ['f-name','f-client','f-value','f-deadline','f-desc'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-phase').value    = 'desenvolvimento';
+  document.getElementById('f-priority').value = 'media';
+  document.getElementById('f-name').style.borderColor = '';
+}
+
+document.getElementById('modal-projeto').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeProjModal();
+});
+document.getElementById('btn-open-modal-proj').addEventListener('click', () => { resetProjForm(); openProjModal(); });
+document.getElementById('btn-close-modal').addEventListener('click', closeProjModal);
+document.getElementById('btn-cancel-modal').addEventListener('click', closeProjModal);
+
+document.getElementById('btn-save-proj').addEventListener('click', async () => {
+  const name   = document.getElementById('f-name').value.trim();
+  const client = document.getElementById('f-client').value.trim();
+  if (!name || !client) {
+    document.getElementById('f-name').style.borderColor = 'var(--danger)';
+    document.getElementById('f-name').focus();
+    return;
+  }
+  document.getElementById('f-name').style.borderColor = '';
+  const rawVal = parseFloat(document.getElementById('f-value').value);
+  const projData = {
+    name, client,
+    phase:       document.getElementById('f-phase').value,
+    value:       isNaN(rawVal) ? null : rawVal,
+    deadline:    document.getElementById('f-deadline').value || null,
+    priority:    document.getElementById('f-priority').value,
+    description: document.getElementById('f-desc').value.trim(),
+  };
+
+  if (editingProjId !== null) {
+    await sb.from('projects').update(projData).eq('id', editingProjId);
+  } else {
+    await sb.from('projects').insert(projData);
+  }
+
+  closeProjModal();
+  resetProjForm();
+  await loadProjects();
+  renderProjectsPage();
+});
+
+// ─── DELETE PROJECT ───
+async function deleteProject(id) {
+  await sb.from('projects').delete().eq('id', id);
+  await loadProjects();
+  renderProjectsPage();
+}
+
+// ─── CONFIRM POPUP ───
+let confirmCallback = null;
+
+function showConfirm(title, msg, onConfirm) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent   = msg;
+  confirmCallback = onConfirm;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  confirmCallback = null;
+}
+
+document.getElementById('confirm-cancel').addEventListener('click', closeConfirm);
+document.getElementById('confirm-ok').addEventListener('click', () => {
+  if (confirmCallback) confirmCallback();
+  closeConfirm();
+});
+document.getElementById('confirm-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeConfirm();
+});
+
+// ─── CLOSE DROPDOWNS ON OUTSIDE CLICK ───
+document.addEventListener('click', () => {
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+});
+
+// ─── INIT PROJECTS ───
+(async () => { await loadClientes(); await loadProjects(); renderProjectsPage(); })();
+
+// ═══════════════════════════════════════════════
+// TASK MODAL
+// ═══════════════════════════════════════════════
+const TASK_PROJECT_CLIENT = {
+  'Redesign Web Corporativo': 'Nexus Tecnologia',
+  'Campanha de Lançamento':   'Orbita Studio',
+  'App Mobile v2.0':          'Viva Saúde',
+  'Identidade Visual':        'Serra & Filhos',
+  'Automação CRM':            'Prime Consult',
+  'Finanças':                 'Interno',
+  'Interno':                  'Interno',
+};
+
+function openNewTaskModal() {
+  document.getElementById('task-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-task-title').focus(), 80);
+}
+
+function closeNewTaskModal() {
+  document.getElementById('task-modal-overlay').classList.remove('open');
+  document.getElementById('f-task-title').value = '';
+  document.getElementById('f-task-due').value = '';
+  document.getElementById('f-task-assignee').value = '';
+  document.getElementById('f-task-project').value = '';
+  document.getElementById('f-task-client').value = '';
+  document.getElementById('f-task-priority').value = 'media';
+  document.getElementById('f-task-status').value = 'a-fazer';
+  document.querySelectorAll('#task-modal-overlay .f-error').forEach(el => el.classList.remove('f-error'));
+}
+
+document.getElementById('f-task-project').addEventListener('change', e => {
+  document.getElementById('f-task-client').value = TASK_PROJECT_CLIENT[e.target.value] || '';
+});
+
+document.querySelectorAll('.open-new-task-modal').forEach(btn => {
+  btn.addEventListener('click', openNewTaskModal);
+});
+document.getElementById('task-modal-close').addEventListener('click', closeNewTaskModal);
+document.getElementById('task-modal-cancel').addEventListener('click', closeNewTaskModal);
+document.getElementById('task-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('task-modal-overlay')) closeNewTaskModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeNewTaskModal();
+    closeProjModal();
+    closeConfirm();
+  }
+});
+
+const TASK_INITIALS = { 'Diogo M.':'DM', 'Ana S.':'AS', 'Pedro R.':'PR', 'Miguel T.':'MT' };
+
+document.getElementById('task-modal-save').addEventListener('click', async () => {
+  const titleEl    = document.getElementById('f-task-title');
+  const assigneeEl = document.getElementById('f-task-assignee');
+  const title    = titleEl.value.trim();
+  const assignee = assigneeEl.value;
+  titleEl.classList.toggle('f-error', !title);
+  assigneeEl.classList.toggle('f-error', !assignee);
+  if (!title || !assignee) return;
+
+  const dueRaw   = document.getElementById('f-task-due').value;
+  const project  = document.getElementById('f-task-project').value || 'Interno';
+  const client   = document.getElementById('f-task-client').value  || 'Interno';
+  const priority = document.getElementById('f-task-priority').value;
+  const status   = document.getElementById('f-task-status').value;
+  const initials = TASK_INITIALS[assignee] || assignee.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+
+  await sb.from('tasks').insert({ title, assignee, initials, project, client, priority, status, due_date: dueRaw || null });
+  closeNewTaskModal();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item active" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Dashboard <span>da Equipa</span></div>
+      <div class="page-sub">Março 2026 · Atualizado há 2 min</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost">⬇ Exportar</button>
+      <button class="btn btn-coral open-new-task-modal">+ Nova Tarefa</button>
+      <a class="btn btn-primary" href="projects.html">+ Novo Projeto</a>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-icon">◫</div>
+      <div class="kpi-label">Projetos Ativos</div>
+      <div class="kpi-value" id="kpi-projects">—</div>
+      <div class="kpi-meta">
+        <span class="kpi-delta up">↑ 2</span>
+        <span>novos este mês</span>
+      </div>
+    </div>
+    <div class="kpi-card coral">
+      <div class="kpi-icon">✓</div>
+      <div class="kpi-label">Tarefas Pendentes</div>
+      <div class="kpi-value" id="kpi-tasks">—</div>
+      <div class="kpi-meta">
+        <span class="kpi-delta warn" id="kpi-urgent">— urgentes</span>
+        <span>· prazo hoje</span>
+      </div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">€</div>
+      <div class="kpi-label">Receita do Mês</div>
+      <div class="kpi-value">€12.400</div>
+      <div class="kpi-meta">
+        <span class="kpi-delta up">↑ 18%</span>
+        <span>vs. fevereiro</span>
+      </div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-icon">💸</div>
+      <div class="kpi-label">Margem Líquida</div>
+      <div class="kpi-value">69%</div>
+      <div class="kpi-meta">
+        <span class="kpi-delta neutral">€3.820 custos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="charts-row">
+
+    <!-- Revenue vs Costs Bar Chart -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Receita vs Custos</div>
+          <div class="card-sub">Últimos 6 meses · em euros</div>
+        </div>
+        <span class="pill">Mensal</span>
+      </div>
+      <div class="bar-chart" id="finChart"></div>
+      <div class="chart-legend">
+        <div class="leg-item">
+          <div class="leg-dot" style="background:var(--blue-light)"></div>Receita
+        </div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background:var(--coral)"></div>Custos
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Status Donut -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Estado dos Projetos</div>
+          <div class="card-sub">Distribuição atual</div>
+        </div>
+      </div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" width="138" height="138" viewBox="0 0 138 138">
+          <circle cx="69" cy="69" r="50" fill="none" stroke="var(--surface3)" stroke-width="17"/>
+          <circle cx="69" cy="69" r="50" fill="none" stroke="#05668d" stroke-width="17"
+            stroke-dasharray="157.1 157.1" stroke-dashoffset="0"
+            transform="rotate(-90 69 69)" opacity="0.9"/>
+          <circle cx="69" cy="69" r="50" fill="none" stroke="#f5c518" stroke-width="17"
+            stroke-dasharray="78.5 235.7" stroke-dashoffset="-157.1"
+            transform="rotate(-90 69 69)" opacity="0.85"/>
+          <circle cx="69" cy="69" r="50" fill="none" stroke="#2dd4a0" stroke-width="17"
+            stroke-dasharray="39.3 274.9" stroke-dashoffset="-235.6"
+            transform="rotate(-90 69 69)" opacity="0.85"/>
+          <circle cx="69" cy="69" r="50" fill="none" stroke="#2e2e2e" stroke-width="17"
+            stroke-dasharray="39.3 274.9" stroke-dashoffset="-274.9"
+            transform="rotate(-90 69 69)" opacity="1"/>
+          <text x="69" y="64" text-anchor="middle" fill="white"
+            font-family="'Funnel Display',sans-serif" font-weight="700" font-size="22">8</text>
+          <text x="69" y="79" text-anchor="middle" fill="#4a4a4a"
+            font-family="Inter,sans-serif" font-size="8" letter-spacing="0.07em">PROJETOS</text>
+        </svg>
+        <div class="donut-list">
+          <div class="donut-row">
+            <div class="d-dot" style="background:#05668d"></div>
+            <div class="d-name">Em curso</div>
+            <div class="d-val">4</div>
+            <div class="d-pct">50%</div>
+          </div>
+          <div class="donut-row">
+            <div class="d-dot" style="background:#f5c518"></div>
+            <div class="d-name">Em revisão</div>
+            <div class="d-val">2</div>
+            <div class="d-pct">25%</div>
+          </div>
+          <div class="donut-row">
+            <div class="d-dot" style="background:#2dd4a0"></div>
+            <div class="d-name">Concluídos</div>
+            <div class="d-val">1</div>
+            <div class="d-pct">12.5%</div>
+          </div>
+          <div class="donut-row">
+            <div class="d-dot" style="background:#2e2e2e;border:1px solid #444"></div>
+            <div class="d-name">Em pausa</div>
+            <div class="d-val">1</div>
+            <div class="d-pct">12.5%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /charts-row -->
+
+  <!-- PROJECTS + TASKS -->
+  <div class="section-sep">
+    <div class="section-sep-line"></div>
+    <div class="section-sep-label">Projetos &amp; Tarefas</div>
+    <div class="section-sep-line"></div>
+  </div>
+  <div class="mid-grid">
+
+    <!-- Projects Table -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Projetos Ativos</div>
+          <div class="card-sub" id="dash-proj-sub">— projetos</div>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="projects.html">Ver todos →</a>
+      </div>
+      <table class="proj-table">
+        <thead>
+          <tr>
+            <th>Projeto / Cliente</th>
+            <th>Progresso</th>
+            <th>Prazo</th>
+            <th>Valor</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="dash-proj-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">A carregar...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Tasks -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Tarefas Prioritárias</div>
+          <div class="card-sub">Urgentes e prazo próximo</div>
+        </div>
+        <span class="pill coral" id="dash-urgent-pill">— urgentes</span>
+      </div>
+      <div class="task-list" id="dash-task-list">
+        <div style="text-align:center;color:var(--text-muted);padding:20px">A carregar...</div>
+      </div>
+    </div>
+
+  </div><!-- /mid-grid -->
+
+  <!-- CLIENTS + FINANCE + ACTIVITY -->
+  <div class="section-sep">
+    <div class="section-sep-line"></div>
+    <div class="section-sep-label">Clientes &amp; Finanças</div>
+    <div class="section-sep-line"></div>
+  </div>
+  <div class="bottom-row">
+
+    <!-- Clients -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Clientes Ativos</div>
+          <div class="card-sub">6 clientes · Março 2026</div>
+        </div>
+        <button class="btn btn-ghost btn-sm">Ver todos →</button>
+      </div>
+      <div class="client-list">
+        <div class="client-item">
+          <div class="c-avatar" style="background:linear-gradient(135deg,#05668d,#0a8ab8)">NT</div>
+          <div class="c-info">
+            <div class="c-name">Nexus Tecnologia</div>
+            <div class="c-sector">Software · SaaS</div>
+          </div>
+          <div>
+            <div class="c-val">€4.500</div>
+            <div class="c-count">2 projetos</div>
+          </div>
+        </div>
+        <div class="client-item">
+          <div class="c-avatar" style="background:linear-gradient(135deg,#ff956b,#c4623c)">OS</div>
+          <div class="c-info">
+            <div class="c-name">Orbita Studio</div>
+            <div class="c-sector">Design · Criativo</div>
+          </div>
+          <div>
+            <div class="c-val">€2.800</div>
+            <div class="c-count">1 projeto</div>
+          </div>
+        </div>
+        <div class="client-item">
+          <div class="c-avatar" style="background:linear-gradient(135deg,#2dd4a0,#147a58)">VS</div>
+          <div class="c-info">
+            <div class="c-name">Viva Saúde</div>
+            <div class="c-sector">Saúde · Mobile</div>
+          </div>
+          <div>
+            <div class="c-val">€6.200</div>
+            <div class="c-count">1 projeto</div>
+          </div>
+        </div>
+        <div class="client-item">
+          <div class="c-avatar" style="background:linear-gradient(135deg,#f5c518,#8a6800)">SF</div>
+          <div class="c-info">
+            <div class="c-name">Serra &amp; Filhos</div>
+            <div class="c-sector">Retalho · Branding</div>
+          </div>
+          <div>
+            <div class="c-val">€1.900</div>
+            <div class="c-count">1 projeto</div>
+          </div>
+        </div>
+        <div class="client-item">
+          <div class="c-avatar" style="background:linear-gradient(135deg,#7c3aed,#4c1d95)">PC</div>
+          <div class="c-info">
+            <div class="c-name">Prime Consult</div>
+            <div class="c-sector">Consultoria · CRM</div>
+          </div>
+          <div>
+            <div class="c-val">€3.200</div>
+            <div class="c-count">2 projetos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finance Summary -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Resumo Financeiro</div>
+          <div class="card-sub">Março 2026</div>
+        </div>
+      </div>
+
+      <div class="fin-row">
+        <div class="fin-item">
+          <div class="fin-label">Receita</div>
+          <div class="fin-value income">€12.400</div>
+          <div class="fin-delta">↑ 18% vs fev.</div>
+        </div>
+        <div class="fin-item">
+          <div class="fin-label">Custos</div>
+          <div class="fin-value expense">€3.820</div>
+          <div class="fin-delta">→ Estável</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--text-muted)">Margem líquida</span>
+          <span style="font-size:12px;font-weight:600;color:var(--success)">69.2%</span>
+        </div>
+        <div style="height:5px;background:var(--surface3);border-radius:4px;overflow:hidden">
+          <div style="width:69.2%;height:100%;background:linear-gradient(90deg,var(--blue),var(--success));border-radius:4px"></div>
+        </div>
+      </div>
+
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:7px">Principais Custos</div>
+      <div class="exp-list">
+        <div class="exp-row">
+          <span class="exp-icon">👥</span>
+          <span class="exp-name">Equipa freelance</span>
+          <span class="exp-amount">€1.800</span>
+          <span class="exp-cat">RH</span>
+        </div>
+        <div class="exp-row">
+          <span class="exp-icon">📢</span>
+          <span class="exp-name">Marketing &amp; Ads</span>
+          <span class="exp-amount">€900</span>
+          <span class="exp-cat">Mktg</span>
+        </div>
+        <div class="exp-row">
+          <span class="exp-icon">☁️</span>
+          <span class="exp-name">Infra &amp; software</span>
+          <span class="exp-amount">€620</span>
+          <span class="exp-cat">Tech</span>
+        </div>
+        <div class="exp-row">
+          <span class="exp-icon">🏢</span>
+          <span class="exp-name">Escritório &amp; admin</span>
+          <span class="exp-amount">€500</span>
+          <span class="exp-cat">Admin</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Atividade Recente</div>
+          <div class="card-sub">Últimas atualizações da equipa</div>
+        </div>
+      </div>
+      <div class="act-list">
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--success)"></div>
+          <div class="act-body">
+            <div class="act-text"><strong>Viva Saúde</strong> — App Mobile atingiu 90% de progresso</div>
+            <div class="act-time">há 12 min</div>
+          </div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--danger)"></div>
+          <div class="act-body">
+            <div class="act-text"><strong>Orbita Studio</strong> — campanha marcada como urgente</div>
+            <div class="act-time">há 1h</div>
+          </div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--blue-light)"></div>
+          <div class="act-body">
+            <div class="act-text"><strong>Nexus Tecnologia</strong> — comentário nos mockups</div>
+            <div class="act-time">há 2h</div>
+          </div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--warning)"></div>
+          <div class="act-body">
+            <div class="act-text"><strong>Fatura #0047</strong> enviada — Prime Consult (€3.200)</div>
+            <div class="act-time">Ontem, 18:30</div>
+          </div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--success)"></div>
+          <div class="act-body">
+            <div class="act-text"><strong>Serra &amp; Filhos</strong> — proposta aceite · projeto iniciado</div>
+            <div class="act-time">Ontem, 14:10</div>
+          </div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--blue-light)"></div>
+          <div class="act-body">
+            <div class="act-text"><strong>Relatório de março</strong> gerado automaticamente</div>
+            <div class="act-time">18 Mar, 09:00</div>
+          </div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--text-muted)"></div>
+          <div class="act-body">
+            <div class="act-text"><strong>Tarefa</strong> "Call semanal" marcada como concluída</div>
+            <div class="act-time">18 Mar, 11:00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /bottom-row -->
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── MODAL: Nova Tarefa ─── -->
+<div class="modal-overlay" id="task-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nova Tarefa</div>
+      <button class="modal-close" id="task-modal-close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Título <span class="form-required">*</span></label>
+          <input class="form-input" id="f-task-title" type="text" placeholder="Descreve a tarefa...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Responsável <span class="form-required">*</span></label>
+          <select class="form-select" id="f-task-assignee">
+            <option value="">Selecionar...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridade</label>
+          <select class="form-select" id="f-task-priority">
+            <option value="alta">Alta</option>
+            <option value="media" selected>Média</option>
+            <option value="baixa">Baixa</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Projeto</label>
+          <select class="form-select" id="f-task-project">
+            <option value="">Selecionar...</option>
+            <option value="Redesign Web Corporativo">Redesign Web Corporativo</option>
+            <option value="Campanha de Lançamento">Campanha de Lançamento</option>
+            <option value="App Mobile v2.0">App Mobile v2.0</option>
+            <option value="Identidade Visual">Identidade Visual</option>
+            <option value="Automação CRM">Automação CRM</option>
+            <option value="Finanças">Finanças</option>
+            <option value="Interno">Interno</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <select class="form-select" id="f-task-client">
+            <option value="">Selecionar...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-task-status">
+            <option value="a-fazer" selected>A Fazer</option>
+            <option value="em-curso">Em Curso</option>
+            <option value="em-revisao">Em Revisão</option>
+            <option value="bloqueada">Bloqueada</option>
+            <option value="concluida">Concluída</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prazo</label>
+          <input class="form-input" id="f-task-due" type="date">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="task-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="task-modal-save">+ Criar Tarefa</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── BAR CHART ───
+const months  = ['Out','Nov','Dez','Jan','Fev','Mar'];
+const revenue = [8200, 9100, 7800, 10400, 10500, 12400];
+const costs   = [3100, 3400, 2900,  3600,  3800,  3820];
+const maxVal  = Math.max(...revenue);
+const chart = document.getElementById('finChart');
+chart.innerHTML = months.map((m, i) => {
+  const hRev  = Math.round((revenue[i] / maxVal) * 125);
+  const hCost = Math.round((costs[i]   / maxVal) * 125);
+  return `<div class="bar-group"><div class="bar-wrap">
+    <div class="bar b-blue"  style="height:${hRev}px"  title="Receita: €${revenue[i].toLocaleString('pt-PT')}"></div>
+    <div class="bar b-coral" style="height:${hCost}px" title="Custos: €${costs[i].toLocaleString('pt-PT')}"></div>
+  </div><div class="bar-label">${m}</div></div>`;
+}).join('');
+
+// ─── HELPERS ───
+function dashFormatDl(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T12:00:00');
+  const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${M[d.getMonth()]}`;
+}
+function dashIsLate(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr + 'T23:59:59') < new Date();
+}
+function dashFormatDue(dateStr) {
+  if (!dateStr) return '—';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const d = new Date(dateStr + 'T12:00:00');
+  if (d.toDateString() === today.toDateString()) return 'Hoje';
+  if (d.toDateString() === tomorrow.toDateString()) return 'Amanhã';
+  const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${M[d.getMonth()]}`;
+}
+
+const PHASE_PROGRESS = { lead:5, 'primeira-reuniao':15, proposta:25, contrato:40, credenciais:50, desenvolvimento:65, testes:80, lancamento:95, followup:100, cancelado:0 };
+
+// ─── LOAD DASHBOARD DATA ───
+async function loadDashboard() {
+  const [{ data: projs }, { data: tasks }] = await Promise.all([
+    sb.from('projects').select('*').neq('phase','cancelado').order('created_at', { ascending: false }).limit(5),
+    sb.from('tasks').select('*').neq('status','concluida').order('due_date', { ascending: true }),
+  ]);
+
+  // KPIs
+  const { count: totalProj } = await sb.from('projects').select('*', { count: 'exact', head: true }).neq('phase','cancelado');
+  const urgent = (tasks || []).filter(t => t.priority === 'alta').length;
+  const pending = (tasks || []).length;
+  document.getElementById('kpi-projects').textContent = totalProj ?? '—';
+  document.getElementById('kpi-tasks').textContent = pending;
+  document.getElementById('kpi-urgent').textContent = `${urgent} urgentes`;
+  document.getElementById('dash-urgent-pill').textContent = `${urgent} urgentes`;
+
+  // Projects table
+  const prioLabels = { alta:'Alta', media:'Média', baixa:'Baixa' };
+  document.getElementById('dash-proj-sub').textContent = `${totalProj ?? '—'} projeto${totalProj !== 1 ? 's' : ''} · activos`;
+  document.getElementById('dash-proj-tbody').innerHTML = (projs || []).map(p => {
+    const dl   = dashFormatDl(p.deadline);
+    const late = dashIsLate(p.deadline);
+    const val  = p.value != null ? `€${Number(p.value).toLocaleString('pt-PT')}` : '—';
+    const pct  = PHASE_PROGRESS[p.phase] ?? 50;
+    const barCls = pct >= 80 ? 'g' : pct >= 50 ? '' : pct >= 30 ? 'y' : 'c';
+    return `<tr>
+      <td><div class="proj-name">${p.name}</div><div class="proj-client">${p.client}</div></td>
+      <td><div style="display:flex;align-items:center;gap:7px">
+        <div class="prog-bar"><div class="prog-fill ${barCls}" style="width:${pct}%"></div></div>
+        <span style="font-size:10.5px;color:var(--text-muted)">${pct}%</span>
+      </div></td>
+      <td style="font-size:11.5px;color:${late?'var(--danger)':'var(--text-muted)'};${late?'font-weight:600':''}">${dl ? (late ? dl+' ⚠' : dl) : '—'}</td>
+      <td style="font-weight:600;color:var(--success);font-size:12px">${val}</td>
+      <td><span class="sbadge active">● Em curso</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Sem projetos</td></tr>';
+
+  // Priority tasks
+  const prioCls = { alta:'h', media:'m', baixa:'l' };
+  const prioLbl = { alta:'Alta', media:'Média', baixa:'Baixa' };
+  const topTasks = (tasks || []).slice(0, 6);
+  document.getElementById('dash-task-list').innerHTML = topTasks.map(t => {
+    const isDone = t.status === 'concluida';
+    const due = dashFormatDue(t.due_date);
+    const late = dashIsLate(t.due_date) && !isDone;
+    return `<div class="task-item" data-id="${t.id}">
+      <div class="task-check ${isDone?'done':''}">${isDone?'✓':''}</div>
+      <div class="task-body">
+        <div class="task-text ${isDone?'done':''}">${t.title}</div>
+        <div class="task-meta">
+          <span class="t-prio ${prioCls[t.priority]||'m'}">${prioLbl[t.priority]||t.priority}</span>
+          <span class="t-proj">${t.client}</span>
+        </div>
+      </div>
+      <div class="t-due ${late?'late':''}">${due}</div>
+    </div>`;
+  }).join('') || '<div style="text-align:center;color:var(--text-muted);padding:20px">Sem tarefas pendentes</div>';
+
+  // Task toggle
+  document.querySelectorAll('#dash-task-list .task-item').forEach(item => {
+    item.addEventListener('click', async () => {
+      const id = parseInt(item.dataset.id);
+      const check = item.querySelector('.task-check');
+      const isDone = check.classList.contains('done');
+      await sb.from('tasks').update({ status: isDone ? 'a-fazer' : 'concluida' }).eq('id', id);
+      await loadDashboard();
+    });
+  });
+}
+
+// ─── TASK MODAL ───
+const TASK_PROJECT_CLIENT = {
+  'Redesign Web Corporativo': 'Nexus Tecnologia',
+  'Campanha de Lançamento':   'Orbita Studio',
+  'App Mobile v2.0':          'Viva Saúde',
+  'Identidade Visual':        'Serra & Filhos',
+  'Automação CRM':            'Prime Consult',
+  'Finanças':                 'Interno',
+  'Interno':                  'Interno',
+};
+let MEMBROS  = [];
+let CLIENTES = [];
+
+async function loadMembros() {
+  const { data, error } = await sb.from('membros').select('id,name,initials,avatar_color').eq('status','ativo').order('name');
+  if (error) { console.error('Erro ao carregar membros:', error); return; }
+  MEMBROS = data || [];
+  const opts = MEMBROS.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  document.getElementById('f-task-assignee').innerHTML = '<option value="">Selecionar...</option>' + opts;
+}
+
+async function loadClientes() {
+  const { data } = await sb.from('clientes').select('id,name').eq('status','ativo').order('name');
+  CLIENTES = data || [];
+  const opts = CLIENTES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  document.getElementById('f-task-client').innerHTML = '<option value="">Selecionar...</option>' + opts;
+}
+
+function getAssigneeInitials(name) {
+  const m = MEMBROS.find(m => m.name === name);
+  return m ? m.initials : name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+}
+
+function openNewTaskModal() {
+  document.getElementById('task-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-task-title').focus(), 80);
+}
+function closeNewTaskModal() {
+  document.getElementById('task-modal-overlay').classList.remove('open');
+  ['f-task-title','f-task-due'].forEach(id => document.getElementById(id).value = '');
+  ['f-task-assignee','f-task-project','f-task-client'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-task-priority').value = 'media';
+  document.getElementById('f-task-status').value = 'a-fazer';
+  document.querySelectorAll('#task-modal-overlay .f-error').forEach(el => el.classList.remove('f-error'));
+}
+
+document.getElementById('f-task-project').addEventListener('change', e => {
+  document.getElementById('f-task-client').value = TASK_PROJECT_CLIENT[e.target.value] || '';
+});
+document.querySelectorAll('.open-new-task-modal').forEach(btn => btn.addEventListener('click', openNewTaskModal));
+document.getElementById('task-modal-close').addEventListener('click', closeNewTaskModal);
+document.getElementById('task-modal-cancel').addEventListener('click', closeNewTaskModal);
+document.getElementById('task-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('task-modal-overlay')) closeNewTaskModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNewTaskModal(); });
+
+document.getElementById('task-modal-save').addEventListener('click', async () => {
+  const titleEl    = document.getElementById('f-task-title');
+  const assigneeEl = document.getElementById('f-task-assignee');
+  const title    = titleEl.value.trim();
+  const assignee = assigneeEl.value;
+  titleEl.classList.toggle('f-error', !title);
+  assigneeEl.classList.toggle('f-error', !assignee);
+  if (!title || !assignee) return;
+  const dueRaw   = document.getElementById('f-task-due').value;
+  const project  = document.getElementById('f-task-project').value || 'Interno';
+  const client   = document.getElementById('f-task-client').value  || 'Interno';
+  const priority = document.getElementById('f-task-priority').value;
+  const status   = document.getElementById('f-task-status').value;
+  const initials = getAssigneeInitials(assignee);
+  await sb.from('tasks').insert({ title, assignee, initials, project, client, priority, status, due_date: dueRaw || null });
+  closeNewTaskModal();
+  await loadDashboard();
+});
+
+// ─── INIT ───
+loadMembros();
+loadClientes();
+loadDashboard();
+</script>
+
+</body>
+</html>

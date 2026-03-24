@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Cliente</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item active" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active" id="profile-content">
+  <div style="text-align:center;padding:80px 0;color:var(--text-muted);font-size:13px">A carregar cliente...</div>
+</div>
+</main>
+</div><!-- /layout -->
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── HELPERS ───
+function darkenHex(hex, amount = 0.3) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
+  const g = Math.max(0, Math.round(((n >>  8) & 0xff) * (1 - amount)));
+  const b = Math.max(0, Math.round(( n        & 0xff) * (1 - amount)));
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function avatarStyle(color) {
+  return `background: linear-gradient(135deg, ${color}, ${darkenHex(color)})`;
+}
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T12:00:00');
+  const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ─── MAIN LOAD ───
+async function loadProfile() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) { renderError('ID de cliente não especificado.'); return; }
+
+  const { data: cliente, error: cErr } = await sb.from('clientes').select('*').eq('id', id).single();
+  if (cErr || !cliente) { renderError('Cliente não encontrado.'); return; }
+
+  document.title = `TeamMate — ${cliente.name}`;
+
+  const { data: projects } = await sb.from('projects').select('*')
+    .eq('client', cliente.name).order('created_at', { ascending: false });
+
+  renderProfile(cliente, projects || []);
+}
+
+function renderError(msg) {
+  document.getElementById('profile-content').innerHTML = `
+    <a class="back-link" href="clientes.html">← Voltar aos Clientes</a>
+    <div style="text-align:center;padding:80px 0;color:var(--text-muted);font-size:13px">${msg}</div>
+  `;
+}
+
+function renderProfile(c, projects) {
+  const totalProj  = projects.length;
+  const ativos     = projects.filter(p => p.phase !== 'cancelado' && p.phase !== 'followup').length;
+  const totalValue = projects.reduce((sum, p) => sum + (p.value || 0), 0);
+
+  const PHASES = {
+    'lead':'Lead', 'primeira-reuniao':'Primeira Reunião', 'proposta':'Proposta',
+    'contrato':'Contrato', 'credenciais':'Credenciais', 'desenvolvimento':'Desenvolvimento',
+    'testes':'Testes', 'lancamento':'Lançamento', 'followup':'Follow Up', 'cancelado':'Cancelado'
+  };
+
+  const projHtml = projects.length === 0
+    ? `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px">Sem projetos associados.</div>`
+    : projects.map(p => {
+        const val     = p.value != null ? `€${Number(p.value).toLocaleString('pt-PT')}` : '—';
+        const phase   = PHASES[p.phase] || p.phase;
+        const initials = p.name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0,2);
+        return `<div class="client-item" style="cursor:default">
+          <div class="c-avatar" style="background:linear-gradient(135deg,var(--blue),#033f56)">${initials}</div>
+          <div class="c-info">
+            <div class="c-name">${p.name}</div>
+            <div class="c-sector">${phase}${p.deadline ? ' · ' + formatDate(p.deadline) : ''}</div>
+          </div>
+          <div class="c-val">${val}</div>
+        </div>`;
+      }).join('');
+
+  const color = c.avatar_color || '#ff956b';
+
+  document.getElementById('profile-content').innerHTML = `
+    <a class="back-link" href="clientes.html">← Voltar aos Clientes</a>
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+      <div class="member-avatar lg" style="${avatarStyle(color)}">${c.initials}</div>
+      <div class="profile-header-info">
+        <div class="profile-name">${c.name}</div>
+        <div class="profile-role">${c.sector || ''}${c.contact_name ? ' · ' + c.contact_name : ''}</div>
+        <div class="profile-meta">
+          ${c.email        ? `<span class="profile-meta-item">✉ ${c.email}</span>` : ''}
+          ${c.phone        ? `<span class="profile-meta-item">☎ ${c.phone}</span>` : ''}
+          ${c.location     ? `<span class="profile-meta-item">⊙ ${c.location}</span>` : ''}
+          ${c.website      ? `<span class="profile-meta-item"><a href="${c.website}" target="_blank" style="color:var(--blue-light)">${c.website.replace(/^https?:\/\//, '')}</a></span>` : ''}
+          <span class="sbadge ${c.status}">${c.status === 'ativo' ? 'Ativo' : 'Inativo'}</span>
+        </div>
+        <div class="profile-actions">
+          <a class="btn btn-primary btn-sm" href="clientes.html?edit=${c.id}">✎ Editar Cliente</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="color:var(--blue-light)">${ativos}</div>
+        <div class="profile-stat-label">Projetos Ativos</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="color:var(--success)">${totalValue > 0 ? '€' + Number(totalValue).toLocaleString('pt-PT') : '—'}</div>
+        <div class="profile-stat-label">Valor Total</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value">${totalProj}</div>
+        <div class="profile-stat-label">Projetos Totais</div>
+      </div>
+    </div>
+
+    <!-- INFO + NOTES GRID -->
+    <div class="profile-info-grid">
+      <div class="profile-info-card">
+        <div class="profile-info-title">Informações</div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Setor</span>
+          <span class="profile-info-value">${c.sector || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Contacto</span>
+          <span class="profile-info-value">${c.contact_name || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">NIF</span>
+          <span class="profile-info-value">${c.nif || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Localização</span>
+          <span class="profile-info-value">${c.location || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Website</span>
+          <span class="profile-info-value">
+            ${c.website ? `<a href="${c.website}" target="_blank" style="color:var(--blue-light)">${c.website.replace(/^https?:\/\//, '')}</a>` : '—'}
+          </span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Cliente desde</span>
+          <span class="profile-info-value">${formatDate(c.created_at)}</span>
+        </div>
+      </div>
+
+      <div class="profile-info-card">
+        <div class="profile-info-title">Notas</div>
+        <div class="profile-bio">${c.notes || '<span style="color:var(--text-muted)">Sem notas registadas.</span>'}</div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="section-sep">
+      <div class="section-sep-line"></div>
+      <div class="section-sep-label">Projetos Associados (${totalProj})</div>
+      <div class="section-sep-line"></div>
+    </div>
+    <div class="client-list" style="margin-bottom:24px">${projHtml}</div>
+  `;
+}
+
+loadProfile();
+</script>
+</body>
+</html>

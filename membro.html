@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Perfil</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item active" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active" id="profile-content">
+  <div style="text-align:center;padding:80px 0;color:var(--text-muted);font-size:13px">A carregar perfil...</div>
+</div>
+</main>
+</div><!-- /layout -->
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── HELPERS ───
+function darkenHex(hex, amount = 0.3) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
+  const g = Math.max(0, Math.round(((n >>  8) & 0xff) * (1 - amount)));
+  const b = Math.max(0, Math.round(( n        & 0xff) * (1 - amount)));
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function avatarStyle(color) {
+  return `background: linear-gradient(135deg, ${color}, ${darkenHex(color)})`;
+}
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T12:00:00');
+  const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;
+}
+function formatDue(dateStr) {
+  if (!dateStr) return '—';
+  const today    = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const d = new Date(dateStr + 'T12:00:00');
+  if (d.toDateString() === today.toDateString())    return 'Hoje';
+  if (d.toDateString() === tomorrow.toDateString()) return 'Amanhã';
+  const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${M[d.getMonth()]}`;
+}
+function isLate(dateStr, status) {
+  if (!dateStr || status === 'concluida') return false;
+  return new Date(dateStr + 'T23:59:59') < new Date();
+}
+
+// ─── MAIN LOAD ───
+async function loadProfile() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) { renderError('ID de membro não especificado.'); return; }
+
+  const { data: membro, error: mErr } = await sb.from('membros').select('*').eq('id', id).single();
+  if (mErr || !membro) { renderError('Membro não encontrado.'); return; }
+
+  document.title = `TeamMate — ${membro.name}`;
+
+  const [
+    { data: tasks },
+    { data: allProjects },
+  ] = await Promise.all([
+    sb.from('tasks').select('*').eq('assignee', membro.name).order('created_at', { ascending: false }),
+    sb.from('projects').select('*').order('name'),
+  ]);
+
+  const memberTasks = tasks || [];
+  const memberProjectNames = [...new Set(memberTasks.map(t => t.project).filter(Boolean))];
+  const memberProjects = (allProjects || []).filter(p => memberProjectNames.includes(p.name));
+
+  renderProfile(membro, memberTasks, memberProjects);
+}
+
+function renderError(msg) {
+  document.getElementById('profile-content').innerHTML = `
+    <a class="back-link" href="membros.html">← Voltar aos Membros</a>
+    <div style="text-align:center;padding:80px 0;color:var(--text-muted);font-size:13px">${msg}</div>
+  `;
+}
+
+function renderProfile(m, tasks, projects) {
+  const totalTasks   = tasks.length;
+  const doneTasks    = tasks.filter(t => t.status === 'concluida').length;
+  const pendingTasks = totalTasks - doneTasks;
+  const lateTasks    = tasks.filter(t => isLate(t.due_date, t.status)).length;
+
+  const prioCls   = { alta:'h', media:'m', baixa:'l' };
+  const prioLabel = { alta:'Alta', media:'Média', baixa:'Baixa' };
+  const statusMeta = {
+    'a-fazer':    { label:'A Fazer',    badge:'paused'  },
+    'em-curso':   { label:'Em Curso',   badge:'active'  },
+    'em-revisao': { label:'Em Revisão', badge:'review'  },
+    'bloqueada':  { label:'Bloqueada',  badge:'overdue' },
+    'concluida':  { label:'Concluída',  badge:'done'    },
+  };
+  const PHASES = {
+    'lead':'Lead', 'primeira-reuniao':'Primeira Reunião', 'proposta':'Proposta',
+    'contrato':'Contrato', 'credenciais':'Credenciais', 'desenvolvimento':'Desenvolvimento',
+    'testes':'Testes', 'lancamento':'Lançamento', 'followup':'Follow Up', 'cancelado':'Cancelado'
+  };
+
+  const skillsHtml = m.skills
+    ? m.skills.split(',').map(s => `<span class="skill-tag">${s.trim()}</span>`).join('')
+    : '<span style="color:var(--text-muted);font-size:12px">Sem competências registadas.</span>';
+
+  const tasksHtml = tasks.length === 0
+    ? `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px">Sem tarefas atribuídas.</div>`
+    : tasks.slice(0, 10).map(t => {
+        const sm   = statusMeta[t.status] || { label: t.status, badge: 'paused' };
+        const due  = formatDue(t.due_date);
+        const late = isLate(t.due_date, t.status);
+        return `<div class="task-item">
+          <div class="task-check ${t.status === 'concluida' ? 'done' : ''}">${t.status === 'concluida' ? '✓' : ''}</div>
+          <div style="flex:1;min-width:0">
+            <div class="task-text${t.status === 'concluida' ? ' done' : ''}">${t.title}</div>
+            <div class="task-meta">
+              <span class="t-prio ${prioCls[t.priority] || 'm'}">${prioLabel[t.priority] || t.priority}</span>
+              ${t.project ? `<span class="t-proj">${t.project}</span>` : ''}
+              <span class="sbadge ${sm.badge}" style="font-size:9.5px;padding:1px 7px">${sm.label}</span>
+            </div>
+          </div>
+          <div class="t-due${late ? ' late' : ''}">${due}</div>
+        </div>`;
+      }).join('');
+
+  const projHtml = projects.length === 0
+    ? `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px">Sem projetos associados.</div>`
+    : projects.map(p => {
+        const val   = p.value != null ? `€${Number(p.value).toLocaleString('pt-PT')}` : '—';
+        const phase = PHASES[p.phase] || p.phase;
+        const initials = p.name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0,2);
+        return `<div class="client-item" style="cursor:default">
+          <div class="c-avatar" style="background:linear-gradient(135deg,var(--blue),#033f56)">${initials}</div>
+          <div class="c-info">
+            <div class="c-name">${p.name}</div>
+            <div class="c-sector">${p.client || '—'} · ${phase}</div>
+          </div>
+          <div class="c-val">${val}</div>
+        </div>`;
+      }).join('');
+
+  const color = m.avatar_color || '#05668d';
+
+  document.getElementById('profile-content').innerHTML = `
+    <a class="back-link" href="membros.html">← Voltar aos Membros</a>
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+      <div class="member-avatar lg" style="${avatarStyle(color)}">${m.initials}</div>
+      <div class="profile-header-info">
+        <div class="profile-name">${m.name}</div>
+        <div class="profile-role">${m.role}${m.department ? ' · ' + m.department : ''}</div>
+        <div class="profile-meta">
+          ${m.email    ? `<span class="profile-meta-item">✉ ${m.email}</span>` : ''}
+          ${m.phone    ? `<span class="profile-meta-item">☎ ${m.phone}</span>` : ''}
+          ${m.location ? `<span class="profile-meta-item">⊙ ${m.location}</span>` : ''}
+          <span class="sbadge ${m.status}">${m.status === 'ativo' ? 'Ativo' : 'Inativo'}</span>
+        </div>
+        <div class="profile-actions">
+          <a class="btn btn-primary btn-sm" href="membros.html?edit=${m.id}">✎ Editar Perfil</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <div class="profile-stat-value">${totalTasks}</div>
+        <div class="profile-stat-label">Total Tarefas</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="color:var(--warning)">${pendingTasks}</div>
+        <div class="profile-stat-label">Pendentes</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="color:var(--success)">${doneTasks}</div>
+        <div class="profile-stat-label">Concluídas</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="color:var(--blue-light)">${projects.length}</div>
+        <div class="profile-stat-label">Projetos</div>
+      </div>
+    </div>
+
+    <!-- INFO + BIO GRID -->
+    <div class="profile-info-grid">
+      <div class="profile-info-card">
+        <div class="profile-info-title">Informações</div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Cargo</span>
+          <span class="profile-info-value">${m.role}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Departamento</span>
+          <span class="profile-info-value">${m.department || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Data de Início</span>
+          <span class="profile-info-value">${formatDate(m.start_date)}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Taxa Horária</span>
+          <span class="profile-info-value" style="color:var(--success)">
+            ${m.hourly_rate != null ? `€${Number(m.hourly_rate).toFixed(2)}/h` : '—'}
+          </span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Localização</span>
+          <span class="profile-info-value">${m.location || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Tarefas em atraso</span>
+          <span class="profile-info-value" style="color:${lateTasks > 0 ? 'var(--danger)' : 'var(--success)'}">
+            ${lateTasks > 0 ? lateTasks + ' em atraso' : 'Nenhuma'}
+          </span>
+        </div>
+      </div>
+
+      <div class="profile-info-card">
+        <div class="profile-info-title">Bio</div>
+        <div class="profile-bio">${m.bio || '<span style="color:var(--text-muted)">Sem bio registada.</span>'}</div>
+        <div style="margin-top:20px">
+          <div class="profile-info-title">Competências</div>
+          <div class="skills-list">${skillsHtml}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="section-sep">
+      <div class="section-sep-line"></div>
+      <div class="section-sep-label">Tarefas Atribuídas (${totalTasks})</div>
+      <div class="section-sep-line"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:${tasks.length > 10 ? '10px' : '24px'}">${tasksHtml}</div>
+    ${tasks.length > 10 ? `<div style="text-align:center;margin-bottom:24px">
+      <a href="tasks.html" class="btn btn-ghost btn-sm">Ver todas as tarefas →</a>
+    </div>` : ''}
+
+    <!-- PROJECTS -->
+    <div class="section-sep">
+      <div class="section-sep-line"></div>
+      <div class="section-sep-label">Projetos Associados (${projects.length})</div>
+      <div class="section-sep-line"></div>
+    </div>
+    <div class="client-list" style="margin-bottom:24px">${projHtml}</div>
+  `;
+}
+
+loadProfile();
+</script>
+</body>
+</html>

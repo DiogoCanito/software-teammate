@@ -1,0 +1,8 @@
+node_modules/
+temporary screenshots/
+package-lock.json
+package.json
+*.output
+.env
+.claude/
+memory/

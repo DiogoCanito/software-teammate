@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Tarefas</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item active" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Tarefas <span>da Equipa</span></div>
+      <div class="page-sub" id="tasks-page-sub">15 tarefas · 5 urgentes · Março 2026</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost">⬇ Exportar</button>
+      <button class="btn btn-coral open-new-task-modal">+ Nova Tarefa</button>
+    </div>
+  </div>
+
+  <!-- FILTERS BAR -->
+  <div class="filters-bar">
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">⌕</span>
+      <input class="filter-search" id="tf-search" type="text" placeholder="Pesquisar tarefas...">
+    </div>
+
+    <select class="filter-select" id="tf-assignee">
+      <option value="">Responsável</option>
+    </select>
+
+    <select class="filter-select" id="tf-project">
+      <option value="">Projeto</option>
+      <option value="Redesign Web Corporativo">Redesign Web Corporativo</option>
+      <option value="Campanha de Lançamento">Campanha de Lançamento</option>
+      <option value="App Mobile v2.0">App Mobile v2.0</option>
+      <option value="Identidade Visual">Identidade Visual</option>
+      <option value="Automação CRM">Automação CRM</option>
+      <option value="Finanças">Finanças</option>
+      <option value="Interno">Interno</option>
+    </select>
+
+    <select class="filter-select" id="tf-client">
+      <option value="">Cliente</option>
+      <option value="Nexus Tecnologia">Nexus Tecnologia</option>
+      <option value="Orbita Studio">Orbita Studio</option>
+      <option value="Viva Saúde">Viva Saúde</option>
+      <option value="Serra &amp; Filhos">Serra &amp; Filhos</option>
+      <option value="Prime Consult">Prime Consult</option>
+      <option value="Interno">Interno</option>
+    </select>
+
+    <select class="filter-select" id="tf-priority">
+      <option value="">Prioridade</option>
+      <option value="alta">Alta</option>
+      <option value="media">Média</option>
+      <option value="baixa">Baixa</option>
+    </select>
+
+    <select class="filter-select" id="tf-status">
+      <option value="">Estado</option>
+      <option value="a-fazer">A Fazer</option>
+      <option value="em-curso">Em Curso</option>
+      <option value="em-revisao">Em Revisão</option>
+      <option value="bloqueada">Bloqueada</option>
+      <option value="concluida">Concluída</option>
+    </select>
+
+    <button class="btn-clear-filters" id="btn-clear-filters" style="display:none">✕ Limpar</button>
+
+    <div class="filters-spacer"></div>
+    <div class="filters-sep"></div>
+
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-list-view">≡ Lista</button>
+      <button class="view-btn" id="btn-kanban-view">⊞ Kanban</button>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="tasks-stats-row" id="tasks-stats-row"></div>
+
+  <!-- CONTENT AREA -->
+  <div id="tasks-content"></div>
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── CONFIRM POPUP ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Confirmar ação</div>
+    <div class="confirm-msg" id="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Nova Tarefa ─── -->
+<div class="modal-overlay" id="task-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nova Tarefa</div>
+      <button class="modal-close" id="task-modal-close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Título <span class="form-required">*</span></label>
+          <input class="form-input" id="f-task-title" type="text" placeholder="Descreve a tarefa...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Responsável <span class="form-required">*</span></label>
+          <select class="form-select" id="f-task-assignee">
+            <option value="">Selecionar...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridade</label>
+          <select class="form-select" id="f-task-priority">
+            <option value="alta">Alta</option>
+            <option value="media" selected>Média</option>
+            <option value="baixa">Baixa</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Projeto</label>
+          <select class="form-select" id="f-task-project">
+            <option value="">Selecionar...</option>
+            <option value="Redesign Web Corporativo">Redesign Web Corporativo</option>
+            <option value="Campanha de Lançamento">Campanha de Lançamento</option>
+            <option value="App Mobile v2.0">App Mobile v2.0</option>
+            <option value="Identidade Visual">Identidade Visual</option>
+            <option value="Automação CRM">Automação CRM</option>
+            <option value="Finanças">Finanças</option>
+            <option value="Interno">Interno</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <select class="form-select" id="f-task-client">
+            <option value="">Selecionar...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-task-status">
+            <option value="a-fazer" selected>A Fazer</option>
+            <option value="em-curso">Em Curso</option>
+            <option value="em-revisao">Em Revisão</option>
+            <option value="bloqueada">Bloqueada</option>
+            <option value="concluida">Concluída</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prazo</label>
+          <input class="form-input" id="f-task-due" type="date">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="task-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="task-modal-save">+ Criar Tarefa</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// TASKS PAGE — Supabase
+// ═══════════════════════════════════════════════
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let TASKS   = [];
+let MEMBROS  = [];
+let CLIENTES = [];
+
+function darkenHex(hex, amount = 0.3) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, Math.round(((n >> 16) & 0xff) * (1 - amount)));
+  const g = Math.max(0, Math.round(((n >>  8) & 0xff) * (1 - amount)));
+  const b = Math.max(0, Math.round(( n        & 0xff) * (1 - amount)));
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+function getAssigneeColor(name) {
+  const m = MEMBROS.find(m => m.name === name);
+  if (!m) return 'linear-gradient(135deg,#333,#555)';
+  const c = m.avatar_color || '#05668d';
+  return `linear-gradient(135deg,${c},${darkenHex(c)})`;
+}
+
+function getAssigneeInitials(name) {
+  const m = MEMBROS.find(m => m.name === name);
+  return m ? m.initials : name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+}
+
+async function loadMembros() {
+  const { data, error } = await sb.from('membros').select('id,name,initials,avatar_color').eq('status','ativo').order('name');
+  if (error) { console.error('Erro ao carregar membros:', error); return; }
+  MEMBROS = data || [];
+  const opts = MEMBROS.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+  document.getElementById('tf-assignee').innerHTML    = '<option value="">Responsável</option>' + opts;
+  document.getElementById('f-task-assignee').innerHTML = '<option value="">Selecionar...</option>' + opts;
+}
+
+async function loadClientes() {
+  const { data } = await sb.from('clientes').select('id,name').eq('status','ativo').order('name');
+  CLIENTES = data || [];
+  const opts = CLIENTES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  document.getElementById('f-task-client').innerHTML = '<option value="">Selecionar...</option>' + opts;
+}
+
+function formatDue(dateStr) {
+  if (!dateStr) return '—';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const d = new Date(dateStr + 'T12:00:00');
+  if (d.toDateString() === today.toDateString()) return 'Hoje';
+  if (d.toDateString() === tomorrow.toDateString()) return 'Amanhã';
+  const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${M[d.getMonth()]}`;
+}
+
+function isLate(dateStr, status) {
+  if (!dateStr || status === 'concluida') return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return new Date(dateStr + 'T00:00:00') < today;
+}
+
+async function loadTasks() {
+  const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('Erro ao carregar tarefas:', error); return; }
+  TASKS = data.map(t => ({
+    ...t,
+    due:  formatDue(t.due_date),
+    late: isLate(t.due_date, t.status),
+  }));
+}
+
+
+const STATUS_META = {
+  'a-fazer':    { label: 'A Fazer',     badge: 'paused',  dot: '#3a3a3a',          colClass: 'kcol-afazer'   },
+  'em-curso':   { label: 'Em Curso',    badge: 'active',  dot: '#0a8ab8',          colClass: 'kcol-emcurso'  },
+  'em-revisao': { label: 'Em Revisão',  badge: 'review',  dot: '#f5c518',          colClass: 'kcol-revisao'  },
+  'bloqueada':  { label: 'Bloqueada',   badge: 'overdue', dot: '#ff4d6d',          colClass: 'kcol-bloqueada'},
+  'concluida':  { label: 'Concluída',   badge: 'done',    dot: '#2dd4a0',          colClass: 'kcol-concluida'},
+};
+const PRIO_META = {
+  'alta':  { label: 'Alta',  cls: 'h' },
+  'media': { label: 'Média', cls: 'm' },
+  'baixa': { label: 'Baixa', cls: 'l' },
+};
+const KANBAN_COLS = ['a-fazer','em-curso','em-revisao','bloqueada','concluida'];
+
+
+let taskView = 'list';
+let taskFilters = { search:'', assignee:'', project:'', client:'', priority:'', status:'' };
+let editingTaskId = null;
+
+function getFilteredTasks() {
+  return TASKS.filter(t => {
+    if (taskFilters.search && !t.title.toLowerCase().includes(taskFilters.search.toLowerCase())) return false;
+    if (taskFilters.assignee && t.assignee !== taskFilters.assignee) return false;
+    if (taskFilters.project  && t.project  !== taskFilters.project)  return false;
+    if (taskFilters.client   && t.client   !== taskFilters.client)   return false;
+    if (taskFilters.priority && t.priority !== taskFilters.priority) return false;
+    if (taskFilters.status   && t.status   !== taskFilters.status)   return false;
+    return true;
+  });
+}
+
+function hasActiveFilters() {
+  return Object.values(taskFilters).some(v => v !== '');
+}
+
+function renderStatsRow(tasks) {
+  const total   = tasks.length;
+  const urgent  = tasks.filter(t => t.priority === 'alta' && t.status !== 'concluida').length;
+  const done    = tasks.filter(t => t.status === 'concluida').length;
+  const blocked = tasks.filter(t => t.status === 'bloqueada').length;
+
+  document.getElementById('tasks-stats-row').innerHTML = `
+    <div class="t-stat"><strong>${total}</strong> tarefa${total !== 1 ? 's' : ''}</div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--danger)"></div><strong>${urgent}</strong> urgente${urgent !== 1 ? 's' : ''}</div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--success)"></div><strong>${done}</strong> concluída${done !== 1 ? 's' : ''}</div>
+    ${blocked > 0 ? `<div class="t-stat"><div class="t-stat-dot" style="background:var(--danger)"></div><strong>${blocked}</strong> bloqueada${blocked !== 1 ? 's' : ''}</div>` : ''}
+  `;
+}
+
+function renderListView(tasks) {
+  if (tasks.length === 0) {
+    document.getElementById('tasks-content').innerHTML = `
+      <div class="no-results">
+        <span class="no-results-icon">⌕</span>
+        Nenhuma tarefa encontrada com os filtros selecionados.
+      </div>`;
+    return;
+  }
+
+  const rows = tasks.map(t => {
+    const pm = PRIO_META[t.priority];
+    const sm = STATUS_META[t.status];
+    const color = getAssigneeColor(t.assignee);
+    const isDone = t.status === 'concluida';
+    return `
+      <tr data-id="${t.id}">
+        <td style="min-width:260px">
+          <div class="tc-title">
+            <div class="tc-cb ${isDone ? 'done' : ''}">${isDone ? '✓' : ''}</div>
+            <span class="tc-name ${isDone ? 'done' : ''}">${t.title}</span>
+          </div>
+        </td>
+        <td>
+          <div class="ta-chip">
+            <div class="ta-av" style="background:${color}">${t.initials}</div>
+            <span class="ta-name">${t.assignee}</span>
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--text-dim)">${t.project}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${t.client}</td>
+        <td><span class="t-prio ${pm.cls}">${pm.label}</span></td>
+        <td><span class="sbadge ${sm.badge}">● ${sm.label}</span></td>
+        <td class="t-due ${t.late && !isDone ? 'late' : ''}" style="font-size:11.5px">${t.due}</td>
+        <td class="row-actions-cell">
+          <div class="row-actions-wrap">
+            <button class="dots-btn" data-id="${t.id}" title="Ações">···</button>
+            <div class="row-dropdown" id="tdrop-${t.id}">
+              <button class="row-dropdown-item" data-action="edit" data-id="${t.id}">✎ Editar</button>
+              <button class="row-dropdown-item delete" data-action="delete" data-id="${t.id}">✕ Eliminar</button>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('tasks-content').innerHTML = `
+    <div class="tasks-table-wrap">
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th>Tarefa</th>
+            <th>Responsável</th>
+            <th>Projeto</th>
+            <th>Cliente</th>
+            <th>Prioridade</th>
+            <th>Estado</th>
+            <th>Prazo</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+
+  document.querySelectorAll('#tasks-content tbody tr').forEach(row => {
+    row.addEventListener('click', async e => {
+      if (e.target.closest('.row-actions-cell')) return;
+      const id = parseInt(row.dataset.id);
+      const task = TASKS.find(t => t.id === id);
+      if (!task) return;
+      const newStatus = task.status === 'concluida' ? 'a-fazer' : 'concluida';
+      await sb.from('tasks').update({ status: newStatus }).eq('id', id);
+      await loadTasks();
+      renderTasksPage();
+    });
+  });
+
+  document.querySelectorAll('#tasks-content .dots-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      document.querySelectorAll('.row-dropdown.open').forEach(d => {
+        if (d.id !== `tdrop-${id}`) d.classList.remove('open');
+      });
+      document.getElementById(`tdrop-${id}`).classList.toggle('open');
+    });
+  });
+
+  document.querySelectorAll('#tasks-content .row-dropdown-item').forEach(item => {
+    item.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = parseInt(item.dataset.id);
+      document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('open'));
+      if (item.dataset.action === 'edit') openEditTaskModal(id);
+      else if (item.dataset.action === 'delete') showConfirm('Eliminar tarefa?', 'Esta ação não pode ser desfeita.', () => deleteTask(id));
+    });
+  });
+}
+
+function renderKanbanView(tasks) {
+  const cols = KANBAN_COLS.map(status => {
+    const sm = STATUS_META[status];
+    const colTasks = tasks.filter(t => t.status === status);
+    const cards = colTasks.length === 0
+      ? `<div class="kanban-empty">Sem tarefas</div>`
+      : colTasks.map(t => {
+          const isDone = status === 'concluida';
+          const color = getAssigneeColor(t.assignee);
+          return `
+            <div class="kcard ${t.priority}" data-id="${t.id}" draggable="true">
+              <button class="kcard-trash-btn" data-id="${t.id}" title="Eliminar">🗑</button>
+              <div class="kcard-title ${isDone ? 'done' : ''}">${t.title}</div>
+              <div class="kcard-footer">
+                <div class="kcard-av" style="background:${color}">${t.initials}</div>
+                <span class="kcard-proj">${t.project}</span>
+                <span class="kcard-due ${t.late && !isDone ? 'late' : ''}">${t.due}</span>
+              </div>
+            </div>`;
+        }).join('');
+
+    return `
+      <div class="kanban-col ${sm.colClass}" data-status="${status}">
+        <div class="kanban-col-head">
+          <div class="kc-head-left">
+            <div class="kc-dot" style="background:${sm.dot}"></div>
+            <span class="kc-col-name">${sm.label}</span>
+          </div>
+          <span class="kc-count">${colTasks.length}</span>
+        </div>
+        <div class="kanban-cards">${cards}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('tasks-content').innerHTML = `<div class="kanban-board">${cols}</div>`;
+
+  document.querySelectorAll('.kcard').forEach(card => {
+    card.addEventListener('click', async e => {
+      if (e.target.closest('.kcard-trash-btn')) return;
+      const id = parseInt(card.dataset.id);
+      const task = TASKS.find(t => t.id === id);
+      if (!task) return;
+      const newStatus = task.status === 'concluida' ? 'a-fazer' : 'concluida';
+      await sb.from('tasks').update({ status: newStatus }).eq('id', id);
+      await loadTasks();
+      renderTasksPage();
+    });
+  });
+
+  document.querySelectorAll('.kcard-trash-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.id);
+      showConfirm('Eliminar tarefa?', 'Esta ação não pode ser desfeita.', () => deleteTask(id));
+    });
+  });
+
+  setupDragDrop();
+}
+
+function renderTasksPage() {
+  const tasks = getFilteredTasks();
+  const urgent = TASKS.filter(t => t.priority === 'alta' && t.status !== 'concluida').length;
+  const sub = document.getElementById('tasks-page-sub');
+  if (sub) sub.textContent = `${TASKS.length} tarefa${TASKS.length !== 1 ? 's' : ''} · ${urgent} urgente${urgent !== 1 ? 's' : ''} · Março 2026`;
+  renderStatsRow(tasks);
+
+  const clearBtn = document.getElementById('btn-clear-filters');
+  clearBtn.style.display = hasActiveFilters() ? 'inline-block' : 'none';
+
+  ['tf-assignee','tf-project','tf-client','tf-priority','tf-status'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.toggle('has-value', el.value !== '');
+  });
+
+  if (taskView === 'list') renderListView(tasks);
+  else renderKanbanView(tasks);
+}
+
+// ─── VIEW TOGGLE ───
+document.getElementById('btn-list-view').addEventListener('click', () => {
+  taskView = 'list';
+  document.getElementById('btn-list-view').classList.add('active');
+  document.getElementById('btn-kanban-view').classList.remove('active');
+  renderTasksPage();
+});
+document.getElementById('btn-kanban-view').addEventListener('click', () => {
+  taskView = 'kanban';
+  document.getElementById('btn-kanban-view').classList.add('active');
+  document.getElementById('btn-list-view').classList.remove('active');
+  renderTasksPage();
+});
+
+// ─── FILTER LISTENERS ───
+document.getElementById('tf-search').addEventListener('input', e => {
+  taskFilters.search = e.target.value;
+  renderTasksPage();
+});
+['tf-assignee','tf-project','tf-client','tf-priority','tf-status'].forEach(id => {
+  document.getElementById(id).addEventListener('change', e => {
+    const key = id.replace('tf-', '');
+    taskFilters[key] = e.target.value;
+    renderTasksPage();
+  });
+});
+document.getElementById('btn-clear-filters').addEventListener('click', () => {
+  taskFilters = { search:'', assignee:'', project:'', client:'', priority:'', status:'' };
+  document.getElementById('tf-search').value = '';
+  ['tf-assignee','tf-project','tf-client','tf-priority','tf-status'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  renderTasksPage();
+});
+
+// ─── INIT ───
+(async () => { await loadMembros(); await loadClientes(); await loadTasks(); renderTasksPage(); })();
+
+// ─── CLOSE DROPDOWNS ON OUTSIDE CLICK ───
+document.addEventListener('click', () => {
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+});
+
+// ═══════════════════════════════════════════════
+// KANBAN DRAG & DROP
+// ═══════════════════════════════════════════════
+let draggedTaskId = null;
+
+function setupDragDrop() {
+  document.querySelectorAll('.kcard[draggable="true"]').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      draggedTaskId = parseInt(card.dataset.id);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedTaskId);
+      setTimeout(() => card.classList.add('is-dragging'), 0);
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('is-dragging');
+      document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+    });
+  });
+
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', e => {
+      if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+    });
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      if (draggedTaskId === null) return;
+      const task = TASKS.find(t => t.id === draggedTaskId);
+      if (task && task.status !== col.dataset.status) {
+        await sb.from('tasks').update({ status: col.dataset.status }).eq('id', draggedTaskId);
+        await loadTasks();
+        renderTasksPage();
+      }
+      draggedTaskId = null;
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════
+// TASK MODAL
+// ═══════════════════════════════════════════════
+const TASK_PROJECT_CLIENT = {
+  'Redesign Web Corporativo': 'Nexus Tecnologia',
+  'Campanha de Lançamento':   'Orbita Studio',
+  'App Mobile v2.0':          'Viva Saúde',
+  'Identidade Visual':        'Serra & Filhos',
+  'Automação CRM':            'Prime Consult',
+  'Finanças':                 'Interno',
+  'Interno':                  'Interno',
+};
+
+function openNewTaskModal() {
+  editingTaskId = null;
+  document.querySelector('#task-modal-overlay .modal-title').textContent = 'Nova Tarefa';
+  document.getElementById('task-modal-save').textContent = '+ Criar Tarefa';
+  document.getElementById('task-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-task-title').focus(), 80);
+}
+
+function openEditTaskModal(id) {
+  const task = TASKS.find(t => t.id === id);
+  if (!task) return;
+  editingTaskId = id;
+  document.querySelector('#task-modal-overlay .modal-title').textContent = 'Editar Tarefa';
+  document.getElementById('task-modal-save').textContent = 'Guardar Alterações';
+  document.getElementById('f-task-title').value    = task.title;
+  document.getElementById('f-task-assignee').value = task.assignee;
+  document.getElementById('f-task-priority').value = task.priority;
+  document.getElementById('f-task-project').value  = task.project;
+  document.getElementById('f-task-client').value   = task.client;
+  document.getElementById('f-task-status').value   = task.status;
+  document.getElementById('f-task-due').value      = task.due_date || '';
+  document.getElementById('task-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-task-title').focus(), 80);
+}
+
+function closeNewTaskModal() {
+  document.getElementById('task-modal-overlay').classList.remove('open');
+  editingTaskId = null;
+  document.querySelector('#task-modal-overlay .modal-title').textContent = 'Nova Tarefa';
+  document.getElementById('task-modal-save').textContent = '+ Criar Tarefa';
+  ['f-task-title','f-task-due'].forEach(id => document.getElementById(id).value = '');
+  ['f-task-assignee','f-task-project','f-task-client'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-task-priority').value = 'media';
+  document.getElementById('f-task-status').value   = 'a-fazer';
+  document.querySelectorAll('#task-modal-overlay .f-error').forEach(el => el.classList.remove('f-error'));
+}
+
+document.getElementById('f-task-project').addEventListener('change', e => {
+  document.getElementById('f-task-client').value = TASK_PROJECT_CLIENT[e.target.value] || '';
+});
+
+document.querySelectorAll('.open-new-task-modal').forEach(btn => {
+  btn.addEventListener('click', openNewTaskModal);
+});
+document.getElementById('task-modal-close').addEventListener('click', closeNewTaskModal);
+document.getElementById('task-modal-cancel').addEventListener('click', closeNewTaskModal);
+document.getElementById('task-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('task-modal-overlay')) closeNewTaskModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeNewTaskModal(); closeConfirm(); }
+});
+
+// ─── DELETE TASK ───
+async function deleteTask(id) {
+  await sb.from('tasks').delete().eq('id', id);
+  await loadTasks();
+  renderTasksPage();
+}
+
+// ─── CONFIRM POPUP ───
+let confirmCallback = null;
+
+function showConfirm(title, msg, onConfirm) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent   = msg;
+  confirmCallback = onConfirm;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  confirmCallback = null;
+}
+
+document.getElementById('confirm-cancel').addEventListener('click', closeConfirm);
+document.getElementById('confirm-ok').addEventListener('click', () => {
+  if (confirmCallback) confirmCallback();
+  closeConfirm();
+});
+document.getElementById('confirm-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeConfirm();
+});
+
+document.getElementById('task-modal-save').addEventListener('click', async () => {
+  const titleEl    = document.getElementById('f-task-title');
+  const assigneeEl = document.getElementById('f-task-assignee');
+  const title    = titleEl.value.trim();
+  const assignee = assigneeEl.value;
+
+  titleEl.classList.toggle('f-error', !title);
+  assigneeEl.classList.toggle('f-error', !assignee);
+  if (!title || !assignee) return;
+
+  const dueRaw   = document.getElementById('f-task-due').value;
+  const project  = document.getElementById('f-task-project').value || 'Interno';
+  const client   = document.getElementById('f-task-client').value  || 'Interno';
+  const priority = document.getElementById('f-task-priority').value;
+  const status   = document.getElementById('f-task-status').value;
+  const initials = getAssigneeInitials(assignee);
+
+  const taskData = { title, assignee, initials, project, client, priority, status, due_date: dueRaw || null };
+
+  if (editingTaskId !== null) {
+    await sb.from('tasks').update(taskData).eq('id', editingTaskId);
+  } else {
+    await sb.from('tasks').insert(taskData);
+  }
+
+  closeNewTaskModal();
+  await loadTasks();
+  renderTasksPage();
+});
+</script>
+
+</body>
+</html>

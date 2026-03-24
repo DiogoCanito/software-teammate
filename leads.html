@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Leads</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="index.html">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item active" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Leads</div>
+      <div class="page-sub">Gere os teus contactos e oportunidades de negócio</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" id="btn-scraping">⬡ Scraping</button>
+      <button class="btn btn-primary" id="btn-nova-lead">+ Nova Lead</button>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filters-bar">
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">⌕</span>
+      <input class="filter-search" id="lf-search" type="text" placeholder="Pesquisar leads...">
+    </div>
+    <select class="filter-select" id="lf-canal">
+      <option value="">Canal</option>
+      <option value="Instagram">Instagram</option>
+      <option value="LinkedIn">LinkedIn</option>
+      <option value="Referência">Referência</option>
+      <option value="Website">Website</option>
+      <option value="Evento">Evento</option>
+      <option value="Cold Outreach">Cold Outreach</option>
+      <option value="Outro">Outro</option>
+    </select>
+    <select class="filter-select" id="lf-status">
+      <option value="">Estado</option>
+      <option value="novo">Novo</option>
+      <option value="contactado">Contactado</option>
+      <option value="negociacao">Em Negociação</option>
+      <option value="convertido">Convertido</option>
+      <option value="perdido">Perdido</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" id="btn-clear-lf" style="display:none">✕ Limpar filtros</button>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="tasks-stats-row" id="leads-stats-row"></div>
+
+  <!-- LEADS TABLE -->
+  <div class="leads-table-wrap">
+    <table class="leads-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Contacto</th>
+          <th>Canal</th>
+          <th>Estado</th>
+          <th>Último Contacto</th>
+          <th>Próximo Follow-up</th>
+          <th>Notas</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="leads-tbody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── CONFIRM DELETE POPUP ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Eliminar lead</div>
+    <div class="confirm-msg" id="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Nova / Editar Lead ─── -->
+<div class="modal-overlay" id="lead-modal-overlay">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <div class="modal-title" id="lead-modal-title">Nova Lead</div>
+      <button class="modal-close" id="lead-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-section-label">Informação Básica</div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Nome ou Empresa <span class="form-required">*</span></label>
+          <input class="form-input" id="f-l-name" type="text" placeholder="Ex: Maria Santos ou Tech Solutions Lda">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="f-l-email" type="email" placeholder="contacto@empresa.pt">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input class="form-input" id="f-l-phone" type="tel" placeholder="+351 9XX XXX XXX">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Website / LinkedIn / Instagram</label>
+          <input class="form-input" id="f-l-social" type="text" placeholder="Ex: linkedin.com/in/... ou @handle">
+        </div>
+      </div>
+
+      <div class="form-section-label">Origem e Contexto</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Canal de Origem</label>
+          <select class="form-select" id="f-l-canal">
+            <option value="">Selecionar...</option>
+            <option value="Instagram">Instagram</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Referência">Referência</option>
+            <option value="Website">Website</option>
+            <option value="Evento">Evento</option>
+            <option value="Cold Outreach">Cold Outreach</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Serviço de Interesse</label>
+          <select class="form-select" id="f-l-servico">
+            <option value="">Selecionar...</option>
+            <option value="Automações">Automações</option>
+            <option value="RadMate">RadMate</option>
+            <option value="Website">Website</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Orçamento Estimado (€)</label>
+          <input class="form-input" id="f-l-orcamento" type="number" placeholder="Ex: 2500" min="0">
+        </div>
+        <div class="form-group"></div>
+      </div>
+
+      <div class="form-section-label">Gestão da Lead</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-l-status">
+            <option value="novo">Novo</option>
+            <option value="contactado">Contactado</option>
+            <option value="negociacao">Em Negociação</option>
+            <option value="convertido">Convertido</option>
+            <option value="perdido">Perdido</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data do Primeiro Contacto</label>
+          <input class="form-input" id="f-l-primeiro-contacto" type="date">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Próximo Follow-up</label>
+          <input class="form-input" id="f-l-followup" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Como foi Contactado</label>
+          <select class="form-select" id="f-l-como">
+            <option value="">Selecionar...</option>
+            <option value="Email">Email</option>
+            <option value="Telefone">Telefone</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Reunião Presencial">Reunião Presencial</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-label">Notas</div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Notas Internas</label>
+          <textarea class="form-textarea" id="f-l-notas" rows="3" placeholder="Informação adicional sobre esta lead..."></textarea>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="lead-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="lead-modal-save">Guardar Lead</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── MOCK DATA ───
+let LEADS = [
+  {
+    id: 1,
+    name: 'Maria Santos',
+    email: 'maria.santos@gmail.com',
+    phone: '+351 912 345 678',
+    social: 'linkedin.com/in/mariasantos',
+    canal: 'LinkedIn',
+    servico: 'Automações',
+    orcamento: 2500,
+    status: 'negociacao',
+    primeiro_contacto: '2026-03-10',
+    proximo_followup: '2026-03-28',
+    como_contactado: 'LinkedIn',
+    notas: 'Muito interessada em automações de Instagram. Negócio de cosmética com 12k seguidores.'
+  },
+  {
+    id: 2,
+    name: 'Tech Solutions Lda',
+    email: 'info@techsolutions.pt',
+    phone: '+351 21 234 5678',
+    social: 'techsolutions.pt',
+    canal: 'Website',
+    servico: 'Website',
+    orcamento: 4000,
+    status: 'novo',
+    primeiro_contacto: '2026-03-22',
+    proximo_followup: '2026-03-25',
+    como_contactado: 'Email',
+    notas: 'Preencheu formulário de contacto. Quer redesign completo do site corporativo.'
+  },
+  {
+    id: 3,
+    name: 'João Ferreira',
+    email: 'joao.ferreira@gmail.com',
+    phone: '+351 934 567 890',
+    social: '@joaoferreira_pt',
+    canal: 'Instagram',
+    servico: 'RadMate',
+    orcamento: 1200,
+    status: 'contactado',
+    primeiro_contacto: '2026-03-15',
+    proximo_followup: '2026-03-26',
+    como_contactado: 'Instagram',
+    notas: 'Viu um reels sobre o RadMate. Quer saber mais sobre os planos e preços.'
+  },
+  {
+    id: 4,
+    name: 'Clara Ribeiro Design',
+    email: 'clara@clararibeiro.pt',
+    phone: '+351 968 123 456',
+    social: 'clararibeiro.pt',
+    canal: 'Referência',
+    servico: 'Website',
+    orcamento: 3500,
+    status: 'convertido',
+    primeiro_contacto: '2026-02-28',
+    proximo_followup: null,
+    como_contactado: 'Reunião Presencial',
+    notas: 'Referência direta do Nexus Tecnologia. Projeto fechado com sucesso!'
+  },
+  {
+    id: 5,
+    name: 'Pedro Nunes',
+    email: 'pedronunes@hotmail.com',
+    phone: '+351 924 789 012',
+    social: '',
+    canal: 'Cold Outreach',
+    servico: 'Automações',
+    orcamento: 800,
+    status: 'perdido',
+    primeiro_contacto: '2026-03-05',
+    proximo_followup: null,
+    como_contactado: 'Email',
+    notas: 'Sem interesse no momento. Poderá reconsiderar no Q3 2026.'
+  }
+];
+
+let editingId   = null;
+let pendingDeleteId = null;
+let nextId = 6;
+
+// ─── HELPERS ───
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T12:00:00');
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+const STATUS_LABELS = {
+  novo:        'Novo',
+  contactado:  'Contactado',
+  negociacao:  'Em Negociação',
+  convertido:  'Convertido',
+  perdido:     'Perdido'
+};
+
+// ─── RENDER ───
+function renderLeads() {
+  const search = document.getElementById('lf-search').value.toLowerCase().trim();
+  const canal  = document.getElementById('lf-canal').value;
+  const status = document.getElementById('lf-status').value;
+
+  let filtered = LEADS;
+  if (search) filtered = filtered.filter(l =>
+    l.name.toLowerCase().includes(search) ||
+    (l.email  && l.email.toLowerCase().includes(search))  ||
+    (l.phone  && l.phone.includes(search))                ||
+    (l.canal  && l.canal.toLowerCase().includes(search))  ||
+    (l.servico && l.servico.toLowerCase().includes(search))
+  );
+  if (canal)  filtered = filtered.filter(l => l.canal  === canal);
+  if (status) filtered = filtered.filter(l => l.status === status);
+
+  // Stats
+  const total      = LEADS.length;
+  const negoc      = LEADS.filter(l => l.status === 'negociacao').length;
+  const convertido = LEADS.filter(l => l.status === 'convertido').length;
+  const perdido    = LEADS.filter(l => l.status === 'perdido').length;
+  document.getElementById('leads-stats-row').innerHTML = `
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--text-muted)"></div> Total: <strong>${total}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:#a78bfa"></div> Em Negociação: <strong>${negoc}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--success)"></div> Convertidos: <strong>${convertido}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--danger)"></div> Perdidos: <strong>${perdido}</strong></div>
+  `;
+
+  // Filter indicators
+  const hasFilter = search || canal || status;
+  document.getElementById('btn-clear-lf').style.display = hasFilter ? '' : 'none';
+  document.getElementById('lf-canal').classList.toggle('has-value', !!canal);
+  document.getElementById('lf-status').classList.toggle('has-value', !!status);
+
+  const tbody = document.getElementById('leads-tbody');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:56px 0;color:var(--text-muted)">
+      <div style="font-size:30px;opacity:0.2;margin-bottom:10px">◎</div>
+      <div style="font-size:13px">Nenhuma lead encontrada</div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(l => `
+    <tr>
+      <td>
+        <div class="lead-name">${l.name}</div>
+        ${l.servico ? `<div class="lead-sub">${l.servico}${l.orcamento ? ' · ' + l.orcamento.toLocaleString('pt-PT') + ' €' : ''}</div>` : ''}
+      </td>
+      <td>
+        ${l.email ? `<div style="font-size:12.5px;color:var(--text-dim)">${l.email}</div>` : ''}
+        ${l.phone ? `<div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">${l.phone}</div>` : ''}
+      </td>
+      <td><span class="canal-tag">${l.canal || '—'}</span></td>
+      <td><span class="lbadge ${l.status}">${STATUS_LABELS[l.status] || l.status}</span></td>
+      <td style="font-size:12.5px;white-space:nowrap">${formatDate(l.primeiro_contacto)}</td>
+      <td style="font-size:12.5px;white-space:nowrap">${l.proximo_followup ? `<span style="color:${isOverdue(l.proximo_followup) ? 'var(--danger)' : 'var(--text-dim)'}">${formatDate(l.proximo_followup)}</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>
+        ${l.notas
+          ? `<div class="note-wrap">
+               <button class="note-icon-btn" title="Ver nota">📝</button>
+               <div class="note-tooltip">${l.notas}</div>
+             </div>`
+          : `<span style="color:var(--text-muted);font-size:13px">—</span>`}
+      </td>
+      <td>
+        <div class="table-actions">
+          <button class="tact-btn" onclick="openEditModal(${l.id})" title="Editar">✎</button>
+          <button class="tact-btn del" onclick="openConfirmDelete(${l.id})" title="Eliminar">✕</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr + 'T23:59:59') < new Date();
+}
+
+// ─── MODAL ───
+function openNewModal() {
+  editingId = null;
+  document.getElementById('lead-modal-title').textContent = 'Nova Lead';
+  document.getElementById('lead-modal-save').textContent  = 'Guardar Lead';
+  ['f-l-name','f-l-email','f-l-phone','f-l-social','f-l-orcamento','f-l-notas',
+   'f-l-primeiro-contacto','f-l-followup']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  ['f-l-canal','f-l-servico','f-l-como'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-l-status').value = 'novo';
+  document.querySelectorAll('#lead-modal-overlay .f-error')
+    .forEach(el => el.classList.remove('f-error'));
+  document.getElementById('lead-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-l-name').focus(), 80);
+}
+
+function openEditModal(id) {
+  const l = LEADS.find(x => x.id === id);
+  if (!l) return;
+  editingId = id;
+  document.getElementById('lead-modal-title').textContent = 'Editar Lead';
+  document.getElementById('lead-modal-save').textContent  = 'Guardar Alterações';
+  document.getElementById('f-l-name').value              = l.name              || '';
+  document.getElementById('f-l-email').value             = l.email             || '';
+  document.getElementById('f-l-phone').value             = l.phone             || '';
+  document.getElementById('f-l-social').value            = l.social            || '';
+  document.getElementById('f-l-canal').value             = l.canal             || '';
+  document.getElementById('f-l-servico').value           = l.servico           || '';
+  document.getElementById('f-l-orcamento').value         = l.orcamento         || '';
+  document.getElementById('f-l-status').value            = l.status            || 'novo';
+  document.getElementById('f-l-primeiro-contacto').value = l.primeiro_contacto || '';
+  document.getElementById('f-l-followup').value          = l.proximo_followup  || '';
+  document.getElementById('f-l-como').value              = l.como_contactado   || '';
+  document.getElementById('f-l-notas').value             = l.notas             || '';
+  document.querySelectorAll('#lead-modal-overlay .f-error')
+    .forEach(el => el.classList.remove('f-error'));
+  document.getElementById('lead-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-l-name').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('lead-modal-overlay').classList.remove('open');
+}
+
+// Save
+document.getElementById('lead-modal-save').addEventListener('click', () => {
+  const nameEl = document.getElementById('f-l-name');
+  const name   = nameEl.value.trim();
+  nameEl.classList.toggle('f-error', !name);
+  if (!name) { nameEl.focus(); return; }
+
+  const payload = {
+    name,
+    email:             document.getElementById('f-l-email').value.trim()             || null,
+    phone:             document.getElementById('f-l-phone').value.trim()             || null,
+    social:            document.getElementById('f-l-social').value.trim()            || null,
+    canal:             document.getElementById('f-l-canal').value                    || null,
+    servico:           document.getElementById('f-l-servico').value                  || null,
+    orcamento:         parseFloat(document.getElementById('f-l-orcamento').value)    || null,
+    status:            document.getElementById('f-l-status').value,
+    primeiro_contacto: document.getElementById('f-l-primeiro-contacto').value        || null,
+    proximo_followup:  document.getElementById('f-l-followup').value                 || null,
+    como_contactado:   document.getElementById('f-l-como').value                     || null,
+    notas:             document.getElementById('f-l-notas').value.trim()             || null,
+  };
+
+  if (editingId !== null) {
+    const idx = LEADS.findIndex(l => l.id === editingId);
+    if (idx !== -1) LEADS[idx] = { ...LEADS[idx], ...payload };
+  } else {
+    LEADS.unshift({ id: nextId++, ...payload });
+  }
+
+  closeModal();
+  renderLeads();
+});
+
+// ─── CONFIRM DELETE ───
+function openConfirmDelete(id) {
+  const l = LEADS.find(x => x.id === id);
+  pendingDeleteId = id;
+  document.getElementById('confirm-title').textContent = 'Eliminar lead';
+  document.getElementById('confirm-msg').textContent   =
+    `Tens a certeza que queres eliminar "${l ? l.name : 'esta lead'}"? Esta ação não pode ser desfeita.`;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+document.getElementById('confirm-ok').addEventListener('click', () => {
+  if (pendingDeleteId === null) return;
+  LEADS = LEADS.filter(l => l.id !== pendingDeleteId);
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+  renderLeads();
+});
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+});
+
+// ─── EVENT LISTENERS ───
+document.getElementById('btn-nova-lead').addEventListener('click', openNewModal);
+document.getElementById('lead-modal-close').addEventListener('click', closeModal);
+document.getElementById('lead-modal-cancel').addEventListener('click', closeModal);
+document.getElementById('lead-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('lead-modal-overlay')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    document.getElementById('confirm-overlay').classList.remove('open');
+  }
+});
+
+document.getElementById('lf-search').addEventListener('input', renderLeads);
+document.getElementById('lf-canal').addEventListener('change', renderLeads);
+document.getElementById('lf-status').addEventListener('change', renderLeads);
+document.getElementById('btn-clear-lf').addEventListener('click', () => {
+  document.getElementById('lf-search').value = '';
+  document.getElementById('lf-canal').value  = '';
+  document.getElementById('lf-status').value = '';
+  renderLeads();
+});
+
+// ─── INIT ───
+renderLeads();
+</script>
+</body>
+</html>
