@@ -5,24 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TeamMate — Cliente</title>
 <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="auth.js"></script>
+<script src="../supabase-config.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
 </head>
 <body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 <div class="layout">
 
 <!-- ─── SIDEBAR ─── -->
 <aside class="sidebar">
   <div class="logo-wrap">
-    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
     <div class="logo-sub">Team Dashboard</div>
   </div>
 
   <div class="nav-group">
     <div class="nav-label">Visão Geral</div>
-    <a class="nav-item" href="index.html">
+    <a class="nav-item" href="../index.html">
       <span class="nav-icon">⊞</span> Dashboard
     </a>
     <a class="nav-item" href="#">

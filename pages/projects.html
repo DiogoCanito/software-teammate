@@ -5,24 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TeamMate — Projetos</title>
 <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="auth.js"></script>
+<script src="../supabase-config.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
 </head>
 <body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 <div class="layout">
 
 <!-- ─── SIDEBAR ─── -->
 <aside class="sidebar">
   <div class="logo-wrap">
-    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
     <div class="logo-sub">Team Dashboard</div>
   </div>
 
   <div class="nav-group">
     <div class="nav-label">Visão Geral</div>
-    <a class="nav-item" href="index.html">
+    <a class="nav-item" href="../index.html">
       <span class="nav-icon">⊞</span> Dashboard
     </a>
     <a class="nav-item" href="#">
@@ -339,7 +351,7 @@ function renderProjListView() {
     const val   = p.value != null ? `€${p.value.toLocaleString('pt-PT')}` : '—';
     const ps    = prioStyles[p.priority] || prioStyles.media;
     const pl    = prioLabels[p.priority] || p.priority;
-    return `<tr>
+    return `<tr class="proj-list-row" onclick="event.target.closest('.row-actions-wrap') || (window.location='projeto.html?id=${p.id}')" style="cursor:pointer">
       <td>
         <div class="proj-name">${p.name}</div>
         <div class="proj-client">${p.client}</div>
@@ -381,8 +393,8 @@ function renderProjKanbanView() {
       const late = projIsLate(p.deadline);
       const val  = p.value != null ? `€${p.value.toLocaleString('pt-PT')}` : null;
       const prioColor = p.priority==='alta' ? '#ff4d6d' : p.priority==='media' ? '#f5c518' : '#2dd4a0';
-      return `<div class="proj-kcard" data-id="${p.id}">
-        <button class="proj-kcard-trash-btn" data-id="${p.id}" title="Eliminar">🗑</button>
+      return `<div class="proj-kcard" data-id="${p.id}" draggable="true" onclick="this.dataset.skipNav||window.location.assign('projeto.html?id=${p.id}')">
+        <button class="proj-kcard-trash-btn" data-id="${p.id}" title="Eliminar" onclick="event.stopPropagation()">🗑</button>
         <div class="proj-kcard-name">${p.name}</div>
         <div class="proj-kcard-client">${p.client}</div>
         <div class="proj-kcard-footer">
@@ -392,7 +404,7 @@ function renderProjKanbanView() {
         </div>
       </div>`;
     }).join('');
-    return `<div class="proj-kcol">
+    return `<div class="proj-kcol" data-phase="${phase.id}">
       <div class="proj-kcol-header">
         <div class="proj-kcol-title">
           <span class="proj-kcol-dot" style="background:${phase.color}"></span>
@@ -404,6 +416,49 @@ function renderProjKanbanView() {
     </div>`;
   }).join('');
   return `<div class="proj-kanban-board">${cols}</div>`;
+}
+
+// ─── PROJECTS KANBAN DRAG & DROP ───
+let draggedProjId = null;
+
+function setupProjDragDrop() {
+  document.querySelectorAll('.proj-kcard[draggable="true"]').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      draggedProjId = parseInt(card.dataset.id);
+      card.dataset.skipNav = '1';
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedProjId);
+      setTimeout(() => card.classList.add('is-dragging'), 0);
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('is-dragging');
+      delete card.dataset.skipNav;
+      document.querySelectorAll('.proj-kcol').forEach(c => c.classList.remove('drag-over'));
+    });
+  });
+
+  document.querySelectorAll('.proj-kcol').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', e => {
+      if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+    });
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      if (draggedProjId === null) return;
+      const proj = projects.find(p => p.id === draggedProjId);
+      if (proj && proj.phase !== col.dataset.phase) {
+        await sb.from('projects').update({ phase: col.dataset.phase }).eq('id', draggedProjId);
+        await loadProjects();
+        renderProjectsPage();
+      }
+      draggedProjId = null;
+    });
+  });
 }
 
 function renderProjectsPage() {
@@ -438,11 +493,11 @@ function renderProjectsPage() {
   } else {
     document.querySelectorAll('#proj-content .proj-kcard-trash-btn').forEach(btn => {
       btn.addEventListener('click', e => {
-        e.stopPropagation();
         const id = parseInt(btn.dataset.id);
         showConfirm('Eliminar projeto?', 'Esta ação não pode ser desfeita.', () => deleteProject(id));
       });
     });
+    setupProjDragDrop();
   }
 }
 
@@ -454,6 +509,7 @@ document.getElementById('btn-proj-list').addEventListener('click', () => {
   renderProjectsPage();
 });
 document.getElementById('btn-proj-kanban').addEventListener('click', () => {
+  if (window.innerWidth <= 768) { showMobileToast('Visão Kanban indisponível em mobile', '⊞'); return; }
   projView = 'kanban';
   document.getElementById('btn-proj-kanban').classList.add('active');
   document.getElementById('btn-proj-list').classList.remove('active');

@@ -5,24 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TeamMate — Tarefas</title>
 <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="auth.js"></script>
+<script src="../supabase-config.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
 </head>
 <body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 <div class="layout">
 
 <!-- ─── SIDEBAR ─── -->
 <aside class="sidebar">
   <div class="logo-wrap">
-    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
     <div class="logo-sub">Team Dashboard</div>
   </div>
 
   <div class="nav-group">
     <div class="nav-label">Visão Geral</div>
-    <a class="nav-item" href="index.html">
+    <a class="nav-item" href="../index.html">
       <span class="nav-icon">⊞</span> Dashboard
     </a>
     <a class="nav-item" href="#">
@@ -159,6 +171,7 @@
     <div class="view-toggle">
       <button class="view-btn active" id="btn-list-view">≡ Lista</button>
       <button class="view-btn" id="btn-kanban-view">⊞ Kanban</button>
+      <button class="view-btn" id="btn-projects-view">◫ Projetos</button>
     </div>
   </div>
 
@@ -545,6 +558,102 @@ function renderKanbanView(tasks) {
   setupDragDrop();
 }
 
+function renderProjectsView(tasks) {
+  const projectMap = {};
+  tasks.forEach(t => {
+    if (!projectMap[t.project]) projectMap[t.project] = [];
+    projectMap[t.project].push(t);
+  });
+
+  const projectNames = Object.keys(projectMap);
+
+  if (projectNames.length === 0) {
+    document.getElementById('tasks-content').innerHTML = `
+      <div class="no-results">
+        <span class="no-results-icon">⌕</span>
+        Nenhuma tarefa encontrada com os filtros selecionados.
+      </div>`;
+    return;
+  }
+
+  const STATUS_ORDER = ['em-curso', 'em-revisao', 'a-fazer', 'bloqueada', 'concluida'];
+
+  const cards = projectNames.map(projName => {
+    const projTasks = projectMap[projName];
+    const client = projTasks[0]?.client || '';
+    const total = projTasks.length;
+    const done  = projTasks.filter(t => t.status === 'concluida').length;
+    const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    const statusGroups = STATUS_ORDER
+      .map(status => ({ status, tasks: projTasks.filter(t => t.status === status) }))
+      .filter(g => g.tasks.length > 0);
+
+    const groupsHtml = statusGroups.map(g => {
+      const sm = STATUS_META[g.status];
+      const rows = g.tasks.map(t => {
+        const pm = PRIO_META[t.priority];
+        const color = getAssigneeColor(t.assignee);
+        const isDone = t.status === 'concluida';
+        return `
+          <div class="pv-task-row" data-id="${t.id}">
+            <div class="pv-task-name">
+              <div class="tc-cb ${isDone ? 'done' : ''}" style="flex-shrink:0">${isDone ? '✓' : ''}</div>
+              <span class="${isDone ? 'done' : ''}">${t.title}</span>
+            </div>
+            <div class="pv-task-meta">
+              <div class="ta-chip" style="gap:5px">
+                <div class="ta-av" style="background:${color};width:22px;height:22px;font-size:9px;flex-shrink:0">${t.initials}</div>
+                <span class="ta-name" style="font-size:11.5px">${t.assignee}</span>
+              </div>
+              <span class="t-prio ${pm.cls}">${pm.label}</span>
+              <span class="t-due ${t.late && !isDone ? 'late' : ''}">${t.due}</span>
+            </div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="pv-status-group">
+          <div class="pv-status-head">
+            <span class="sbadge ${sm.badge}">● ${sm.label}</span>
+            <span class="pv-status-count">${g.tasks.length}</span>
+          </div>
+          ${rows}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="pv-card">
+        <div class="pv-card-header">
+          <div class="pv-card-left">
+            <div class="pv-card-title">${projName}</div>
+            ${client ? `<span class="pv-card-client">${client}</span>` : ''}
+          </div>
+          <div class="pv-card-right">
+            <span class="pv-card-count">${total} tarefa${total !== 1 ? 's' : ''}</span>
+            <div class="pv-progress-bar"><div class="pv-progress-fill" style="width:${pct}%"></div></div>
+            <span class="pv-card-pct">${pct}%</span>
+          </div>
+        </div>
+        <div class="pv-card-body">${groupsHtml}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('tasks-content').innerHTML = `<div class="pv-container">${cards}</div>`;
+
+  document.querySelectorAll('.pv-task-row').forEach(row => {
+    row.addEventListener('click', async () => {
+      const id = parseInt(row.dataset.id);
+      const task = TASKS.find(t => t.id === id);
+      if (!task) return;
+      const newStatus = task.status === 'concluida' ? 'a-fazer' : 'concluida';
+      await sb.from('tasks').update({ status: newStatus }).eq('id', id);
+      await loadTasks();
+      renderTasksPage();
+    });
+  });
+}
+
 function renderTasksPage() {
   const tasks = getFilteredTasks();
   const urgent = TASKS.filter(t => t.priority === 'alta' && t.status !== 'concluida').length;
@@ -561,21 +670,26 @@ function renderTasksPage() {
   });
 
   if (taskView === 'list') renderListView(tasks);
-  else renderKanbanView(tasks);
+  else if (taskView === 'kanban') renderKanbanView(tasks);
+  else renderProjectsView(tasks);
 }
 
 // ─── VIEW TOGGLE ───
-document.getElementById('btn-list-view').addEventListener('click', () => {
-  taskView = 'list';
-  document.getElementById('btn-list-view').classList.add('active');
-  document.getElementById('btn-kanban-view').classList.remove('active');
+const VIEW_BTNS = ['btn-list-view','btn-kanban-view','btn-projects-view'];
+function setView(view) {
+  taskView = view;
+  VIEW_BTNS.forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById(`btn-${view}-view`).classList.add('active');
   renderTasksPage();
+}
+document.getElementById('btn-list-view').addEventListener('click',     () => setView('list'));
+document.getElementById('btn-kanban-view').addEventListener('click',   () => {
+  if (window.innerWidth <= 768) { showMobileToast('Visão Kanban indisponível em mobile', '⊞'); return; }
+  setView('kanban');
 });
-document.getElementById('btn-kanban-view').addEventListener('click', () => {
-  taskView = 'kanban';
-  document.getElementById('btn-kanban-view').classList.add('active');
-  document.getElementById('btn-list-view').classList.remove('active');
-  renderTasksPage();
+document.getElementById('btn-projects-view').addEventListener('click', () => {
+  if (window.innerWidth <= 768) { showMobileToast('Visão Projetos indisponível em mobile', '◫'); return; }
+  setView('projects');
 });
 
 // ─── FILTER LISTENERS ───

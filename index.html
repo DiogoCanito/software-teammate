@@ -9,14 +9,26 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="auth.js"></script>
+<script src="mobile-sidebar.js"></script>
 </head>
 <body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 <div class="layout">
 
 <!-- ─── SIDEBAR ─── -->
 <aside class="sidebar">
   <div class="logo-wrap">
-    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <img src="brand_assets/logo-teammate.svg" alt="TeamMate">
     <div class="logo-sub">Team Dashboard</div>
   </div>
 
@@ -32,11 +44,11 @@
 
   <div class="nav-group">
     <div class="nav-label">Trabalho</div>
-    <a class="nav-item" href="tasks.html">
+    <a class="nav-item" href="pages/tasks.html">
       <span class="nav-icon">✓</span> Tarefas
       <span class="nav-badge">5</span>
     </a>
-    <a class="nav-item" href="projects.html">
+    <a class="nav-item" href="pages/projects.html">
       <span class="nav-icon">◫</span> Projetos
       <span class="nav-badge blue">8</span>
     </a>
@@ -47,19 +59,19 @@
 
   <div class="nav-group">
     <div class="nav-label">Negócio</div>
-    <a class="nav-item" href="leads.html">
+    <a class="nav-item" href="pages/leads.html">
       <span class="nav-icon">◎</span> Leads
     </a>
-    <a class="nav-item" href="clientes.html">
+    <a class="nav-item" href="pages/clientes.html">
       <span class="nav-icon">👤</span> Clientes
     </a>
-    <a class="nav-item" href="custos.html">
+    <a class="nav-item" href="pages/custos.html">
       <span class="nav-icon">💸</span> Custos
     </a>
     <a class="nav-item" href="#">
       <span class="nav-icon">€</span> Finanças
     </a>
-    <a class="nav-item" href="propostas.html">
+    <a class="nav-item" href="pages/propostas.html">
       <span class="nav-icon">📋</span> Propostas
       <span class="nav-badge">2</span>
     </a>
@@ -67,7 +79,7 @@
 
   <div class="nav-group">
     <div class="nav-label">Equipa</div>
-    <a class="nav-item" href="membros.html">
+    <a class="nav-item" href="pages/membros.html">
       <span class="nav-icon">👥</span> Membros
     </a>
     <a class="nav-item" href="#">
@@ -100,7 +112,7 @@
     <div class="topbar-actions">
       <button class="btn btn-ghost">⬇ Exportar</button>
       <button class="btn btn-coral open-new-task-modal">+ Nova Tarefa</button>
-      <a class="btn btn-primary" href="projects.html">+ Novo Projeto</a>
+      <a class="btn btn-primary" href="pages/projects.html">+ Novo Projeto</a>
     </div>
   </div>
 
@@ -240,7 +252,7 @@
           <div class="card-title">Projetos Ativos</div>
           <div class="card-sub" id="dash-proj-sub">— projetos</div>
         </div>
-        <a class="btn btn-ghost btn-sm" href="projects.html">Ver todos →</a>
+        <a class="btn btn-ghost btn-sm" href="pages/projects.html">Ver todos →</a>
       </div>
       <table class="proj-table">
         <thead>

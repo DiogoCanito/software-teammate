@@ -5,24 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TeamMate — Custos</title>
 <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="auth.js"></script>
+<script src="../supabase-config.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
 </head>
 <body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 <div class="layout">
 
 <!-- ─── SIDEBAR ─── -->
 <aside class="sidebar">
   <div class="logo-wrap">
-    <img src="brand_assets/Logo TeamMate.svg" alt="TeamMate">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
     <div class="logo-sub">Team Dashboard</div>
   </div>
 
   <div class="nav-group">
     <div class="nav-label">Visão Geral</div>
-    <a class="nav-item" href="index.html">
+    <a class="nav-item" href="../index.html">
       <span class="nav-icon">⊞</span> Dashboard
     </a>
     <a class="nav-item" href="#">
@@ -782,6 +794,31 @@ document.getElementById('btn-clear-cf').addEventListener('click', () => {
 
 // ─── INIT ───
 renderCustos();
+
+// ─── NOTE TOOLTIP ───
+(function() {
+  const popup = document.createElement('div');
+  popup.className = 'note-popup';
+  document.body.appendChild(popup);
+  document.querySelector('.leads-table-wrap').addEventListener('mouseover', e => {
+    const btn = e.target.closest('.note-icon-btn');
+    if (!btn) return;
+    const src = btn.parentElement.querySelector('.note-tooltip');
+    if (!src) return;
+    popup.textContent = src.textContent;
+    const rect = btn.getBoundingClientRect();
+    popup.style.top = (rect.bottom + 6) + 'px';
+    popup.style.left = Math.max(8, rect.right - 240) + 'px';
+    popup.classList.add('visible');
+    requestAnimationFrame(() => {
+      const pr = popup.getBoundingClientRect();
+      if (pr.bottom > window.innerHeight - 8) popup.style.top = (rect.top - pr.height - 6) + 'px';
+    });
+  });
+  document.querySelector('.leads-table-wrap').addEventListener('mouseout', e => {
+    if (e.target.closest('.note-icon-btn')) popup.classList.remove('visible');
+  });
+})();
 </script>
 </body>
 </html>
