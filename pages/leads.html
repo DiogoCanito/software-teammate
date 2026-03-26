@@ -48,11 +48,11 @@
     <div class="nav-label">Trabalho</div>
     <a class="nav-item" href="tasks.html">
       <span class="nav-icon">✓</span> Tarefas
-      <span class="nav-badge" id="nav-badge-tarefas">5</span>
+      <span class="nav-badge" id="nav-badge-tarefas"></span>
     </a>
     <a class="nav-item" href="projects.html">
       <span class="nav-icon">◫</span> Projetos
-      <span class="nav-badge blue" id="nav-badge-projetos">8</span>
+      <span class="nav-badge blue" id="nav-badge-projetos"></span>
     </a>
     <a class="nav-item" href="#">
       <span class="nav-icon">⏱</span> Registo de Tempo
@@ -75,7 +75,7 @@
     </a>
     <a class="nav-item" href="propostas.html">
       <span class="nav-icon">📋</span> Propostas
-      <span class="nav-badge" id="nav-badge-propostas">2</span>
+      <span class="nav-badge" id="nav-badge-propostas"></span>
     </a>
   </div>
 
@@ -386,7 +386,7 @@ function renderLeads() {
   }
 
   tbody.innerHTML = filtered.map(l => `
-    <tr>
+    <tr data-id="${l.id}" style="cursor:pointer">
       <td>
         <a class="lead-name lead-name-link" href="lead.html?id=${l.id}">${l.name}</a>
         ${l.servico ? `<div class="lead-sub">${l.servico}${l.orcamento ? ' · ' + l.orcamento.toLocaleString('pt-PT') + ' €' : ''}</div>` : ''}
@@ -612,10 +612,16 @@ async function changeLeadStatus(id, newStatus, selectEl) {
 // ─── ACTION DROPDOWN ───
 function toggleActionMenu(e, id) {
   e.stopPropagation();
+  const btn = e.target.closest('.action-menu-btn') || e.currentTarget;
   const menu = document.getElementById(`action-menu-${id}`);
   const isOpen = menu.classList.contains('open');
   closeAllMenus();
-  if (!isOpen) menu.classList.add('open');
+  if (!isOpen) {
+    const rect = btn.getBoundingClientRect();
+    menu.style.top  = (rect.bottom + 4) + 'px';
+    menu.style.left = Math.max(8, rect.right - 140) + 'px';
+    menu.classList.add('open');
+  }
 }
 
 function closeAllMenus() {
@@ -623,6 +629,13 @@ function closeAllMenus() {
 }
 
 document.addEventListener('click', closeAllMenus);
+
+// ─── ROW CLICK → LEAD PROFILE ───
+document.getElementById('leads-tbody').addEventListener('click', e => {
+  if (e.target.closest('select, button, a, .note-wrap')) return;
+  const row = e.target.closest('tr[data-id]');
+  if (row) window.location.href = `lead.html?id=${row.dataset.id}`;
+});
 
 // ─── INIT ───
 Promise.all([loadLeads(), loadMembros()]);

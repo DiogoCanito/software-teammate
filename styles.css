@@ -1115,8 +1115,8 @@ body::after {
 .leads-table tbody tr { transition: background 0.1s; }
 .leads-table tbody tr:hover td { background: var(--surface2); }
 .lead-name { font-size: 13px; font-weight: 500; color: var(--text); }
-.lead-name-link { text-decoration: none; transition: color 0.15s; }
-.lead-name-link:hover { color: var(--blue-light); text-decoration: underline; }
+.lead-name-link { text-decoration: none; color: var(--blue-light); transition: color 0.15s; }
+.lead-name-link:hover { color: var(--text); text-decoration: underline; }
 .lead-sub  { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
 
 /* Lead status badges */
@@ -1237,14 +1237,12 @@ body::after {
 .action-menu-btn:hover { background: var(--surface3); color: var(--text); }
 .action-dropdown {
   display: none;
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
+  position: fixed;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 4px;
-  z-index: 200;
+  z-index: 9000;
   min-width: 130px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.35);
 }
