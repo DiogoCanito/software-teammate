@@ -385,7 +385,7 @@ function renderLeads() {
     return;
   }
 
-  tbody.innerHTML = filtered.map(l => `
+  const rows = filtered.map(l => `
     <tr data-id="${l.id}" style="cursor:pointer">
       <td>
         <a class="lead-name lead-name-link" href="lead.html?id=${l.id}">${l.name}</a>
@@ -411,17 +411,39 @@ function renderLeads() {
              </div>`
           : `<span style="color:var(--text-muted);font-size:13px">—</span>`}
       </td>
-      <td>
-        <div class="action-menu">
-          <button class="action-menu-btn" onclick="toggleActionMenu(event, ${l.id})">⋮</button>
-          <div class="action-dropdown" id="action-menu-${l.id}">
-            <button class="action-dropdown-item" onclick="openEditModal(${l.id}); closeAllMenus()">✎ Editar</button>
-            <button class="action-dropdown-item del" onclick="openConfirmDelete(${l.id}); closeAllMenus()">✕ Eliminar</button>
+      <td class="row-actions-cell">
+        <div class="row-actions-wrap">
+          <button class="dots-btn" data-id="${l.id}" title="Ações">···</button>
+          <div class="row-dropdown" id="ldrop-${l.id}">
+            <button class="row-dropdown-item" data-action="edit" data-id="${l.id}">✎ Editar</button>
+            <button class="row-dropdown-item delete" data-action="delete" data-id="${l.id}">✕ Eliminar</button>
           </div>
         </div>
       </td>
     </tr>
   `).join('');
+  tbody.innerHTML = rows;
+
+  document.querySelectorAll('#leads-tbody .dots-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      document.querySelectorAll('.row-dropdown.open').forEach(d => {
+        if (d.id !== `ldrop-${id}`) d.classList.remove('open');
+      });
+      document.getElementById(`ldrop-${id}`).classList.toggle('open');
+    });
+  });
+
+  document.querySelectorAll('#leads-tbody .row-dropdown-item').forEach(item => {
+    item.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = item.dataset.id;
+      document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('open'));
+      if (item.dataset.action === 'edit') openEditModal(id);
+      else if (item.dataset.action === 'delete') openConfirmDelete(id);
+    });
+  });
 }
 
 function isOverdue(dateStr) {
@@ -448,7 +470,7 @@ function openNewModal() {
 }
 
 function openEditModal(id) {
-  const l = LEADS.find(x => x.id === id);
+  const l = LEADS.find(x => String(x.id) === String(id));
   if (!l) return;
   editingId      = id;
   originalStatus = l.status;
@@ -515,7 +537,7 @@ document.getElementById('lead-modal-save').addEventListener('click', async () =>
 
 // ─── CONFIRM DELETE ───
 function openConfirmDelete(id) {
-  const l = LEADS.find(x => x.id === id);
+  const l = LEADS.find(x => String(x.id) === String(id));
   pendingDeleteId = id;
   document.getElementById('confirm-title').textContent = 'Eliminar lead';
   document.getElementById('confirm-msg').textContent   =
@@ -609,26 +631,10 @@ async function changeLeadStatus(id, newStatus, selectEl) {
   `;
 }
 
-// ─── ACTION DROPDOWN ───
-function toggleActionMenu(e, id) {
-  e.stopPropagation();
-  const btn = e.target.closest('.action-menu-btn') || e.currentTarget;
-  const menu = document.getElementById(`action-menu-${id}`);
-  const isOpen = menu.classList.contains('open');
-  closeAllMenus();
-  if (!isOpen) {
-    const rect = btn.getBoundingClientRect();
-    menu.style.top  = (rect.bottom + 4) + 'px';
-    menu.style.left = Math.max(8, rect.right - 140) + 'px';
-    menu.classList.add('open');
-  }
-}
-
-function closeAllMenus() {
-  document.querySelectorAll('.action-dropdown.open').forEach(m => m.classList.remove('open'));
-}
-
-document.addEventListener('click', closeAllMenus);
+// ─── CLOSE DROPDOWNS ON OUTSIDE CLICK ───
+document.addEventListener('click', () => {
+  document.querySelectorAll('.row-dropdown.open').forEach(d => d.classList.remove('open'));
+});
 
 // ─── ROW CLICK → LEAD PROFILE ───
 document.getElementById('leads-tbody').addEventListener('click', e => {

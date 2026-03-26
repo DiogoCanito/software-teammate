@@ -1080,7 +1080,7 @@ body::after {
 
 /* --- LEADS PAGE --- */
 .leads-table-wrap {
-  overflow-x: auto;
+  overflow: visible;
   border-radius: 13px;
   border: 1px solid var(--border);
   background: var(--surface);
