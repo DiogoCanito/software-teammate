@@ -1126,11 +1126,28 @@ body::after {
   white-space: nowrap;
   border: 1px solid transparent;
 }
-.lbadge.novo       { background: rgba(5,102,141,0.15);   color: #0a8ab8;       border-color: rgba(5,102,141,0.3); }
-.lbadge.contactado { background: rgba(245,197,24,0.13);  color: #d4a506;       border-color: rgba(245,197,24,0.28); }
-.lbadge.negociacao { background: rgba(124,58,237,0.14);  color: #a78bfa;       border-color: rgba(124,58,237,0.28); }
-.lbadge.convertido { background: rgba(45,212,160,0.13);  color: var(--success);border-color: rgba(45,212,160,0.28); }
-.lbadge.perdido    { background: rgba(74,74,74,0.25);    color: var(--text-muted); border-color: var(--border); }
+.lbadge.novo              { background: rgba(5,102,141,0.15);   color: #0a8ab8;        border-color: rgba(5,102,141,0.3); }
+.lbadge.contactado        { background: rgba(245,197,24,0.13);  color: #d4a506;        border-color: rgba(245,197,24,0.28); }
+.lbadge.primeira_reuniao  { background: rgba(249,115,22,0.13);  color: #f97316;        border-color: rgba(249,115,22,0.28); }
+.lbadge.segunda_reuniao   { background: rgba(124,58,237,0.14);  color: #a78bfa;        border-color: rgba(124,58,237,0.28); }
+.lbadge.convertido        { background: rgba(45,212,160,0.13);  color: var(--success); border-color: rgba(45,212,160,0.28); }
+.lbadge.perdido           { background: rgba(74,74,74,0.25);    color: var(--text-muted); border-color: var(--border); }
+
+/* Inline status select in leads table */
+.lbadge-sel {
+  font-size: 11px; font-weight: 600; padding: 3px 6px 3px 9px;
+  border-radius: 20px; border: 1px solid transparent;
+  background-clip: padding-box; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  font-family: inherit; outline: none;
+}
+.lbadge-sel.novo             { background: rgba(5,102,141,0.15);   color: #0a8ab8;        border-color: rgba(5,102,141,0.3); }
+.lbadge-sel.contactado       { background: rgba(245,197,24,0.13);  color: #d4a506;        border-color: rgba(245,197,24,0.28); }
+.lbadge-sel.primeira_reuniao { background: rgba(249,115,22,0.13);  color: #f97316;        border-color: rgba(249,115,22,0.28); }
+.lbadge-sel.segunda_reuniao  { background: rgba(124,58,237,0.14);  color: #a78bfa;        border-color: rgba(124,58,237,0.28); }
+.lbadge-sel.convertido       { background: rgba(45,212,160,0.13);  color: var(--success); border-color: rgba(45,212,160,0.28); }
+.lbadge-sel.perdido          { background: rgba(74,74,74,0.25);    color: var(--text-muted); border-color: var(--border); }
+.lbadge-sel option           { background: var(--surface); color: var(--text); font-size: 12px; }
 
 /* Canal tag */
 .canal-tag {
@@ -1550,7 +1567,7 @@ body::after {
     border-radius: 20px;
     position: fixed; bottom: 12px; left: 12px; right: 12px;
     width: auto; max-width: calc(100vw - 24px);
-    max-height: 90vh;
+    max-height: 80vh;
     transform: translateY(100%);
     overflow-x: hidden;
   }

@@ -135,7 +135,8 @@
       <option value="">Estado</option>
       <option value="novo">Novo</option>
       <option value="contactado">Contactado</option>
-      <option value="negociacao">Em Negociação</option>
+      <option value="primeira_reuniao">Primeira Reunião</option>
+      <option value="segunda_reuniao">Segunda Reunião</option>
       <option value="convertido">Convertido</option>
       <option value="perdido">Perdido</option>
     </select>
@@ -217,42 +218,6 @@
         </div>
       </div>
 
-      <div class="form-section-label">Origem e Contexto</div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Canal de Origem</label>
-          <select class="form-select" id="f-l-canal">
-            <option value="">Selecionar...</option>
-            <option value="Instagram">Instagram</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Referência">Referência</option>
-            <option value="Website">Website</option>
-            <option value="Evento">Evento</option>
-            <option value="Cold Outreach">Cold Outreach</option>
-            <option value="Outro">Outro</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Serviço de Interesse</label>
-          <select class="form-select" id="f-l-servico">
-            <option value="">Selecionar...</option>
-            <option value="Automações">Automações</option>
-            <option value="RadMate">RadMate</option>
-            <option value="Website">Website</option>
-            <option value="Outro">Outro</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Orçamento Estimado (€)</label>
-          <input class="form-input" id="f-l-orcamento" type="number" placeholder="Ex: 2500" min="0">
-        </div>
-        <div class="form-group"></div>
-      </div>
-
       <div class="form-section-label">Gestão da Lead</div>
 
       <div class="form-row">
@@ -261,7 +226,8 @@
           <select class="form-select" id="f-l-status">
             <option value="novo">Novo</option>
             <option value="contactado">Contactado</option>
-            <option value="negociacao">Em Negociação</option>
+            <option value="primeira_reuniao">Primeira Reunião</option>
+            <option value="segunda_reuniao">Segunda Reunião</option>
             <option value="convertido">Convertido</option>
             <option value="perdido">Perdido</option>
           </select>
@@ -310,6 +276,8 @@
 </div>
 
 <script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // ─── MOCK DATA ───
 let LEADS = [
   {
@@ -319,9 +287,7 @@ let LEADS = [
     phone: '+351 912 345 678',
     social: 'linkedin.com/in/mariasantos',
     canal: 'LinkedIn',
-    servico: 'Automações',
-    orcamento: 2500,
-    status: 'negociacao',
+    status: 'primeira_reuniao',
     primeiro_contacto: '2026-03-10',
     proximo_followup: '2026-03-28',
     como_contactado: 'LinkedIn',
@@ -389,7 +355,8 @@ let LEADS = [
   }
 ];
 
-let editingId   = null;
+let editingId       = null;
+let originalStatus  = null;
 let pendingDeleteId = null;
 let nextId = 6;
 
@@ -402,11 +369,12 @@ function formatDate(dateStr) {
 }
 
 const STATUS_LABELS = {
-  novo:        'Novo',
-  contactado:  'Contactado',
-  negociacao:  'Em Negociação',
-  convertido:  'Convertido',
-  perdido:     'Perdido'
+  novo:             'Novo',
+  contactado:       'Contactado',
+  primeira_reuniao: 'Primeira Reunião',
+  segunda_reuniao:  'Segunda Reunião',
+  convertido:       'Convertido',
+  perdido:          'Perdido',
 };
 
 // ─── RENDER ───
@@ -428,12 +396,12 @@ function renderLeads() {
 
   // Stats
   const total      = LEADS.length;
-  const negoc      = LEADS.filter(l => l.status === 'negociacao').length;
+  const emReuniao  = LEADS.filter(l => l.status === 'primeira_reuniao' || l.status === 'segunda_reuniao').length;
   const convertido = LEADS.filter(l => l.status === 'convertido').length;
   const perdido    = LEADS.filter(l => l.status === 'perdido').length;
   document.getElementById('leads-stats-row').innerHTML = `
     <div class="t-stat"><div class="t-stat-dot" style="background:var(--text-muted)"></div> Total: <strong>${total}</strong></div>
-    <div class="t-stat"><div class="t-stat-dot" style="background:#a78bfa"></div> Em Negociação: <strong>${negoc}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:#a78bfa"></div> Em Reunião: <strong>${emReuniao}</strong></div>
     <div class="t-stat"><div class="t-stat-dot" style="background:var(--success)"></div> Convertidos: <strong>${convertido}</strong></div>
     <div class="t-stat"><div class="t-stat-dot" style="background:var(--danger)"></div> Perdidos: <strong>${perdido}</strong></div>
   `;
@@ -465,7 +433,11 @@ function renderLeads() {
         ${l.phone ? `<div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">${l.phone}</div>` : ''}
       </td>
       <td><span class="canal-tag">${l.canal || '—'}</span></td>
-      <td><span class="lbadge ${l.status}">${STATUS_LABELS[l.status] || l.status}</span></td>
+      <td>
+        <select class="lbadge-sel ${l.status}" onchange="changeLeadStatus(${l.id}, this.value, this)">
+          ${Object.entries(STATUS_LABELS).map(([v,t]) => `<option value="${v}"${l.status===v?' selected':''}>${t}</option>`).join('')}
+        </select>
+      </td>
       <td style="font-size:12.5px;white-space:nowrap">${formatDate(l.primeiro_contacto)}</td>
       <td style="font-size:12.5px;white-space:nowrap">${l.proximo_followup ? `<span style="color:${isOverdue(l.proximo_followup) ? 'var(--danger)' : 'var(--text-dim)'}">${formatDate(l.proximo_followup)}</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
       <td>
@@ -494,14 +466,13 @@ function isOverdue(dateStr) {
 // ─── MODAL ───
 function openNewModal() {
   editingId = null;
+  originalStatus = null;
   document.getElementById('lead-modal-title').textContent = 'Nova Lead';
   document.getElementById('lead-modal-save').textContent  = 'Guardar Lead';
-  ['f-l-name','f-l-email','f-l-phone','f-l-social','f-l-orcamento','f-l-notas',
+  ['f-l-name','f-l-email','f-l-phone','f-l-social','f-l-notas',
    'f-l-primeiro-contacto','f-l-followup']
     .forEach(id => { document.getElementById(id).value = ''; });
-  ['f-l-canal','f-l-servico','f-l-como'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
+  document.getElementById('f-l-como').value   = '';
   document.getElementById('f-l-status').value = 'novo';
   document.querySelectorAll('#lead-modal-overlay .f-error')
     .forEach(el => el.classList.remove('f-error'));
@@ -512,16 +483,14 @@ function openNewModal() {
 function openEditModal(id) {
   const l = LEADS.find(x => x.id === id);
   if (!l) return;
-  editingId = id;
+  editingId      = id;
+  originalStatus = l.status;
   document.getElementById('lead-modal-title').textContent = 'Editar Lead';
   document.getElementById('lead-modal-save').textContent  = 'Guardar Alterações';
   document.getElementById('f-l-name').value              = l.name              || '';
   document.getElementById('f-l-email').value             = l.email             || '';
   document.getElementById('f-l-phone').value             = l.phone             || '';
   document.getElementById('f-l-social').value            = l.social            || '';
-  document.getElementById('f-l-canal').value             = l.canal             || '';
-  document.getElementById('f-l-servico').value           = l.servico           || '';
-  document.getElementById('f-l-orcamento').value         = l.orcamento         || '';
   document.getElementById('f-l-status').value            = l.status            || 'novo';
   document.getElementById('f-l-primeiro-contacto').value = l.primeiro_contacto || '';
   document.getElementById('f-l-followup').value          = l.proximo_followup  || '';
@@ -538,7 +507,7 @@ function closeModal() {
 }
 
 // Save
-document.getElementById('lead-modal-save').addEventListener('click', () => {
+document.getElementById('lead-modal-save').addEventListener('click', async () => {
   const nameEl = document.getElementById('f-l-name');
   const name   = nameEl.value.trim();
   nameEl.classList.toggle('f-error', !name);
@@ -549,9 +518,6 @@ document.getElementById('lead-modal-save').addEventListener('click', () => {
     email:             document.getElementById('f-l-email').value.trim()             || null,
     phone:             document.getElementById('f-l-phone').value.trim()             || null,
     social:            document.getElementById('f-l-social').value.trim()            || null,
-    canal:             document.getElementById('f-l-canal').value                    || null,
-    servico:           document.getElementById('f-l-servico').value                  || null,
-    orcamento:         parseFloat(document.getElementById('f-l-orcamento').value)    || null,
     status:            document.getElementById('f-l-status').value,
     primeiro_contacto: document.getElementById('f-l-primeiro-contacto').value        || null,
     proximo_followup:  document.getElementById('f-l-followup').value                 || null,
@@ -564,6 +530,11 @@ document.getElementById('lead-modal-save').addEventListener('click', () => {
     if (idx !== -1) LEADS[idx] = { ...LEADS[idx], ...payload };
   } else {
     LEADS.unshift({ id: nextId++, ...payload });
+  }
+
+  // Auto-create client when status is "Segunda Reunião" (only on first time)
+  if (payload.status === 'segunda_reuniao' && originalStatus !== 'segunda_reuniao') {
+    await createClientFromLead(payload);
   }
 
   closeModal();
@@ -615,6 +586,54 @@ document.getElementById('btn-clear-lf').addEventListener('click', () => {
   document.getElementById('lf-status').value = '';
   renderLeads();
 });
+
+// ─── AUTO-FILL FOLLOWUP ───
+document.getElementById('f-l-primeiro-contacto').addEventListener('change', function () {
+  const followupEl = document.getElementById('f-l-followup');
+  if (!this.value || followupEl.value) return; // only auto-fill if followup is empty
+  const d = new Date(this.value + 'T12:00:00');
+  d.setMonth(d.getMonth() + 1);
+  followupEl.value = d.toISOString().slice(0, 10);
+});
+
+// ─── CREATE CLIENT FROM LEAD ───
+async function createClientFromLead(lead) {
+  const words    = (lead.name || '').trim().split(/\s+/);
+  const initials = words.map(w => w[0] || '').join('').toUpperCase().slice(0, 2) || 'CL';
+  const { error } = await sb.from('clientes').insert({
+    name:         lead.name,
+    initials,
+    email:        lead.email        || null,
+    phone:        lead.phone        || null,
+    status:       'ativo',
+    avatar_color: '#ff956b',
+  });
+  if (error) console.error('Erro ao criar cliente:', error);
+}
+
+// ─── INLINE STATUS CHANGE ───
+async function changeLeadStatus(id, newStatus, selectEl) {
+  const idx = LEADS.findIndex(l => l.id === id);
+  if (idx === -1) return;
+  const prevStatus = LEADS[idx].status;
+  LEADS[idx].status = newStatus;
+  selectEl.className = `lbadge-sel ${newStatus}`;
+
+  if (newStatus === 'segunda_reuniao' && prevStatus !== 'segunda_reuniao') {
+    await createClientFromLead(LEADS[idx]);
+  }
+
+  // Re-render only stats (don't re-render rows to avoid resetting the select)
+  const emReuniao  = LEADS.filter(l => l.status === 'primeira_reuniao' || l.status === 'segunda_reuniao').length;
+  const convertido = LEADS.filter(l => l.status === 'convertido').length;
+  const perdido    = LEADS.filter(l => l.status === 'perdido').length;
+  document.getElementById('leads-stats-row').innerHTML = `
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--text-muted)"></div> Total: <strong>${LEADS.length}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:#a78bfa"></div> Em Reunião: <strong>${emReuniao}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--success)"></div> Convertidos: <strong>${convertido}</strong></div>
+    <div class="t-stat"><div class="t-stat-dot" style="background:var(--danger)"></div> Perdidos: <strong>${perdido}</strong></div>
+  `;
+}
 
 // ─── INIT ───
 renderLeads();
