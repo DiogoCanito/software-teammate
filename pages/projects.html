@@ -161,10 +161,6 @@
         <div class="form-group">
           <label class="form-label">Fase</label>
           <select class="form-select" id="f-phase">
-            <option value="lead">Lead</option>
-            <option value="primeira-reuniao">Primeira Reunião</option>
-            <option value="proposta">Proposta</option>
-            <option value="contrato">Contrato</option>
             <option value="credenciais">Credenciais</option>
             <option value="desenvolvimento" selected>Desenvolvimento</option>
             <option value="testes">Testes</option>
@@ -309,16 +305,12 @@ async function loadProjects() {
 }
 
 const PHASES = [
-  { id: 'lead',             label: 'Lead',            color: '#6b7280' },
-  { id: 'primeira-reuniao', label: 'Primeira Reunião', color: '#8b5cf6' },
-  { id: 'proposta',         label: 'Proposta',         color: '#3b82f6' },
-  { id: 'contrato',         label: 'Contrato',         color: '#0a8ab8' },
-  { id: 'credenciais',      label: 'Credenciais',      color: '#f59e0b' },
-  { id: 'desenvolvimento',  label: 'Desenvolvimento',  color: '#05668d' },
-  { id: 'testes',           label: 'Testes',           color: '#f5c518' },
-  { id: 'lancamento',       label: 'Lançamento',       color: '#2dd4a0' },
-  { id: 'followup',         label: 'Follow Up',        color: '#ff956b' },
-  { id: 'cancelado',        label: 'Cancelado',        color: '#ff4d6d' },
+  { id: 'credenciais',     label: 'Credenciais',     color: '#f59e0b' },
+  { id: 'desenvolvimento', label: 'Desenvolvimento', color: '#05668d' },
+  { id: 'testes',          label: 'Testes',          color: '#f5c518' },
+  { id: 'lancamento',      label: 'Lançamento',      color: '#2dd4a0' },
+  { id: 'followup',        label: 'Follow Up',       color: '#ff956b' },
+  { id: 'cancelado',       label: 'Cancelado',       color: '#ff4d6d' },
 ];
 
 

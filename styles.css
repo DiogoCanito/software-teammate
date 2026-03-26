@@ -518,7 +518,9 @@ body::after {
 .tasks-table tbody tr:last-child td { border-bottom: none; }
 .tasks-table tbody tr { transition: background 0.1s; cursor: pointer; }
 .tasks-table tbody tr:hover td { background: var(--surface2); }
+.tc-main-cell { min-width: 260px; }
 .tc-title { display: flex; align-items: center; gap: 9px; }
+.tc-mobile-card { display: none; }
 .tc-cb {
   width: 15px; height: 15px; border-radius: 4px;
   border: 1.5px solid var(--border); flex-shrink: 0;
@@ -1578,11 +1580,22 @@ body::after {
   .main { overflow-x: hidden; }
   .form-input, .form-select, .form-textarea { max-width: 100%; }
 
-  /* Tables: show only first column + last (actions) column, hide everything in between */
-  .tasks-table th:nth-child(n+2):not(:last-child),
-  .tasks-table td:nth-child(n+2):not(:last-child) { display: none; }
+  /* Tables: hide all columns except first on tasks, hide middle cols on leads */
+  .tasks-table th:nth-child(n+2),
+  .tasks-table td:nth-child(n+2) { display: none; }
   .leads-table th:nth-child(n+2):not(:last-child),
   .leads-table td:nth-child(n+2):not(:last-child) { display: none; }
+
+  /* Tasks table: mobile card layout inside first cell */
+  .tc-main-cell { min-width: 0; width: 100%; padding: 10px 14px; }
+  .tc-title { display: none; }
+  .tc-mobile-card { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .tc-mobile-body { flex: 1; min-width: 0; }
+  .tc-mobile-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+  .tc-mobile-card .t-due { font-size: 11px; white-space: nowrap; flex-shrink: 0; color: var(--text-muted); }
+  .tc-mobile-card .t-due.late { color: var(--danger); }
+  .tasks-table tbody tr { border-bottom: 1px solid var(--border); }
+  .tasks-table tbody tr:last-child { border-bottom: none; }
 
   /* Prevent tables from overflowing */
   .tasks-table-wrap { overflow: hidden; }

@@ -415,10 +415,21 @@ function renderListView(tasks) {
     const isDone = t.status === 'concluida';
     return `
       <tr data-id="${t.id}">
-        <td style="min-width:260px">
+        <td class="tc-main-cell">
           <div class="tc-title">
             <div class="tc-cb ${isDone ? 'done' : ''}">${isDone ? '✓' : ''}</div>
             <span class="tc-name ${isDone ? 'done' : ''}">${t.title}</span>
+          </div>
+          <div class="tc-mobile-card">
+            <div class="tc-cb ${isDone ? 'done' : ''}">${isDone ? '✓' : ''}</div>
+            <div class="tc-mobile-body">
+              <span class="tc-name ${isDone ? 'done' : ''}">${t.title}</span>
+              <div class="tc-mobile-meta">
+                <span class="t-prio ${pm.cls}">${pm.label}</span>
+                <span class="t-proj">${t.client}</span>
+              </div>
+            </div>
+            <div class="t-due ${t.late && !isDone ? 'late' : ''}">${t.due}</div>
           </div>
         </td>
         <td>
