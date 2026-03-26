@@ -1218,6 +1218,54 @@ body::after {
 .tact-btn:hover { background: var(--surface3); color: var(--text); }
 .tact-btn.del:hover { color: var(--danger); }
 
+/* 3-dots action dropdown */
+.action-menu { position: relative; display: inline-flex; }
+.action-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.action-menu-btn:hover { background: var(--surface3); color: var(--text); }
+.action-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  z-index: 200;
+  min-width: 130px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+.action-dropdown.open { display: block; }
+.action-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+.action-dropdown-item:hover { background: var(--surface3); color: var(--text); }
+.action-dropdown-item.del:hover { color: var(--danger); }
+
 /* Modal section label */
 .form-section-label {
   font-size: 9.5px;

@@ -220,6 +220,13 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Morada</label>
+          <input class="form-input" id="f-l-morada" type="text" placeholder="Ex: Rua das Flores 123, Lisboa">
+        </div>
+      </div>
+
       <div class="form-section-label">Gestão da Lead</div>
 
       <div class="form-row">
@@ -382,9 +389,12 @@ function renderLeads() {
           : `<span style="color:var(--text-muted);font-size:13px">—</span>`}
       </td>
       <td>
-        <div class="table-actions">
-          <button class="tact-btn" onclick="openEditModal(${l.id})" title="Editar">✎</button>
-          <button class="tact-btn del" onclick="openConfirmDelete(${l.id})" title="Eliminar">✕</button>
+        <div class="action-menu">
+          <button class="action-menu-btn" onclick="toggleActionMenu(event, ${l.id})">⋮</button>
+          <div class="action-dropdown" id="action-menu-${l.id}">
+            <button class="action-dropdown-item" onclick="openEditModal(${l.id}); closeAllMenus()">✎ Editar</button>
+            <button class="action-dropdown-item del" onclick="openConfirmDelete(${l.id}); closeAllMenus()">✕ Eliminar</button>
+          </div>
         </div>
       </td>
     </tr>
@@ -402,7 +412,7 @@ function openNewModal() {
   originalStatus = null;
   document.getElementById('lead-modal-title').textContent = 'Nova Lead';
   document.getElementById('lead-modal-save').textContent  = 'Guardar Lead';
-  ['f-l-name','f-l-email','f-l-phone','f-l-social','f-l-notas',
+  ['f-l-name','f-l-email','f-l-phone','f-l-social','f-l-morada','f-l-notas',
    'f-l-primeiro-contacto','f-l-followup']
     .forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('f-l-como').value   = '';
@@ -424,6 +434,7 @@ function openEditModal(id) {
   document.getElementById('f-l-email').value             = l.email             || '';
   document.getElementById('f-l-phone').value             = l.phone             || '';
   document.getElementById('f-l-social').value            = l.social            || '';
+  document.getElementById('f-l-morada').value            = l.morada            || '';
   document.getElementById('f-l-status').value            = l.status            || 'novo';
   document.getElementById('f-l-primeiro-contacto').value = l.primeiro_contacto || '';
   document.getElementById('f-l-followup').value          = l.proximo_followup  || '';
@@ -451,6 +462,7 @@ document.getElementById('lead-modal-save').addEventListener('click', async () =>
     email:             document.getElementById('f-l-email').value.trim()             || null,
     phone:             document.getElementById('f-l-phone').value.trim()             || null,
     social:            document.getElementById('f-l-social').value.trim()            || null,
+    morada:            document.getElementById('f-l-morada').value.trim()            || null,
     status:            document.getElementById('f-l-status').value,
     primeiro_contacto: document.getElementById('f-l-primeiro-contacto').value        || null,
     proximo_followup:  document.getElementById('f-l-followup').value                 || null,
@@ -570,6 +582,21 @@ async function changeLeadStatus(id, newStatus, selectEl) {
     <div class="t-stat"><div class="t-stat-dot" style="background:var(--danger)"></div> Perdidos: <strong>${perdido}</strong></div>
   `;
 }
+
+// ─── ACTION DROPDOWN ───
+function toggleActionMenu(e, id) {
+  e.stopPropagation();
+  const menu = document.getElementById(`action-menu-${id}`);
+  const isOpen = menu.classList.contains('open');
+  closeAllMenus();
+  if (!isOpen) menu.classList.add('open');
+}
+
+function closeAllMenus() {
+  document.querySelectorAll('.action-dropdown.open').forEach(m => m.classList.remove('open'));
+}
+
+document.addEventListener('click', closeAllMenus);
 
 // ─── INIT ───
 loadLeads();
