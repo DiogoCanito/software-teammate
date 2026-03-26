@@ -29,7 +29,13 @@
 
     <div class="form-group">
       <label class="form-label" for="login-password">Password</label>
-      <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+      <div class="pw-wrap">
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+        <button type="button" class="pw-toggle" id="pw-toggle" onclick="togglePassword()" tabindex="-1" aria-label="Mostrar password">
+          <svg id="pw-eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="pw-eye-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
     </div>
 
     <label class="login-remember">
@@ -52,7 +58,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Se já tiver sessão ativa, redireciona para o dashboard
 sb.auth.getSession().then(({ data: { session } }) => {
-  if (session) window.location.replace('index.html');
+  if (session) window.location.replace('/homepage');
 });
 
 function showError(msg) {
@@ -98,7 +104,7 @@ async function doLogin() {
     }
 
     // Sucesso — redireciona para o dashboard
-    window.location.replace('index.html');
+    window.location.replace('/homepage');
 
   } catch (e) {
     showError('Erro de ligação. Tenta novamente mais tarde.');
@@ -116,7 +122,7 @@ async function doForgot() {
   }
 
   const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/login.html'
+    redirectTo: window.location.origin + '/login'
   });
 
   if (error) {
@@ -128,6 +134,21 @@ async function doForgot() {
     el.style.color = '#2dd4a0';
     el.textContent = 'Email de recuperação enviado. Verifica a tua caixa de entrada.';
     el.classList.add('show');
+  }
+}
+
+function togglePassword() {
+  const input = document.getElementById('login-password');
+  const show = document.getElementById('pw-eye-show');
+  const hide = document.getElementById('pw-eye-hide');
+  if (input.type === 'password') {
+    input.type = 'text';
+    show.style.display = 'none';
+    hide.style.display = '';
+  } else {
+    input.type = 'password';
+    show.style.display = '';
+    hide.style.display = 'none';
   }
 }
 

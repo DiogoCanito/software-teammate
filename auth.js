@@ -8,7 +8,7 @@
   sb.auth.getSession().then(function (res) {
     var session = res.data.session;
     if (!session) {
-      window.location.replace('/login.html');
+      window.location.replace('/login');
       return;
     }
     // Atualiza o nome do utilizador na sidebar
@@ -24,14 +24,14 @@
   // Reage a mudanças de estado de autenticação (ex: sessão expirada)
   sb.auth.onAuthStateChange(function (_event, session) {
     if (!session) {
-      window.location.replace('/login.html');
+      window.location.replace('/login');
     }
   });
 
   // Logout com signOut do Supabase
   window.__authLogout = async function () {
     await sb.auth.signOut();
-    window.location.replace('/login.html');
+    window.location.replace('/login');
   };
 
   // Abre a confirmação de logout
