@@ -139,18 +139,17 @@
     <div class="kpi-card green">
       <div class="kpi-icon">€</div>
       <div class="kpi-label">Receita do Mês</div>
-      <div class="kpi-value">€12.400</div>
+      <div class="kpi-value" id="kpi-receita">—</div>
       <div class="kpi-meta">
-        <span class="kpi-delta up">↑ 18%</span>
-        <span>vs. fevereiro</span>
+        <span class="kpi-delta neutral" id="kpi-receita-sub">propostas aceites</span>
       </div>
     </div>
     <div class="kpi-card yellow">
       <div class="kpi-icon">💸</div>
       <div class="kpi-label">Margem Líquida</div>
-      <div class="kpi-value">69%</div>
+      <div class="kpi-value" id="kpi-margem">—</div>
       <div class="kpi-meta">
-        <span class="kpi-delta neutral">€3.820 custos</span>
+        <span class="kpi-delta neutral" id="kpi-custos-sub">— custos</span>
       </div>
     </div>
   </div>
@@ -186,52 +185,8 @@
           <div class="card-sub">Distribuição atual</div>
         </div>
       </div>
-      <div class="donut-wrap">
-        <svg class="donut-svg" width="138" height="138" viewBox="0 0 138 138">
-          <circle cx="69" cy="69" r="50" fill="none" stroke="var(--surface3)" stroke-width="17"/>
-          <circle cx="69" cy="69" r="50" fill="none" stroke="#05668d" stroke-width="17"
-            stroke-dasharray="157.1 157.1" stroke-dashoffset="0"
-            transform="rotate(-90 69 69)" opacity="0.9"/>
-          <circle cx="69" cy="69" r="50" fill="none" stroke="#f5c518" stroke-width="17"
-            stroke-dasharray="78.5 235.7" stroke-dashoffset="-157.1"
-            transform="rotate(-90 69 69)" opacity="0.85"/>
-          <circle cx="69" cy="69" r="50" fill="none" stroke="#2dd4a0" stroke-width="17"
-            stroke-dasharray="39.3 274.9" stroke-dashoffset="-235.6"
-            transform="rotate(-90 69 69)" opacity="0.85"/>
-          <circle cx="69" cy="69" r="50" fill="none" stroke="#2e2e2e" stroke-width="17"
-            stroke-dasharray="39.3 274.9" stroke-dashoffset="-274.9"
-            transform="rotate(-90 69 69)" opacity="1"/>
-          <text x="69" y="64" text-anchor="middle" fill="white"
-            font-family="'Funnel Display',sans-serif" font-weight="700" font-size="22">8</text>
-          <text x="69" y="79" text-anchor="middle" fill="#4a4a4a"
-            font-family="Inter,sans-serif" font-size="8" letter-spacing="0.07em">PROJETOS</text>
-        </svg>
-        <div class="donut-list">
-          <div class="donut-row">
-            <div class="d-dot" style="background:#05668d"></div>
-            <div class="d-name">Em curso</div>
-            <div class="d-val">4</div>
-            <div class="d-pct">50%</div>
-          </div>
-          <div class="donut-row">
-            <div class="d-dot" style="background:#f5c518"></div>
-            <div class="d-name">Em revisão</div>
-            <div class="d-val">2</div>
-            <div class="d-pct">25%</div>
-          </div>
-          <div class="donut-row">
-            <div class="d-dot" style="background:#2dd4a0"></div>
-            <div class="d-name">Concluídos</div>
-            <div class="d-val">1</div>
-            <div class="d-pct">12.5%</div>
-          </div>
-          <div class="donut-row">
-            <div class="d-dot" style="background:#2e2e2e;border:1px solid #444"></div>
-            <div class="d-name">Em pausa</div>
-            <div class="d-val">1</div>
-            <div class="d-pct">12.5%</div>
-          </div>
-        </div>
+      <div class="donut-wrap" id="dash-donut-wrap">
+        <div style="text-align:center;color:var(--text-muted);padding:20px">A carregar...</div>
       </div>
     </div>
 
@@ -297,66 +252,12 @@
       <div class="card-header">
         <div>
           <div class="card-title">Clientes Ativos</div>
-          <div class="card-sub">6 clientes · Março 2026</div>
+          <div class="card-sub" id="dash-cli-sub">— clientes</div>
         </div>
-        <button class="btn btn-ghost btn-sm">Ver todos →</button>
+        <a class="btn btn-ghost btn-sm" href="pages/clientes.html">Ver todos →</a>
       </div>
-      <div class="client-list">
-        <div class="client-item">
-          <div class="c-avatar" style="background:linear-gradient(135deg,#05668d,#0a8ab8)">NT</div>
-          <div class="c-info">
-            <div class="c-name">Nexus Tecnologia</div>
-            <div class="c-sector">Software · SaaS</div>
-          </div>
-          <div>
-            <div class="c-val">€4.500</div>
-            <div class="c-count">2 projetos</div>
-          </div>
-        </div>
-        <div class="client-item">
-          <div class="c-avatar" style="background:linear-gradient(135deg,#ff956b,#c4623c)">OS</div>
-          <div class="c-info">
-            <div class="c-name">Orbita Studio</div>
-            <div class="c-sector">Design · Criativo</div>
-          </div>
-          <div>
-            <div class="c-val">€2.800</div>
-            <div class="c-count">1 projeto</div>
-          </div>
-        </div>
-        <div class="client-item">
-          <div class="c-avatar" style="background:linear-gradient(135deg,#2dd4a0,#147a58)">VS</div>
-          <div class="c-info">
-            <div class="c-name">Viva Saúde</div>
-            <div class="c-sector">Saúde · Mobile</div>
-          </div>
-          <div>
-            <div class="c-val">€6.200</div>
-            <div class="c-count">1 projeto</div>
-          </div>
-        </div>
-        <div class="client-item">
-          <div class="c-avatar" style="background:linear-gradient(135deg,#f5c518,#8a6800)">SF</div>
-          <div class="c-info">
-            <div class="c-name">Serra &amp; Filhos</div>
-            <div class="c-sector">Retalho · Branding</div>
-          </div>
-          <div>
-            <div class="c-val">€1.900</div>
-            <div class="c-count">1 projeto</div>
-          </div>
-        </div>
-        <div class="client-item">
-          <div class="c-avatar" style="background:linear-gradient(135deg,#7c3aed,#4c1d95)">PC</div>
-          <div class="c-info">
-            <div class="c-name">Prime Consult</div>
-            <div class="c-sector">Consultoria · CRM</div>
-          </div>
-          <div>
-            <div class="c-val">€3.200</div>
-            <div class="c-count">2 projetos</div>
-          </div>
-        </div>
+      <div class="client-list" id="dash-client-list">
+        <div style="text-align:center;color:var(--text-muted);padding:20px">A carregar...</div>
       </div>
     </div>
 
@@ -365,120 +266,11 @@
       <div class="card-header">
         <div>
           <div class="card-title">Resumo Financeiro</div>
-          <div class="card-sub">Março 2026</div>
+          <div class="card-sub" id="dash-fin-sub">Este mês</div>
         </div>
       </div>
-
-      <div class="fin-row">
-        <div class="fin-item">
-          <div class="fin-label">Receita</div>
-          <div class="fin-value income">€12.400</div>
-          <div class="fin-delta">↑ 18% vs fev.</div>
-        </div>
-        <div class="fin-item">
-          <div class="fin-label">Custos</div>
-          <div class="fin-value expense">€3.820</div>
-          <div class="fin-delta">→ Estável</div>
-        </div>
-      </div>
-
-      <div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:11px;color:var(--text-muted)">Margem líquida</span>
-          <span style="font-size:12px;font-weight:600;color:var(--success)">69.2%</span>
-        </div>
-        <div style="height:5px;background:var(--surface3);border-radius:4px;overflow:hidden">
-          <div style="width:69.2%;height:100%;background:linear-gradient(90deg,var(--blue),var(--success));border-radius:4px"></div>
-        </div>
-      </div>
-
-      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:7px">Principais Custos</div>
-      <div class="exp-list">
-        <div class="exp-row">
-          <span class="exp-icon">👥</span>
-          <span class="exp-name">Equipa freelance</span>
-          <span class="exp-amount">€1.800</span>
-          <span class="exp-cat">RH</span>
-        </div>
-        <div class="exp-row">
-          <span class="exp-icon">📢</span>
-          <span class="exp-name">Marketing &amp; Ads</span>
-          <span class="exp-amount">€900</span>
-          <span class="exp-cat">Mktg</span>
-        </div>
-        <div class="exp-row">
-          <span class="exp-icon">☁️</span>
-          <span class="exp-name">Infra &amp; software</span>
-          <span class="exp-amount">€620</span>
-          <span class="exp-cat">Tech</span>
-        </div>
-        <div class="exp-row">
-          <span class="exp-icon">🏢</span>
-          <span class="exp-name">Escritório &amp; admin</span>
-          <span class="exp-amount">€500</span>
-          <span class="exp-cat">Admin</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Activity Feed -->
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Atividade Recente</div>
-          <div class="card-sub">Últimas atualizações da equipa</div>
-        </div>
-      </div>
-      <div class="act-list">
-        <div class="act-item">
-          <div class="act-dot" style="background:var(--success)"></div>
-          <div class="act-body">
-            <div class="act-text"><strong>Viva Saúde</strong> — App Mobile atingiu 90% de progresso</div>
-            <div class="act-time">há 12 min</div>
-          </div>
-        </div>
-        <div class="act-item">
-          <div class="act-dot" style="background:var(--danger)"></div>
-          <div class="act-body">
-            <div class="act-text"><strong>Orbita Studio</strong> — campanha marcada como urgente</div>
-            <div class="act-time">há 1h</div>
-          </div>
-        </div>
-        <div class="act-item">
-          <div class="act-dot" style="background:var(--blue-light)"></div>
-          <div class="act-body">
-            <div class="act-text"><strong>Nexus Tecnologia</strong> — comentário nos mockups</div>
-            <div class="act-time">há 2h</div>
-          </div>
-        </div>
-        <div class="act-item">
-          <div class="act-dot" style="background:var(--warning)"></div>
-          <div class="act-body">
-            <div class="act-text"><strong>Fatura #0047</strong> enviada — Prime Consult (€3.200)</div>
-            <div class="act-time">Ontem, 18:30</div>
-          </div>
-        </div>
-        <div class="act-item">
-          <div class="act-dot" style="background:var(--success)"></div>
-          <div class="act-body">
-            <div class="act-text"><strong>Serra &amp; Filhos</strong> — proposta aceite · projeto iniciado</div>
-            <div class="act-time">Ontem, 14:10</div>
-          </div>
-        </div>
-        <div class="act-item">
-          <div class="act-dot" style="background:var(--blue-light)"></div>
-          <div class="act-body">
-            <div class="act-text"><strong>Relatório de março</strong> gerado automaticamente</div>
-            <div class="act-time">18 Mar, 09:00</div>
-          </div>
-        </div>
-        <div class="act-item">
-          <div class="act-dot" style="background:var(--text-muted)"></div>
-          <div class="act-body">
-            <div class="act-text"><strong>Tarefa</strong> "Call semanal" marcada como concluída</div>
-            <div class="act-time">18 Mar, 11:00</div>
-          </div>
-        </div>
+      <div id="dash-fin-body">
+        <div style="text-align:center;color:var(--text-muted);padding:20px">A carregar...</div>
       </div>
     </div>
 
@@ -568,21 +360,6 @@
 <script>
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ─── BAR CHART ───
-const months  = ['Out','Nov','Dez','Jan','Fev','Mar'];
-const revenue = [8200, 9100, 7800, 10400, 10500, 12400];
-const costs   = [3100, 3400, 2900,  3600,  3800,  3820];
-const maxVal  = Math.max(...revenue);
-const chart = document.getElementById('finChart');
-chart.innerHTML = months.map((m, i) => {
-  const hRev  = Math.round((revenue[i] / maxVal) * 125);
-  const hCost = Math.round((costs[i]   / maxVal) * 125);
-  return `<div class="bar-group"><div class="bar-wrap">
-    <div class="bar b-blue"  style="height:${hRev}px"  title="Receita: €${revenue[i].toLocaleString('pt-PT')}"></div>
-    <div class="bar b-coral" style="height:${hCost}px" title="Custos: €${costs[i].toLocaleString('pt-PT')}"></div>
-  </div><div class="bar-label">${m}</div></div>`;
-}).join('');
-
 // ─── HELPERS ───
 function dashFormatDl(dateStr) {
   if (!dateStr) return null;
@@ -609,23 +386,64 @@ const PHASE_PROGRESS = { lead:5, 'primeira-reuniao':15, proposta:25, contrato:40
 
 // ─── LOAD DASHBOARD DATA ───
 async function loadDashboard() {
-  const [{ data: projs }, { data: tasks }] = await Promise.all([
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear  = now.getFullYear();
+
+  const [
+    { data: projs },
+    { data: tasks },
+    { data: allProjs },
+    { data: clientes },
+    { data: propostas },
+    { data: custos },
+  ] = await Promise.all([
     sb.from('projects').select('*').neq('phase','cancelado').order('created_at', { ascending: false }).limit(5),
     sb.from('tasks').select('*').neq('status','concluida').order('due_date', { ascending: true }),
+    sb.from('projects').select('phase').neq('phase','cancelado'),
+    sb.from('clientes').select('*').eq('status','ativo').order('name').limit(6),
+    sb.from('propostas').select('*'),
+    sb.from('custos').select('*'),
   ]);
 
-  // KPIs
-  const { count: totalProj } = await sb.from('projects').select('*', { count: 'exact', head: true }).neq('phase','cancelado');
-  const urgent = (tasks || []).filter(t => t.priority === 'alta').length;
+  // ─── BASIC KPIs ───
+  const totalProj = (allProjs || []).length;
+  const urgent  = (tasks || []).filter(t => t.priority === 'alta').length;
   const pending = (tasks || []).length;
-  document.getElementById('kpi-projects').textContent = totalProj ?? '—';
-  document.getElementById('kpi-tasks').textContent = pending;
-  document.getElementById('kpi-urgent').textContent = `${urgent} urgentes`;
+  document.getElementById('kpi-projects').textContent = totalProj;
+  document.getElementById('kpi-tasks').textContent    = pending;
+  document.getElementById('kpi-urgent').textContent   = `${urgent} urgentes`;
   document.getElementById('dash-urgent-pill').textContent = `${urgent} urgentes`;
 
-  // Projects table
-  const prioLabels = { alta:'Alta', media:'Média', baixa:'Baixa' };
-  document.getElementById('dash-proj-sub').textContent = `${totalProj ?? '—'} projeto${totalProj !== 1 ? 's' : ''} · activos`;
+  // ─── FINANCIAL KPIs ───
+  const receita = (propostas || [])
+    .filter(p => p.estado === 'aceite' && p.data_criacao)
+    .filter(p => {
+      const d = new Date(p.data_criacao + 'T12:00:00');
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    })
+    .reduce((s, p) => s + (p.iva ? p.valor * (1 + (p.iva_pct || 23) / 100) : Number(p.valor)), 0);
+
+  let custosMes = 0;
+  (custos || []).forEach(c => {
+    const f = c.frequencia;
+    if      (f === 'mensal')  custosMes += Number(c.valor);
+    else if (f === 'semanal') custosMes += Number(c.valor) * 4;
+    else if (f === 'diario')  custosMes += Number(c.valor) * 30;
+    else if (f === 'anual')   custosMes += Number(c.valor) / 12;
+    else if (f === 'unico' && c.data) {
+      const d = new Date(c.data + 'T12:00:00');
+      if (d.getMonth() === thisMonth && d.getFullYear() === thisYear) custosMes += Number(c.valor);
+    }
+  });
+
+  const margemPct = receita > 0 ? (receita - custosMes) / receita * 100 : 0;
+  document.getElementById('kpi-receita').textContent    = `€${Math.round(receita).toLocaleString('pt-PT')}`;
+  document.getElementById('kpi-margem').textContent     = receita > 0 ? `${Math.round(margemPct)}%` : '—';
+  document.getElementById('kpi-custos-sub').textContent = `€${Math.round(custosMes).toLocaleString('pt-PT')} custos`;
+
+  // ─── PROJECTS TABLE ───
+  document.getElementById('dash-proj-sub').textContent = `${totalProj} projeto${totalProj !== 1 ? 's' : ''} · activos`;
   document.getElementById('dash-proj-tbody').innerHTML = (projs || []).map(p => {
     const dl   = dashFormatDl(p.deadline);
     const late = dashIsLate(p.deadline);
@@ -644,13 +462,12 @@ async function loadDashboard() {
     </tr>`;
   }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Sem projetos</td></tr>';
 
-  // Priority tasks
+  // ─── PRIORITY TASKS ───
   const prioCls = { alta:'h', media:'m', baixa:'l' };
   const prioLbl = { alta:'Alta', media:'Média', baixa:'Baixa' };
-  const topTasks = (tasks || []).slice(0, 6);
-  document.getElementById('dash-task-list').innerHTML = topTasks.map(t => {
+  document.getElementById('dash-task-list').innerHTML = (tasks || []).slice(0, 6).map(t => {
     const isDone = t.status === 'concluida';
-    const due = dashFormatDue(t.due_date);
+    const due  = dashFormatDue(t.due_date);
     const late = dashIsLate(t.due_date) && !isDone;
     return `<div class="task-item" data-id="${t.id}">
       <div class="task-check ${isDone?'done':''}">${isDone?'✓':''}</div>
@@ -665,16 +482,135 @@ async function loadDashboard() {
     </div>`;
   }).join('') || '<div style="text-align:center;color:var(--text-muted);padding:20px">Sem tarefas pendentes</div>';
 
-  // Task toggle
   document.querySelectorAll('#dash-task-list .task-item').forEach(item => {
     item.addEventListener('click', async () => {
       const id = parseInt(item.dataset.id);
-      const check = item.querySelector('.task-check');
-      const isDone = check.classList.contains('done');
+      const isDone = item.querySelector('.task-check').classList.contains('done');
       await sb.from('tasks').update({ status: isDone ? 'a-fazer' : 'concluida' }).eq('id', id);
       await loadDashboard();
     });
   });
+
+  // ─── CLIENTS ───
+  const cliList = clientes || [];
+  document.getElementById('dash-cli-sub').textContent = `${cliList.length} cliente${cliList.length !== 1 ? 's' : ''} · ativos`;
+  document.getElementById('dash-client-list').innerHTML = cliList.length === 0
+    ? '<div style="text-align:center;color:var(--text-muted);padding:20px">Sem clientes ativos</div>'
+    : cliList.map(c => `
+        <div class="client-item">
+          <div class="c-avatar" style="background:${c.avatar_color || '#05668d'}">${c.initials || '??'}</div>
+          <div class="c-info">
+            <div class="c-name">${c.name}</div>
+            <div class="c-sector">${c.sector || '—'}</div>
+          </div>
+        </div>`).join('');
+
+  // ─── DONUT CHART ───
+  const phases   = allProjs || [];
+  const total    = phases.length || 1;
+  const emCurso  = phases.filter(p => ['credenciais','desenvolvimento'].includes(p.phase)).length;
+  const emTestes = phases.filter(p => ['testes','lancamento'].includes(p.phase)).length;
+  const concluidos = phases.filter(p => p.phase === 'followup').length;
+  const C = 2 * Math.PI * 50;
+  const s1 = C * emCurso  / total;
+  const s2 = C * emTestes / total;
+  const s3 = C * concluidos / total;
+  document.getElementById('dash-donut-wrap').innerHTML = `
+    <svg class="donut-svg" width="138" height="138" viewBox="0 0 138 138">
+      <circle cx="69" cy="69" r="50" fill="none" stroke="var(--surface3)" stroke-width="17"/>
+      ${s1>0?`<circle cx="69" cy="69" r="50" fill="none" stroke="#05668d" stroke-width="17"
+        stroke-dasharray="${s1} ${C-s1}" stroke-dashoffset="0" transform="rotate(-90 69 69)" opacity="0.9"/>` : ''}
+      ${s2>0?`<circle cx="69" cy="69" r="50" fill="none" stroke="#f5c518" stroke-width="17"
+        stroke-dasharray="${s2} ${C-s2}" stroke-dashoffset="${-s1}" transform="rotate(-90 69 69)" opacity="0.85"/>` : ''}
+      ${s3>0?`<circle cx="69" cy="69" r="50" fill="none" stroke="#2dd4a0" stroke-width="17"
+        stroke-dasharray="${s3} ${C-s3}" stroke-dashoffset="${-(s1+s2)}" transform="rotate(-90 69 69)" opacity="0.85"/>` : ''}
+      <text x="69" y="64" text-anchor="middle" fill="white"
+        font-family="'Funnel Display',sans-serif" font-weight="700" font-size="22">${phases.length}</text>
+      <text x="69" y="79" text-anchor="middle" fill="#4a4a4a"
+        font-family="Inter,sans-serif" font-size="8" letter-spacing="0.07em">PROJETOS</text>
+    </svg>
+    <div class="donut-list">
+      <div class="donut-row"><div class="d-dot" style="background:#05668d"></div><div class="d-name">Em curso</div><div class="d-val">${emCurso}</div><div class="d-pct">${Math.round(emCurso/total*100)}%</div></div>
+      <div class="donut-row"><div class="d-dot" style="background:#f5c518"></div><div class="d-name">Em testes</div><div class="d-val">${emTestes}</div><div class="d-pct">${Math.round(emTestes/total*100)}%</div></div>
+      <div class="donut-row"><div class="d-dot" style="background:#2dd4a0"></div><div class="d-name">Concluídos</div><div class="d-val">${concluidos}</div><div class="d-pct">${Math.round(concluidos/total*100)}%</div></div>
+    </div>`;
+
+  // ─── BAR CHART ───
+  const MN = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const barMonths = Array.from({length:6}, (_,i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5-i), 1);
+    return { m: d.getMonth(), y: d.getFullYear(), label: MN[d.getMonth()] };
+  });
+  const barRev = barMonths.map(({m,y}) =>
+    (propostas||[]).filter(p => p.estado==='aceite' && p.data_criacao)
+      .filter(p => { const d=new Date(p.data_criacao+'T12:00:00'); return d.getMonth()===m && d.getFullYear()===y; })
+      .reduce((s,p) => s+(p.iva?Number(p.valor)*(1+(p.iva_pct||23)/100):Number(p.valor)), 0)
+  );
+  const barCst = barMonths.map(({m,y}) => {
+    let t=0;
+    (custos||[]).forEach(c => {
+      const startD = c.data ? new Date(c.data+'T12:00:00') : null;
+      const endOfMonth = new Date(y, m+1, 0);
+      const f = c.frequencia;
+      if ((f==='mensal'||f==='semanal'||f==='diario'||f==='anual') && (!startD||startD<=endOfMonth)) {
+        if (f==='mensal') t+=Number(c.valor);
+        else if (f==='semanal') t+=Number(c.valor)*4;
+        else if (f==='diario') t+=Number(c.valor)*30;
+        else t+=Number(c.valor)/12;
+      } else if (f==='unico' && startD && startD.getMonth()===m && startD.getFullYear()===y) {
+        t+=Number(c.valor);
+      }
+    });
+    return t;
+  });
+  const maxBar = Math.max(...barRev, ...barCst, 1);
+  document.getElementById('finChart').innerHTML = barMonths.map((bm,i) => {
+    const hR = Math.max(2, Math.round(barRev[i]/maxBar*125));
+    const hC = Math.max(2, Math.round(barCst[i]/maxBar*125));
+    return `<div class="bar-group"><div class="bar-wrap">
+      <div class="bar b-blue"  style="height:${hR}px" title="Receita: €${Math.round(barRev[i]).toLocaleString('pt-PT')}"></div>
+      <div class="bar b-coral" style="height:${hC}px" title="Custos: €${Math.round(barCst[i]).toLocaleString('pt-PT')}"></div>
+    </div><div class="bar-label">${bm.label}</div></div>`;
+  }).join('');
+
+  // ─── FINANCE SUMMARY ───
+  const CAT_LABELS = { software:'Software', marketing:'Marketing', equipa:'Equipa', escritorio:'Escritório', infraestrutura:'Infra', fornecedores:'Fornec.', outros:'Outros' };
+  const CAT_ICONS  = { software:'💻', marketing:'📢', equipa:'👥', escritorio:'🏢', infraestrutura:'☁️', fornecedores:'🤝', outros:'📦' };
+  const catMap = {};
+  (custos||[]).forEach(c => {
+    const cat=c.categoria||'outros'; let val=0;
+    const f=c.frequencia;
+    if (f==='mensal') val=Number(c.valor); else if (f==='semanal') val=Number(c.valor)*4;
+    else if (f==='diario') val=Number(c.valor)*30; else if (f==='anual') val=Number(c.valor)/12;
+    else if (f==='unico'&&c.data) { const d=new Date(c.data+'T12:00:00'); if(d.getMonth()===thisMonth&&d.getFullYear()===thisYear) val=Number(c.valor); else return; }
+    catMap[cat]=(catMap[cat]||0)+val;
+  });
+  const topCats = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const mc = margemPct>=50?'var(--success)':margemPct>=20?'var(--warning)':'var(--danger)';
+  document.getElementById('dash-fin-body').innerHTML = `
+    <div class="fin-row">
+      <div class="fin-item"><div class="fin-label">Receita</div><div class="fin-value income">€${Math.round(receita).toLocaleString('pt-PT')}</div><div class="fin-delta">propostas aceites</div></div>
+      <div class="fin-item"><div class="fin-label">Custos</div><div class="fin-value expense">€${Math.round(custosMes).toLocaleString('pt-PT')}</div><div class="fin-delta">este mês</div></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--text-muted)">Margem líquida</span>
+        <span style="font-size:12px;font-weight:600;color:${mc}">${receita>0?margemPct.toFixed(1)+'%':'—'}</span>
+      </div>
+      <div style="height:5px;background:var(--surface3);border-radius:4px;overflow:hidden">
+        <div style="width:${Math.max(0,Math.min(100,margemPct))}%;height:100%;background:linear-gradient(90deg,var(--blue),var(--success));border-radius:4px"></div>
+      </div>
+    </div>
+    ${topCats.length>0?`
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:7px">Principais Custos</div>
+      <div class="exp-list">${topCats.map(([cat,val])=>`
+        <div class="exp-row">
+          <span class="exp-icon">${CAT_ICONS[cat]||'📦'}</span>
+          <span class="exp-name">${CAT_LABELS[cat]||cat}</span>
+          <span class="exp-amount">€${Math.round(val).toLocaleString('pt-PT')}</span>
+          <span class="exp-cat">${(CAT_LABELS[cat]||cat).slice(0,6)}</span>
+        </div>`).join('')}</div>`
+    : '<div style="text-align:center;color:var(--text-muted);font-size:12.5px;padding:12px 0">Sem custos registados</div>'}`;
 }
 
 // ─── TASK MODAL ───

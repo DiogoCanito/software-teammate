@@ -364,84 +364,38 @@
 </div>
 
 <script>
-// ─── MOCK DATA ───
-let PROPOSTAS = [
-  {
-    id: 1, numero: 'PROP-001', nome: 'Automação de Inbox', cliente: 'Nexus Tecnologia',
-    lead: 'lead-1', servicos: ['Automações'],
-    descricao: 'Automatização completa da caixa de entrada com IA para triagem e resposta automática.',
-    valor: 1200, iva: false, iva_pct: 23,
-    data_criacao: '2026-03-05', data_envio: '2026-03-06', validade: '2026-04-06',
-    estado: 'aceite', como_enviada: 'Email', probabilidade: '100',
-    notas: 'Cliente muito satisfeito. Projeto iniciado a 10 de março.',
-    condicoes: '30% entrada + 70% na entrega'
-  },
-  {
-    id: 2, numero: 'PROP-002', nome: 'Website Corporativo', cliente: 'Creative Studio',
-    lead: '', servicos: ['Website'],
-    descricao: 'Desenvolvimento de website institucional com CMS e área de portfólio.',
-    valor: 2500, iva: false, iva_pct: 23,
-    data_criacao: '2026-03-08', data_envio: '2026-03-10', validade: '2026-04-10',
-    estado: 'em-negociacao', como_enviada: 'Email', probabilidade: '75',
-    notas: 'Cliente pediu revisão de preço. Reunião marcada para 25/03.',
-    condicoes: null
-  },
-  {
-    id: 3, numero: 'PROP-003', nome: 'Implementação RadMate', cliente: 'Nexus Tecnologia',
-    lead: 'lead-1', servicos: ['RadMate'],
-    descricao: 'Setup e configuração completa do RadMate para equipa de 10 pessoas.',
-    valor: 800, iva: false, iva_pct: 23,
-    data_criacao: '2026-03-12', data_envio: '2026-03-14', validade: '2026-04-14',
-    estado: 'enviada', como_enviada: 'Plataforma Online', probabilidade: '50',
-    notas: 'Aguardar resposta. Follow-up em 28/03.',
-    condicoes: null
-  },
-  {
-    id: 4, numero: 'PROP-004', nome: 'Automação de Leads', cliente: 'Creative Studio',
-    lead: 'lead-2', servicos: ['Automações'],
-    descricao: 'Pipeline automatizado de captura e qualificação de leads.',
-    valor: 950, iva: false, iva_pct: 23,
-    data_criacao: '2026-03-18', data_envio: null, validade: '2026-04-18',
-    estado: 'rascunho', como_enviada: null, probabilidade: '25',
-    notas: 'Em preparação. Aguardar aprovação interna.',
-    condicoes: null
-  },
-  {
-    id: 5, numero: 'PROP-005', nome: 'Pack Marketing IA', cliente: 'Nexus Tecnologia',
-    lead: '', servicos: ['Marketing', 'Automações'],
-    descricao: 'Pacote completo de marketing com automações de IA para campanhas digitais.',
-    valor: 1800, iva: false, iva_pct: 23,
-    data_criacao: '2026-02-10', data_envio: '2026-02-12', validade: '2026-03-12',
-    estado: 'recusada', como_enviada: 'Email', probabilidade: '25',
-    notas: 'Cliente optou por solução interna. Reavaliar em Q3.',
-    condicoes: null
-  },
-  {
-    id: 6, numero: 'PROP-006', nome: 'Dashboard Interno', cliente: 'Creative Studio',
-    lead: 'lead-2', servicos: ['Dashboard'],
-    descricao: 'Dashboard personalizado para monitorização de KPIs de negócio em tempo real.',
-    valor: 3200, iva: false, iva_pct: 23,
-    data_criacao: '2026-03-01', data_envio: '2026-03-03', validade: '2026-04-03',
-    estado: 'aceite', como_enviada: 'Email', probabilidade: '100',
-    notas: 'Projeto confirmado. Início a 15 de março.',
-    condicoes: '50% entrada + 50% entrega'
-  },
-  {
-    id: 7, numero: 'PROP-007', nome: 'Chatbot Atendimento', cliente: 'Nexus Tecnologia',
-    lead: 'lead-1', servicos: ['Automações'],
-    descricao: 'Chatbot com IA para atendimento ao cliente 24/7 integrado no website.',
-    valor: 1500, iva: false, iva_pct: 23,
-    data_criacao: '2026-01-20', data_envio: '2026-01-22', validade: '2026-02-22',
-    estado: 'expirada', como_enviada: 'PDF Físico', probabilidade: '25',
-    notas: 'Proposta expirada sem resposta. Reenviar versão atualizada.',
-    condicoes: null
-  }
-];
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let PROPOSTAS = [];
 let editingId = null;
 let pendingDeleteId = null;
 let viewingId = null;
-let nextId = 8;
+
+// ─── LOAD ───
+async function loadPropostas() {
+  const { data, error } = await sb.from('propostas').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('Erro ao carregar propostas:', error); return; }
+  PROPOSTAS = data || [];
+  renderPropostas();
+}
+
+async function loadClientesForModal() {
+  const { data } = await sb.from('clientes').select('name').eq('status','ativo').order('name');
+  const sel = document.getElementById('f-p-cliente');
+  const cur = sel.value;
+  const opts = (data || []).map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  sel.innerHTML = '<option value="">Selecionar...</option>' + opts;
+  if (cur) sel.value = cur;
+}
+
+async function loadLeadsForModal() {
+  const { data } = await sb.from('leads').select('id,name').order('name');
+  const sel = document.getElementById('f-p-lead');
+  const cur = sel.value;
+  const opts = (data || []).map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  sel.innerHTML = '<option value="">Nenhuma</option>' + opts;
+  if (cur) sel.value = cur;
+}
 
 // ─── HELPERS ───
 const ESTADOS_LABELS = {
@@ -717,6 +671,8 @@ function openNewModal() {
   document.getElementById('btn-save-proposta').textContent      = 'Guardar Proposta';
   document.getElementById('f-p-numero').value      = nextNumero();
   document.getElementById('f-p-data-criacao').value = new Date().toISOString().split('T')[0];
+  loadClientesForModal();
+  loadLeadsForModal();
   document.getElementById('proposta-modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-p-nome').focus(), 80);
 }
@@ -728,10 +684,10 @@ function openEditModal(id) {
   clearModal();
   document.getElementById('proposta-modal-title').textContent = 'Editar Proposta';
   document.getElementById('btn-save-proposta').textContent    = 'Guardar Alterações';
+  loadClientesForModal().then(() => { document.getElementById('f-p-cliente').value = p.cliente || ''; });
+  loadLeadsForModal().then(() => { document.getElementById('f-p-lead').value = p.lead || ''; });
   document.getElementById('f-p-nome').value           = p.nome          || '';
   document.getElementById('f-p-numero').value         = p.numero        || '';
-  document.getElementById('f-p-cliente').value        = p.cliente       || '';
-  document.getElementById('f-p-lead').value           = p.lead          || '';
   document.getElementById('f-p-descricao').value      = p.descricao     || '';
   document.getElementById('f-p-valor').value          = p.valor         || '';
   document.getElementById('f-p-iva').checked          = !!p.iva;
@@ -756,7 +712,7 @@ function closeModal() {
   document.getElementById('proposta-modal-overlay').classList.remove('open');
 }
 
-function savePropostaWith(forceRascunho) {
+async function savePropostaWith(forceRascunho) {
   const nomeEl    = document.getElementById('f-p-nome');
   const clienteEl = document.getElementById('f-p-cliente');
   const valorEl   = document.getElementById('f-p-valor');
@@ -779,7 +735,7 @@ function savePropostaWith(forceRascunho) {
     numero:        document.getElementById('f-p-numero').value.trim() || nextNumero(),
     nome,
     cliente,
-    lead:          document.getElementById('f-p-lead').value || '',
+    lead:          document.getElementById('f-p-lead').value || null,
     servicos,
     descricao:     document.getElementById('f-p-descricao').value.trim()   || null,
     valor,
@@ -796,29 +752,31 @@ function savePropostaWith(forceRascunho) {
   };
 
   if (editingId !== null) {
-    const idx = PROPOSTAS.findIndex(p => p.id === editingId);
-    if (idx !== -1) PROPOSTAS[idx] = { ...PROPOSTAS[idx], ...payload };
+    const { error } = await sb.from('propostas').update(payload).eq('id', editingId);
+    if (error) { console.error('Erro ao atualizar proposta:', error); return; }
   } else {
-    PROPOSTAS.unshift({ id: nextId++, ...payload });
+    const { error } = await sb.from('propostas').insert(payload);
+    if (error) { console.error('Erro ao criar proposta:', error); return; }
   }
 
   closeModal();
-  renderPropostas();
+  await loadPropostas();
 }
 
 // ─── DUPLICATE ───
-function duplicar(id) {
+async function duplicar(id) {
   const p = PROPOSTAS.find(x => x.id === id);
   if (!p) return;
-  PROPOSTAS.unshift({
-    ...p,
-    id: nextId++,
+  const { id: _id, created_at, ...rest } = p;
+  const { error } = await sb.from('propostas').insert({
+    ...rest,
     numero: nextNumero(),
     estado: 'rascunho',
     data_criacao: new Date().toISOString().split('T')[0],
     data_envio: null,
   });
-  renderPropostas();
+  if (error) { console.error('Erro ao duplicar proposta:', error); return; }
+  await loadPropostas();
 }
 
 // ─── CONFIRM DELETE ───
@@ -831,12 +789,12 @@ function openConfirmDelete(id) {
   document.getElementById('confirm-overlay').classList.add('open');
 }
 
-document.getElementById('confirm-ok').addEventListener('click', () => {
+document.getElementById('confirm-ok').addEventListener('click', async () => {
   if (pendingDeleteId === null) return;
-  PROPOSTAS = PROPOSTAS.filter(p => p.id !== pendingDeleteId);
+  await sb.from('propostas').delete().eq('id', pendingDeleteId);
   pendingDeleteId = null;
   document.getElementById('confirm-overlay').classList.remove('open');
-  renderPropostas();
+  await loadPropostas();
 });
 document.getElementById('confirm-cancel').addEventListener('click', () => {
   pendingDeleteId = null;
@@ -873,7 +831,7 @@ document.getElementById('btn-clear-pf').addEventListener('click', () => {
 });
 
 // ─── INIT ───
-renderPropostas();
+loadPropostas();
 </script>
 </body>
 </html>

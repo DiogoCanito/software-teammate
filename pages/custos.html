@@ -311,125 +311,19 @@
 </div>
 
 <script>
-// ─── MOCK DATA ───
-let CUSTOS = [
-  {
-    id: 1,
-    nome: 'Vercel',
-    descricao: 'Hosting projetos clientes',
-    valor: 20,
-    categoria: 'software',
-    tipo: 'fixo',
-    frequencia: 'mensal',
-    data: '2026-01-01',
-    proximo_pagamento: '2026-04-01',
-    metodo: 'Cartão de Crédito',
-    fornecedor: 'Vercel Inc.',
-    notas: 'Plano Pro. Inclui 3 projetos e deployments ilimitados.'
-  },
-  {
-    id: 2,
-    nome: 'Claude Pro',
-    descricao: 'IA para desenvolvimento e automações',
-    valor: 18,
-    categoria: 'software',
-    tipo: 'fixo',
-    frequencia: 'mensal',
-    data: '2026-01-01',
-    proximo_pagamento: '2026-04-01',
-    metodo: 'Cartão de Crédito',
-    fornecedor: 'Anthropic',
-    notas: 'Conta pessoal de uso profissional. Renovação automática.'
-  },
-  {
-    id: 3,
-    nome: 'Google Workspace',
-    descricao: 'Email corporativo e colaboração',
-    valor: 12,
-    categoria: 'software',
-    tipo: 'fixo',
-    frequencia: 'mensal',
-    data: '2026-01-01',
-    proximo_pagamento: '2026-04-01',
-    metodo: 'Cartão de Crédito',
-    fornecedor: 'Google',
-    notas: '2 licenças × €6. Renovação automática ativa.'
-  },
-  {
-    id: 4,
-    nome: 'Meta Ads — Março',
-    descricao: 'Campanha geração de leads',
-    valor: 400,
-    categoria: 'marketing',
-    tipo: 'variavel',
-    frequencia: 'unico',
-    data: '2026-03-01',
-    proximo_pagamento: null,
-    metodo: 'Cartão de Crédito',
-    fornecedor: 'Meta',
-    notas: 'Campanha de remarketing + aquisição. ROAS estimado 4x. Duração: março completo.'
-  },
-  {
-    id: 5,
-    nome: 'Domínio TeamMate.pt',
-    descricao: 'Registo anual do domínio',
-    valor: 15,
-    categoria: 'infraestrutura',
-    tipo: 'unico',
-    frequencia: 'anual',
-    data: '2026-01-15',
-    proximo_pagamento: '2027-01-15',
-    metodo: 'Cartão de Crédito',
-    fornecedor: 'GoDaddy',
-    notas: 'Renovação automática ativa. Transferência para Cloudflare a considerar.'
-  },
-  {
-    id: 6,
-    nome: 'Contabilista',
-    descricao: 'Serviços de contabilidade mensal',
-    valor: 150,
-    categoria: 'fornecedores',
-    tipo: 'fixo',
-    frequencia: 'mensal',
-    data: '2026-01-01',
-    proximo_pagamento: '2026-04-01',
-    metodo: 'Transferência Bancária',
-    fornecedor: 'Bento & Associados',
-    notas: 'Inclui declarações fiscais trimestrais e IRS anual.'
-  },
-  {
-    id: 7,
-    nome: 'Figma',
-    descricao: 'Design e prototipagem de interfaces',
-    valor: 15,
-    categoria: 'software',
-    tipo: 'fixo',
-    frequencia: 'mensal',
-    data: '2026-01-01',
-    proximo_pagamento: '2026-04-01',
-    metodo: 'Cartão de Crédito',
-    fornecedor: 'Figma Inc.',
-    notas: 'Plano Professional. 1 editor seat.'
-  },
-  {
-    id: 8,
-    nome: 'Material de Escritório',
-    descricao: 'Papel, canetas e organização',
-    valor: 45,
-    categoria: 'escritorio',
-    tipo: 'variavel',
-    frequencia: 'unico',
-    data: '2026-03-20',
-    proximo_pagamento: null,
-    metodo: 'Outro',
-    fornecedor: null,
-    notas: 'Compra pontual para reorganização do espaço de trabalho.'
-  }
-];
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let CUSTOS = [];
 let editingId = null;
 let pendingDeleteId = null;
-let nextId = 9;
+
+// ─── LOAD ───
+async function loadCustos() {
+  const { data, error } = await sb.from('custos').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('Erro ao carregar custos:', error); return; }
+  CUSTOS = data || [];
+  renderCustos();
+}
 
 // ─── HELPERS ───
 const CAT_LABELS = {
@@ -702,7 +596,7 @@ document.getElementById('f-c-tipo').addEventListener('change', function() {
 document.getElementById('f-c-frequencia').addEventListener('change', toggleProximoPagamento);
 
 // Save
-document.getElementById('custo-modal-save').addEventListener('click', () => {
+document.getElementById('custo-modal-save').addEventListener('click', async () => {
   const nomeEl  = document.getElementById('f-c-nome');
   const valorEl = document.getElementById('f-c-valor');
   const nome    = nomeEl.value.trim();
@@ -730,14 +624,15 @@ document.getElementById('custo-modal-save').addEventListener('click', () => {
   };
 
   if (editingId !== null) {
-    const idx = CUSTOS.findIndex(c => c.id === editingId);
-    if (idx !== -1) CUSTOS[idx] = { ...CUSTOS[idx], ...payload };
+    const { error } = await sb.from('custos').update(payload).eq('id', editingId);
+    if (error) { console.error('Erro ao atualizar custo:', error); return; }
   } else {
-    CUSTOS.unshift({ id: nextId++, ...payload });
+    const { error } = await sb.from('custos').insert(payload);
+    if (error) { console.error('Erro ao criar custo:', error); return; }
   }
 
   closeModal();
-  renderCustos();
+  await loadCustos();
 });
 
 // ─── CONFIRM DELETE ───
@@ -750,12 +645,12 @@ function openConfirmDelete(id) {
   document.getElementById('confirm-overlay').classList.add('open');
 }
 
-document.getElementById('confirm-ok').addEventListener('click', () => {
+document.getElementById('confirm-ok').addEventListener('click', async () => {
   if (pendingDeleteId === null) return;
-  CUSTOS = CUSTOS.filter(c => c.id !== pendingDeleteId);
+  await sb.from('custos').delete().eq('id', pendingDeleteId);
   pendingDeleteId = null;
   document.getElementById('confirm-overlay').classList.remove('open');
-  renderCustos();
+  await loadCustos();
 });
 document.getElementById('confirm-cancel').addEventListener('click', () => {
   pendingDeleteId = null;
@@ -793,7 +688,7 @@ document.getElementById('btn-clear-cf').addEventListener('click', () => {
 });
 
 // ─── INIT ───
-renderCustos();
+loadCustos();
 
 // ─── NOTE TOOLTIP ───
 (function() {

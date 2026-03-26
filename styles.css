@@ -335,7 +335,7 @@ body::after {
 .t-due.late { color: var(--danger); }
 
 /* ─── BOTTOM ROW: Clients + Finance + Activity ─── */
-.bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
 /* Clients */
 .client-list { display: flex; flex-direction: column; gap: 6px; }

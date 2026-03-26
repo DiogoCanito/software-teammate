@@ -278,87 +278,18 @@
 <script>
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ─── MOCK DATA ───
-let LEADS = [
-  {
-    id: 1,
-    name: 'Maria Santos',
-    email: 'maria.santos@gmail.com',
-    phone: '+351 912 345 678',
-    social: 'linkedin.com/in/mariasantos',
-    canal: 'LinkedIn',
-    status: 'primeira_reuniao',
-    primeiro_contacto: '2026-03-10',
-    proximo_followup: '2026-03-28',
-    como_contactado: 'LinkedIn',
-    notas: 'Muito interessada em automações de Instagram. Negócio de cosmética com 12k seguidores.'
-  },
-  {
-    id: 2,
-    name: 'Tech Solutions Lda',
-    email: 'info@techsolutions.pt',
-    phone: '+351 21 234 5678',
-    social: 'techsolutions.pt',
-    canal: 'Website',
-    servico: 'Website',
-    orcamento: 4000,
-    status: 'novo',
-    primeiro_contacto: '2026-03-22',
-    proximo_followup: '2026-03-25',
-    como_contactado: 'Email',
-    notas: 'Preencheu formulário de contacto. Quer redesign completo do site corporativo.'
-  },
-  {
-    id: 3,
-    name: 'João Ferreira',
-    email: 'joao.ferreira@gmail.com',
-    phone: '+351 934 567 890',
-    social: '@joaoferreira_pt',
-    canal: 'Instagram',
-    servico: 'RadMate',
-    orcamento: 1200,
-    status: 'contactado',
-    primeiro_contacto: '2026-03-15',
-    proximo_followup: '2026-03-26',
-    como_contactado: 'Instagram',
-    notas: 'Viu um reels sobre o RadMate. Quer saber mais sobre os planos e preços.'
-  },
-  {
-    id: 4,
-    name: 'Clara Ribeiro Design',
-    email: 'clara@clararibeiro.pt',
-    phone: '+351 968 123 456',
-    social: 'clararibeiro.pt',
-    canal: 'Referência',
-    servico: 'Website',
-    orcamento: 3500,
-    status: 'convertido',
-    primeiro_contacto: '2026-02-28',
-    proximo_followup: null,
-    como_contactado: 'Reunião Presencial',
-    notas: 'Referência direta do Nexus Tecnologia. Projeto fechado com sucesso!'
-  },
-  {
-    id: 5,
-    name: 'Pedro Nunes',
-    email: 'pedronunes@hotmail.com',
-    phone: '+351 924 789 012',
-    social: '',
-    canal: 'Cold Outreach',
-    servico: 'Automações',
-    orcamento: 800,
-    status: 'perdido',
-    primeiro_contacto: '2026-03-05',
-    proximo_followup: null,
-    como_contactado: 'Email',
-    notas: 'Sem interesse no momento. Poderá reconsiderar no Q3 2026.'
-  }
-];
-
+let LEADS = [];
 let editingId       = null;
 let originalStatus  = null;
 let pendingDeleteId = null;
-let nextId = 6;
+
+// ─── LOAD ───
+async function loadLeads() {
+  const { data, error } = await sb.from('leads').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('Erro ao carregar leads:', error); return; }
+  LEADS = data || [];
+  renderLeads();
+}
 
 // ─── HELPERS ───
 function formatDate(dateStr) {
@@ -526,10 +457,11 @@ document.getElementById('lead-modal-save').addEventListener('click', async () =>
   };
 
   if (editingId !== null) {
-    const idx = LEADS.findIndex(l => l.id === editingId);
-    if (idx !== -1) LEADS[idx] = { ...LEADS[idx], ...payload };
+    const { error } = await sb.from('leads').update(payload).eq('id', editingId);
+    if (error) { console.error('Erro ao atualizar lead:', error); return; }
   } else {
-    LEADS.unshift({ id: nextId++, ...payload });
+    const { error } = await sb.from('leads').insert(payload);
+    if (error) { console.error('Erro ao criar lead:', error); return; }
   }
 
   // Auto-create client when status is "Segunda Reunião" (only on first time)
@@ -538,7 +470,7 @@ document.getElementById('lead-modal-save').addEventListener('click', async () =>
   }
 
   closeModal();
-  renderLeads();
+  await loadLeads();
 });
 
 // ─── CONFIRM DELETE ───
@@ -551,12 +483,12 @@ function openConfirmDelete(id) {
   document.getElementById('confirm-overlay').classList.add('open');
 }
 
-document.getElementById('confirm-ok').addEventListener('click', () => {
+document.getElementById('confirm-ok').addEventListener('click', async () => {
   if (pendingDeleteId === null) return;
-  LEADS = LEADS.filter(l => l.id !== pendingDeleteId);
+  await sb.from('leads').delete().eq('id', pendingDeleteId);
   pendingDeleteId = null;
   document.getElementById('confirm-overlay').classList.remove('open');
-  renderLeads();
+  await loadLeads();
 });
 document.getElementById('confirm-cancel').addEventListener('click', () => {
   pendingDeleteId = null;
@@ -619,6 +551,8 @@ async function changeLeadStatus(id, newStatus, selectEl) {
   LEADS[idx].status = newStatus;
   selectEl.className = `lbadge-sel ${newStatus}`;
 
+  await sb.from('leads').update({ status: newStatus }).eq('id', id);
+
   if (newStatus === 'segunda_reuniao' && prevStatus !== 'segunda_reuniao') {
     await createClientFromLead(LEADS[idx]);
   }
@@ -636,7 +570,7 @@ async function changeLeadStatus(id, newStatus, selectEl) {
 }
 
 // ─── INIT ───
-renderLeads();
+loadLeads();
 
 // ─── NOTE TOOLTIP ───
 (function() {
