@@ -1580,6 +1580,11 @@ body::after {
   .main { overflow-x: hidden; }
   .form-input, .form-select, .form-textarea { max-width: 100%; }
 
+  /* Projects table: show only Projeto/Cliente (col 1) and Valor (col 4) on mobile */
+  .proj-table th:nth-child(2), .proj-table td:nth-child(2),
+  .proj-table th:nth-child(3), .proj-table td:nth-child(3),
+  .proj-table th:nth-child(5), .proj-table td:nth-child(5) { display: none; }
+
   /* Tables: hide all columns except first on tasks, hide middle cols on leads */
   .tasks-table th:nth-child(n+2),
   .tasks-table td:nth-child(n+2) { display: none; }
