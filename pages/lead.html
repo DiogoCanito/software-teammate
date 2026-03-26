@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Lead</title>
+<link rel="icon" type="image/png" href="../brand_assets/TeamMateLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../nav-badges.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
+</head>
+<body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="/homepage">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge" id="nav-badge-tarefas">5</span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue" id="nav-badge-projetos">8</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item active" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge" id="nav-badge-propostas">2</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active" id="lead-content">
+  <div style="text-align:center;padding:80px 0;color:var(--text-muted);font-size:13px">A carregar lead...</div>
+</div>
+</main>
+</div><!-- /layout -->
+
+<!-- ─── CONFIRM DELETE ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title">Eliminar lead</div>
+    <div class="confirm-msg" id="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Editar Lead ─── -->
+<div class="modal-overlay" id="lead-modal-overlay">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <div class="modal-title">Editar Lead</div>
+      <button class="modal-close" id="lead-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-section-label">Informação Básica</div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Nome ou Empresa <span class="form-required">*</span></label>
+          <input class="form-input" id="f-l-name" type="text" placeholder="Ex: Maria Santos ou Tech Solutions Lda">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="f-l-email" type="email" placeholder="contacto@empresa.pt">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input class="form-input" id="f-l-phone" type="tel" placeholder="+351 9XX XXX XXX">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Website / LinkedIn / Instagram</label>
+          <input class="form-input" id="f-l-social" type="text" placeholder="Ex: linkedin.com/in/... ou @handle">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Morada</label>
+          <input class="form-input" id="f-l-morada" type="text" placeholder="Ex: Rua das Flores 123, Lisboa">
+        </div>
+      </div>
+
+      <div class="form-section-label">Gestão da Lead</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-l-status">
+            <option value="novo">Novo</option>
+            <option value="contactado">Contactado</option>
+            <option value="primeira_reuniao">Primeira Reunião</option>
+            <option value="segunda_reuniao">Segunda Reunião</option>
+            <option value="convertido">Convertido</option>
+            <option value="perdido">Perdido</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data do Primeiro Contacto</label>
+          <input class="form-input" id="f-l-primeiro-contacto" type="date">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Próximo Follow-up</label>
+          <input class="form-input" id="f-l-followup" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Como foi Contactado</label>
+          <select class="form-select" id="f-l-como">
+            <option value="">Selecionar...</option>
+            <option value="Email">Email</option>
+            <option value="Telefone">Telefone</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Reunião Presencial">Reunião Presencial</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Adicionado por</label>
+          <select class="form-select" id="f-l-adicionado-por">
+            <option value="">Selecionar membro...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-label">Notas</div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Notas Internas</label>
+          <textarea class="form-textarea" id="f-l-notas" rows="3" placeholder="Informação adicional sobre esta lead..."></textarea>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="lead-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="lead-modal-save">Guardar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let LEAD    = null;
+let MEMBROS = [];
+
+const STATUS_LABELS = {
+  novo:             'Novo',
+  contactado:       'Contactado',
+  primeira_reuniao: 'Primeira Reunião',
+  segunda_reuniao:  'Segunda Reunião',
+  convertido:       'Convertido',
+  perdido:          'Perdido',
+};
+
+// ─── HELPERS ───
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T12:00:00');
+  const M = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d     = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / 86400000);
+}
+
+function followupLabel(dateStr) {
+  if (!dateStr) return { text: '—', color: 'var(--text-muted)' };
+  const n = daysUntil(dateStr);
+  if (n < 0)  return { text: `Atrasado ${Math.abs(n)}d`, color: 'var(--danger)' };
+  if (n === 0) return { text: 'Hoje',                     color: 'var(--warning)' };
+  if (n === 1) return { text: 'Amanhã',                   color: 'var(--warning)' };
+  return { text: `Em ${n} dias`,                          color: 'var(--text-dim)' };
+}
+
+function initials(name) {
+  return (name || '').trim().split(/\s+/).map(w => w[0] || '').join('').toUpperCase().slice(0, 2) || '??';
+}
+
+// ─── LOAD ───
+async function loadLead() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) { renderError('ID de lead não especificado.'); return; }
+
+  const { data, error } = await sb.from('leads').select('*').eq('id', id).single();
+  if (error || !data) { renderError('Lead não encontrada.'); return; }
+
+  LEAD = data;
+  document.title = `TeamMate — ${LEAD.name}`;
+  renderProfile();
+}
+
+async function loadMembros() {
+  const { data } = await sb.from('membros').select('id, name, status').order('name');
+  MEMBROS = (data || []).filter(m => m.status !== 'inativo');
+  const sel = document.getElementById('f-l-adicionado-por');
+  MEMBROS.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.name;
+    opt.textContent = m.name;
+    sel.appendChild(opt);
+  });
+}
+
+// ─── RENDER ───
+function renderError(msg) {
+  document.getElementById('lead-content').innerHTML = `
+    <a class="back-link" href="leads.html">← Voltar às Leads</a>
+    <div style="text-align:center;padding:80px 0;color:var(--text-muted);font-size:13px">${msg}</div>
+  `;
+}
+
+function renderProfile() {
+  const l  = LEAD;
+  const ini = initials(l.name);
+  const fu  = followupLabel(l.proximo_followup);
+
+  document.getElementById('lead-content').innerHTML = `
+    <a class="back-link" href="leads.html">← Voltar às Leads</a>
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+      <div class="member-avatar lg" style="background:linear-gradient(135deg,var(--blue),#033f56);font-size:22px">${ini}</div>
+      <div class="profile-header-info">
+        <div class="profile-name">${l.name}</div>
+        <div class="profile-role">${l.canal || 'Lead'}${l.adicionado_por ? ' · Adicionado por ' + l.adicionado_por : ''}</div>
+        <div class="profile-meta">
+          ${l.email   ? `<span class="profile-meta-item">✉ ${l.email}</span>` : ''}
+          ${l.phone   ? `<span class="profile-meta-item">☎ ${l.phone}</span>` : ''}
+          ${l.morada  ? `<span class="profile-meta-item">⊙ ${l.morada}</span>` : ''}
+          ${l.social  ? `<span class="profile-meta-item">◈ ${l.social}</span>` : ''}
+          <span class="lbadge ${l.status}">${STATUS_LABELS[l.status] || l.status}</span>
+        </div>
+        <div class="profile-actions">
+          <button class="btn btn-primary btn-sm" onclick="openEditModal()">✎ Editar Lead</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="openConfirmDelete()">✕ Eliminar Lead</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="color:var(--blue-light)">
+          <span class="lbadge ${l.status}" style="font-size:13px;padding:4px 12px">${STATUS_LABELS[l.status] || '—'}</span>
+        </div>
+        <div class="profile-stat-label">Estado Atual</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="font-size:20px">${l.primeiro_contacto ? formatDate(l.primeiro_contacto) : '—'}</div>
+        <div class="profile-stat-label">Primeiro Contacto</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="color:${fu.color};font-size:20px">${fu.text}</div>
+        <div class="profile-stat-label">Próximo Follow-up</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" style="font-size:20px">${l.adicionado_por || '—'}</div>
+        <div class="profile-stat-label">Adicionado por</div>
+      </div>
+    </div>
+
+    <!-- INFO GRID -->
+    <div class="profile-info-grid">
+      <div class="profile-info-card">
+        <div class="profile-info-title">Contacto</div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Email</span>
+          <span class="profile-info-value">${l.email ? `<a href="mailto:${l.email}" style="color:var(--blue-light)">${l.email}</a>` : '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Telefone</span>
+          <span class="profile-info-value">${l.phone || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Morada</span>
+          <span class="profile-info-value">${l.morada || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Website / Social</span>
+          <span class="profile-info-value">${l.social || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Canal de Origem</span>
+          <span class="profile-info-value">${l.canal ? `<span class="canal-tag">${l.canal}</span>` : '—'}</span>
+        </div>
+      </div>
+
+      <div class="profile-info-card">
+        <div class="profile-info-title">Gestão da Lead</div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Estado</span>
+          <span class="profile-info-value"><span class="lbadge ${l.status}">${STATUS_LABELS[l.status] || '—'}</span></span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Primeiro Contacto</span>
+          <span class="profile-info-value">${l.primeiro_contacto ? formatDate(l.primeiro_contacto) : '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Próximo Follow-up</span>
+          <span class="profile-info-value" style="color:${fu.color}">${l.proximo_followup ? formatDate(l.proximo_followup) : '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Como foi Contactado</span>
+          <span class="profile-info-value">${l.como_contactado || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Adicionado por</span>
+          <span class="profile-info-value">${l.adicionado_por || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="profile-info-label">Criado em</span>
+          <span class="profile-info-value">${formatDate(l.created_at)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="profile-info-card" style="margin-bottom:24px">
+      <div class="profile-info-title">Notas Internas</div>
+      <div class="profile-bio">${l.notas || '<span style="color:var(--text-muted)">Sem notas registadas.</span>'}</div>
+    </div>
+  `;
+}
+
+// ─── EDIT MODAL ───
+function openEditModal() {
+  const l = LEAD;
+  document.getElementById('f-l-name').value              = l.name              || '';
+  document.getElementById('f-l-email').value             = l.email             || '';
+  document.getElementById('f-l-phone').value             = l.phone             || '';
+  document.getElementById('f-l-social').value            = l.social            || '';
+  document.getElementById('f-l-morada').value            = l.morada            || '';
+  document.getElementById('f-l-status').value            = l.status            || 'novo';
+  document.getElementById('f-l-primeiro-contacto').value = l.primeiro_contacto || '';
+  document.getElementById('f-l-followup').value          = l.proximo_followup  || '';
+  document.getElementById('f-l-como').value              = l.como_contactado   || '';
+  document.getElementById('f-l-adicionado-por').value    = l.adicionado_por    || '';
+  document.getElementById('f-l-notas').value             = l.notas             || '';
+  document.querySelectorAll('#lead-modal-overlay .f-error').forEach(el => el.classList.remove('f-error'));
+  document.getElementById('lead-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-l-name').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('lead-modal-overlay').classList.remove('open');
+}
+
+document.getElementById('lead-modal-save').addEventListener('click', async () => {
+  const nameEl = document.getElementById('f-l-name');
+  const name   = nameEl.value.trim();
+  nameEl.classList.toggle('f-error', !name);
+  if (!name) { nameEl.focus(); return; }
+
+  const prevStatus = LEAD.status;
+  const payload = {
+    name,
+    email:             document.getElementById('f-l-email').value.trim()          || null,
+    phone:             document.getElementById('f-l-phone').value.trim()          || null,
+    social:            document.getElementById('f-l-social').value.trim()         || null,
+    morada:            document.getElementById('f-l-morada').value.trim()         || null,
+    status:            document.getElementById('f-l-status').value,
+    primeiro_contacto: document.getElementById('f-l-primeiro-contacto').value     || null,
+    proximo_followup:  document.getElementById('f-l-followup').value              || null,
+    como_contactado:   document.getElementById('f-l-como').value                  || null,
+    adicionado_por:    document.getElementById('f-l-adicionado-por').value        || null,
+    notas:             document.getElementById('f-l-notas').value.trim()          || null,
+  };
+
+  const { error } = await sb.from('leads').update(payload).eq('id', LEAD.id);
+  if (error) { console.error('Erro ao atualizar lead:', error); return; }
+
+  if (payload.status === 'segunda_reuniao' && prevStatus !== 'segunda_reuniao') {
+    await createClientFromLead(payload);
+  }
+
+  LEAD = { ...LEAD, ...payload };
+  closeModal();
+  renderProfile();
+});
+
+document.getElementById('lead-modal-close').addEventListener('click', closeModal);
+document.getElementById('lead-modal-cancel').addEventListener('click', closeModal);
+document.getElementById('lead-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('lead-modal-overlay')) closeModal();
+});
+
+// ─── DELETE ───
+function openConfirmDelete() {
+  document.getElementById('confirm-msg').textContent =
+    `Tens a certeza que queres eliminar "${LEAD ? LEAD.name : 'esta lead'}"? Esta ação não pode ser desfeita.`;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  if (!LEAD) return;
+  await sb.from('leads').delete().eq('id', LEAD.id);
+  window.location.href = 'leads.html';
+});
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.remove('open');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    document.getElementById('confirm-overlay').classList.remove('open');
+  }
+});
+
+// ─── AUTO-FILL FOLLOWUP ───
+document.getElementById('f-l-primeiro-contacto').addEventListener('change', function () {
+  const followupEl = document.getElementById('f-l-followup');
+  if (!this.value || followupEl.value) return;
+  const d = new Date(this.value + 'T12:00:00');
+  d.setMonth(d.getMonth() + 1);
+  followupEl.value = d.toISOString().slice(0, 10);
+});
+
+// ─── CREATE CLIENT FROM LEAD ───
+async function createClientFromLead(lead) {
+  const words    = (lead.name || '').trim().split(/\s+/);
+  const ini      = words.map(w => w[0] || '').join('').toUpperCase().slice(0, 2) || 'CL';
+  const { error } = await sb.from('clientes').insert({
+    name:         lead.name,
+    initials:     ini,
+    email:        lead.email    || null,
+    phone:        lead.phone    || null,
+    status:       'ativo',
+    avatar_color: '#ff956b',
+  });
+  if (error) console.error('Erro ao criar cliente:', error);
+}
+
+// ─── INIT ───
+Promise.all([loadLead(), loadMembros()]);
+</script>
+</body>
+</html>

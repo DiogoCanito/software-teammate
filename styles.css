@@ -1115,6 +1115,8 @@ body::after {
 .leads-table tbody tr { transition: background 0.1s; }
 .leads-table tbody tr:hover td { background: var(--surface2); }
 .lead-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.lead-name-link { text-decoration: none; transition: color 0.15s; }
+.lead-name-link:hover { color: var(--blue-light); text-decoration: underline; }
 .lead-sub  { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
 
 /* Lead status badges */
