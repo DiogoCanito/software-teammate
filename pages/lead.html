@@ -165,6 +165,13 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Link Maps</label>
+          <input class="form-input" id="f-l-link-maps" type="url" placeholder="Ex: https://maps.google.com/...">
+        </div>
+      </div>
+
       <div class="form-section-label">Gestão da Lead</div>
 
       <div class="form-row">
@@ -425,6 +432,7 @@ function openEditModal() {
   document.getElementById('f-l-phone').value             = l.phone             || '';
   document.getElementById('f-l-social').value            = l.social            || '';
   document.getElementById('f-l-morada').value            = l.morada            || '';
+  document.getElementById('f-l-link-maps').value         = l.link_maps         || '';
   document.getElementById('f-l-status').value            = l.status            || 'novo';
   document.getElementById('f-l-primeiro-contacto').value = l.primeiro_contacto || '';
   document.getElementById('f-l-followup').value          = l.proximo_followup  || '';
@@ -453,6 +461,7 @@ document.getElementById('lead-modal-save').addEventListener('click', async () =>
     phone:             document.getElementById('f-l-phone').value.trim()          || null,
     social:            document.getElementById('f-l-social').value.trim()         || null,
     morada:            document.getElementById('f-l-morada').value.trim()         || null,
+    link_maps:         document.getElementById('f-l-link-maps').value.trim()      || null,
     status:            document.getElementById('f-l-status').value,
     primeiro_contacto: document.getElementById('f-l-primeiro-contacto').value     || null,
     proximo_followup:  document.getElementById('f-l-followup').value              || null,
