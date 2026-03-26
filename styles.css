@@ -510,6 +510,8 @@ body::after {
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
+.tasks-table thead tr th:first-child { border-radius: 13px 0 0 0; }
+.tasks-table thead tr th:last-child  { border-radius: 0 13px 0 0; }
 .tasks-table td {
   padding: 10px 14px; font-size: 12.5px;
   border-bottom: 1px solid rgba(255,255,255,0.04);
@@ -1105,6 +1107,8 @@ body::after {
   white-space: nowrap;
   background: var(--surface);
 }
+.leads-table thead tr th:first-child { border-radius: 13px 0 0 0; }
+.leads-table thead tr th:last-child  { border-radius: 0 13px 0 0; }
 .leads-table td {
   padding: 10px 14px;
   border-bottom: 1px solid rgba(255,255,255,0.04);
