@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Calendário</title>
+<link rel="icon" type="image/png" href="../brand_assets/TeamMateLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../nav-badges.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
+</head>
+<body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="/homepage">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge" id="nav-badge-tarefas"></span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue" id="nav-badge-projetos"></span>
+    </a>
+    <a class="nav-item active" href="calendario.html">
+      <span class="nav-icon">📅</span> Calendário
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge" id="nav-badge-propostas"></span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Calendário</div>
+      <div class="page-sub">Gere os teus eventos, reuniões e follow-ups</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="cal-view-toggle">
+        <button class="cal-view-btn active" id="btn-view-cal">📅 Calendário</button>
+        <button class="cal-view-btn" id="btn-view-list">≡ Lista</button>
+      </div>
+      <button class="btn btn-primary" id="btn-novo-evento">+ Novo Evento</button>
+    </div>
+  </div>
+
+  <!-- KPI GRID -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-label">Hoje</div>
+      <div class="kpi-value" id="kpi-hoje">0</div>
+      <div class="kpi-meta" id="kpi-hoje-meta">eventos hoje</div>
+    </div>
+    <div class="kpi-card coral">
+      <div class="kpi-icon">📆</div>
+      <div class="kpi-label">Esta Semana</div>
+      <div class="kpi-value" id="kpi-semana">0</div>
+      <div class="kpi-meta">próximos 7 dias</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">🗓</div>
+      <div class="kpi-label">Este Mês</div>
+      <div class="kpi-value" id="kpi-mes">0</div>
+      <div class="kpi-meta" id="kpi-mes-meta">eventos no mês</div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-icon">⚠</div>
+      <div class="kpi-label">Follow-ups Pendentes</div>
+      <div class="kpi-value" id="kpi-followups">0</div>
+      <div class="kpi-meta">data passada, sem concluir</div>
+    </div>
+  </div>
+
+  <!-- CALENDAR WRAP -->
+  <div class="cal-wrap" id="cal-wrap">
+
+    <!-- GRID VIEW -->
+    <div class="cal-section grid-only" id="cal-grid-section">
+      <div class="cal-nav">
+        <button class="btn btn-ghost btn-sm" id="cal-prev">‹</button>
+        <div class="cal-month-title" id="cal-month-title">Março 2026</div>
+        <button class="btn btn-ghost btn-sm" id="cal-next">›</button>
+        <button class="btn btn-ghost btn-sm" id="cal-today-btn">Hoje</button>
+      </div>
+      <div class="cal-weekdays">
+        <div class="cal-weekday">Seg</div>
+        <div class="cal-weekday">Ter</div>
+        <div class="cal-weekday">Qua</div>
+        <div class="cal-weekday">Qui</div>
+        <div class="cal-weekday">Sex</div>
+        <div class="cal-weekday weekend">Sáb</div>
+        <div class="cal-weekday weekend">Dom</div>
+      </div>
+      <div class="cal-days" id="cal-days"></div>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div id="cal-list-section" style="display:none; min-width:0">
+      <div class="cal-section">
+        <div style="padding:16px 18px 0; border-bottom:1px solid var(--border); padding-bottom:16px;">
+          <div class="filters-bar" style="margin-bottom:0">
+            <select class="filter-select" id="cf-tipo">
+              <option value="">Tipo</option>
+              <option value="reuniao">Reunião</option>
+              <option value="follow-up">Follow-up</option>
+              <option value="deadline">Deadline</option>
+              <option value="tarefa">Tarefa</option>
+              <option value="pagamento">Pagamento</option>
+              <option value="outro">Outro</option>
+            </select>
+            <select class="filter-select" id="cf-periodo">
+              <option value="todos">Todos</option>
+              <option value="hoje">Hoje</option>
+              <option value="semana">Esta Semana</option>
+              <option value="mes">Este Mês</option>
+            </select>
+            <select class="filter-select" id="cf-assoc">
+              <option value="">Associação</option>
+              <option value="cliente">Clientes</option>
+              <option value="lead">Leads</option>
+              <option value="projeto">Projetos</option>
+            </select>
+            <div class="filter-search-wrap">
+              <span class="filter-search-icon">⌕</span>
+              <input class="filter-search" id="cf-search" type="text" placeholder="Pesquisar eventos...">
+            </div>
+            <button class="btn btn-ghost btn-sm" id="btn-clear-cf" style="display:none">✕ Limpar</button>
+          </div>
+        </div>
+        <div class="cal-list-section-inner" id="cal-list-content"></div>
+      </div>
+    </div>
+
+  </div><!-- /cal-wrap -->
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── EVENT POPOVER ─── -->
+<div class="cal-popover" id="cal-popover">
+  <button class="cal-popover-close" id="cal-pop-close">✕</button>
+  <div class="cal-popover-type" id="cal-pop-type"></div>
+  <div class="cal-popover-title" id="cal-pop-title"></div>
+  <div class="cal-popover-row" id="cal-pop-time"></div>
+  <div class="cal-popover-row" id="cal-pop-assoc"></div>
+  <div class="cal-popover-row" id="cal-pop-status"></div>
+  <div class="cal-popover-actions" id="cal-pop-actions"></div>
+</div>
+
+<!-- ─── MODAL: NOVO/EDITAR EVENTO ─── -->
+<div class="modal-overlay" id="evento-modal-overlay">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title" id="evento-modal-title">Novo Evento</div>
+      <button class="modal-close" id="evento-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-section-label">Informação Básica</div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Título <span class="form-required">*</span></label>
+          <input class="form-input" id="f-ev-titulo" type="text" placeholder="Ex: Reunião com Cliente A">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo <span class="form-required">*</span></label>
+          <select class="form-select" id="f-ev-tipo">
+            <option value="reuniao">Reunião</option>
+            <option value="follow-up">Follow-up</option>
+            <option value="deadline">Deadline</option>
+            <option value="tarefa">Tarefa</option>
+            <option value="pagamento">Pagamento</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-ev-estado">
+            <option value="agendado">Agendado</option>
+            <option value="concluido">Concluído</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Descrição / Notas</label>
+          <textarea class="form-textarea" id="f-ev-descricao" placeholder="Detalhes adicionais sobre o evento..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-section-label">Data e Hora</div>
+
+      <div class="form-row" style="align-items:center">
+        <div class="form-group full">
+          <div class="cal-toggle-row">
+            <input type="checkbox" id="f-ev-todo-dia">
+            <label for="f-ev-todo-dia">Todo o dia</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row" id="ev-dates-row">
+        <div class="form-group">
+          <label class="form-label">Data de Início <span class="form-required">*</span></label>
+          <input class="form-input" id="f-ev-data-inicio" type="date">
+        </div>
+        <div class="form-group" id="ev-hora-inicio-group">
+          <label class="form-label">Hora de Início</label>
+          <input class="form-input" id="f-ev-hora-inicio" type="time">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data de Fim</label>
+          <input class="form-input" id="f-ev-data-fim" type="date">
+        </div>
+        <div class="form-group" id="ev-hora-fim-group">
+          <label class="form-label">Hora de Fim</label>
+          <input class="form-input" id="f-ev-hora-fim" type="time">
+        </div>
+      </div>
+
+      <div class="form-section-label">Associação (opcional)</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Associar a</label>
+          <select class="form-select" id="f-ev-assoc-tipo">
+            <option value="nenhum">Nenhum</option>
+            <option value="cliente">Cliente</option>
+            <option value="lead">Lead</option>
+            <option value="projeto">Projeto</option>
+          </select>
+        </div>
+        <div class="form-group" id="ev-assoc-select-group" style="display:none">
+          <label class="form-label" id="ev-assoc-select-label">Selecionar</label>
+          <select class="form-select" id="f-ev-assoc-nome">
+            <option value="">Selecionar...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-label">Recorrência (opcional)</div>
+
+      <div class="form-row" style="align-items:center">
+        <div class="form-group full">
+          <div class="cal-toggle-row">
+            <input type="checkbox" id="f-ev-recorrente">
+            <label for="f-ev-recorrente">Evento recorrente</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row" id="ev-freq-row" style="display:none">
+        <div class="form-group full">
+          <label class="form-label">Frequência</label>
+          <select class="form-select" id="f-ev-frequencia">
+            <option value="diariamente">Diariamente</option>
+            <option value="semanalmente">Semanalmente</option>
+            <option value="mensalmente">Mensalmente</option>
+            <option value="anualmente">Anualmente</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-label">Lembretes</div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Lembrete</label>
+          <select class="form-select" id="f-ev-lembrete">
+            <option value="sem_lembrete">Sem lembrete</option>
+            <option value="15min">15 min antes</option>
+            <option value="30min">30 min antes</option>
+            <option value="1hora">1 hora antes</option>
+            <option value="1dia">1 dia antes</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="evento-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="evento-modal-save">Guardar Evento</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CONFIRM OVERLAY ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Confirmar ação</div>
+    <div class="confirm-msg" id="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── STATE ───
+let EVENTOS       = [];
+let LEADS_DATA    = [];
+let PROJECTS_DATA = [];
+let TASKS_DATA    = [];
+let CLIENTES_DATA = [];
+let calView       = localStorage.getItem('cal-view') || 'calendar';
+let calYear, calMonth;
+let editingId       = null;
+let pendingDeleteId = null;
+
+const TIPO_LABELS = {
+  'reuniao':   'Reunião',
+  'follow-up': 'Follow-up',
+  'deadline':  'Deadline',
+  'tarefa':    'Tarefa',
+  'pagamento': 'Pagamento',
+  'outro':     'Outro',
+};
+const TIPO_COLORS = {
+  'reuniao':   '#4fc4e8',
+  'follow-up': '#ff956b',
+  'deadline':  '#ff4d6d',
+  'tarefa':    '#a78bfa',
+  'pagamento': '#2dd4a0',
+  'outro':     '#4a4a4a',
+};
+const MONTHS_PT  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const WEEKDAYS_PT = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+// ─── LOAD FUNCTIONS ───
+async function loadCalendario() {
+  const { data, error } = await sb.from('calendario').select('*').order('data_inicio', { ascending: true });
+  if (error) { console.error('Erro ao carregar eventos:', error); return; }
+  EVENTOS = data || [];
+}
+
+async function loadLeads() {
+  const { data } = await sb.from('leads').select('id, name, proximo_followup, status');
+  LEADS_DATA = (data || []).filter(l => l.proximo_followup && l.status !== 'convertido' && l.status !== 'perdido');
+}
+
+async function loadProjects() {
+  const { data } = await sb.from('projects').select('id, name, deadline, client, phase');
+  PROJECTS_DATA = (data || []).filter(p => p.deadline && p.phase !== 'cancelado');
+}
+
+async function loadTasks() {
+  const { data } = await sb.from('tasks').select('id, title, due_date, status, assignee');
+  TASKS_DATA = (data || []).filter(t => t.due_date && t.status !== 'concluida');
+}
+
+async function loadClientes() {
+  const { data } = await sb.from('clientes').select('id, name').order('name');
+  CLIENTES_DATA = data || [];
+}
+
+// ─── COMBINED EVENTS ───
+function getAllEvents() {
+  const all = EVENTOS.map(e => ({ ...e, synthetic: false }));
+
+  PROJECTS_DATA.forEach(p => {
+    all.push({
+      id: 'proj-' + p.id,
+      titulo: 'Deadline: ' + p.name,
+      tipo: 'deadline',
+      descricao: p.client ? 'Cliente: ' + p.client : '',
+      todo_dia: true,
+      data_inicio: p.deadline,
+      hora_inicio: null,
+      estado: 'agendado',
+      associacao_tipo: 'projeto',
+      associacao_nome: p.name,
+      synthetic: true,
+      source: 'projeto',
+      source_id: p.id,
+    });
+  });
+
+  LEADS_DATA.forEach(l => {
+    all.push({
+      id: 'lead-' + l.id,
+      titulo: 'Follow-up: ' + l.name,
+      tipo: 'follow-up',
+      descricao: '',
+      todo_dia: false,
+      data_inicio: l.proximo_followup,
+      hora_inicio: null,
+      estado: 'agendado',
+      associacao_tipo: 'lead',
+      associacao_nome: l.name,
+      synthetic: true,
+      source: 'lead',
+      source_id: l.id,
+    });
+  });
+
+  TASKS_DATA.forEach(t => {
+    all.push({
+      id: 'task-' + t.id,
+      titulo: t.title,
+      tipo: 'tarefa',
+      descricao: t.assignee ? 'Responsável: ' + t.assignee : '',
+      todo_dia: true,
+      data_inicio: t.due_date,
+      hora_inicio: null,
+      estado: 'agendado',
+      associacao_tipo: 'nenhum',
+      associacao_nome: null,
+      synthetic: true,
+      source: 'tarefa',
+      source_id: t.id,
+    });
+  });
+
+  return all;
+}
+
+// ─── KPIs ───
+function renderKPIs() {
+  const all   = getAllEvents();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const todayStr = toDateStr(today);
+  const weekEnd  = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7);
+  const thisYear = today.getFullYear();
+  const thisMon  = today.getMonth();
+
+  const hoje    = all.filter(e => e.data_inicio === todayStr).length;
+  const semana  = all.filter(e => {
+    const d = parseDate(e.data_inicio);
+    return d >= today && d < weekEnd;
+  }).length;
+  const mes     = all.filter(e => {
+    const d = parseDate(e.data_inicio);
+    return d.getFullYear() === thisYear && d.getMonth() === thisMon;
+  }).length;
+  const pending = all.filter(e =>
+    e.tipo === 'follow-up' &&
+    parseDate(e.data_inicio) < today &&
+    e.estado !== 'concluido'
+  ).length;
+
+  document.getElementById('kpi-hoje').textContent     = hoje;
+  document.getElementById('kpi-semana').textContent   = semana;
+  document.getElementById('kpi-mes').textContent      = mes;
+  document.getElementById('kpi-followups').textContent = pending;
+  document.getElementById('kpi-hoje-meta').textContent = hoje === 1 ? 'evento hoje' : 'eventos hoje';
+  document.getElementById('kpi-mes-meta').textContent  = mes === 1 ? 'evento este mês' : 'eventos este mês';
+}
+
+// ─── CALENDAR GRID ───
+function renderCalendarGrid() {
+  const y = calYear, m = calMonth;
+  document.getElementById('cal-month-title').textContent = MONTHS_PT[m] + ' ' + y;
+
+  const firstDow    = new Date(y, m, 1).getDay();           // 0=Sun
+  const firstDayMon = (firstDow + 6) % 7;                   // Mon=0
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const prevDays    = new Date(y, m, 0).getDate();
+  const totalCells  = Math.ceil((firstDayMon + daysInMonth) / 7) * 7;
+
+  const todayStr = toDateStr(new Date());
+  const all      = getAllEvents();
+
+  let html = '';
+  for (let i = 0; i < totalCells; i++) {
+    let dayNum, dateObj, isCurrent;
+    if (i < firstDayMon) {
+      dayNum  = prevDays - (firstDayMon - i - 1);
+      dateObj = new Date(y, m - 1, dayNum);
+      isCurrent = false;
+    } else if (i >= firstDayMon + daysInMonth) {
+      dayNum  = i - firstDayMon - daysInMonth + 1;
+      dateObj = new Date(y, m + 1, dayNum);
+      isCurrent = false;
+    } else {
+      dayNum  = i - firstDayMon + 1;
+      dateObj = new Date(y, m, dayNum);
+      isCurrent = true;
+    }
+
+    const dateStr  = toDateStr(dateObj);
+    const isToday  = dateStr === todayStr;
+    const isWknd   = (i % 7 === 5 || i % 7 === 6);
+    const dayEvts  = all.filter(e => e.data_inicio === dateStr)
+                        .sort((a, b) => (a.hora_inicio || '99:99') > (b.hora_inicio || '99:99') ? 1 : -1);
+
+    let cls = 'cal-day';
+    if (!isCurrent) cls += ' other-month';
+    if (isToday)    cls += ' today';
+    if (isWknd)     cls += ' weekend-day';
+
+    let pillsHtml = '';
+    const maxShow = 3;
+    dayEvts.slice(0, maxShow).forEach(ev => {
+      const label = (ev.hora_inicio ? ev.hora_inicio.slice(0,5) + ' ' : '') + ev.titulo;
+      pillsHtml += `<span class="cal-event-pill ${ev.tipo}" data-evid="${ev.id}" title="${ev.titulo}">${escHtml(label)}</span>`;
+    });
+    if (dayEvts.length > maxShow) {
+      pillsHtml += `<span class="cal-more" data-date="${dateStr}">+${dayEvts.length - maxShow} mais</span>`;
+    }
+
+    html += `<div class="${cls}" data-date="${dateStr}">
+      <div class="cal-day-num">${dayNum}</div>
+      ${pillsHtml}
+    </div>`;
+  }
+
+  document.getElementById('cal-days').innerHTML = html;
+
+  // Day click → open new modal with date prefilled
+  document.querySelectorAll('.cal-day[data-date]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.cal-event-pill') || e.target.closest('.cal-more')) return;
+      openNewModal(el.dataset.date);
+    });
+  });
+
+  // Pill click → popover
+  document.querySelectorAll('.cal-event-pill[data-evid]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      showPopover(el.dataset.evid, el);
+    });
+  });
+
+  // "+N mais" → switch to list view filtered to that date
+  document.querySelectorAll('.cal-more[data-date]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      switchView('lista');
+    });
+  });
+}
+
+// ─── LIST VIEW ───
+function renderListView() {
+  const tipo   = document.getElementById('cf-tipo').value;
+  const periodo = document.getElementById('cf-periodo').value;
+  const assoc  = document.getElementById('cf-assoc').value;
+  const search = document.getElementById('cf-search').value.toLowerCase().trim();
+
+  const today   = new Date(); today.setHours(0,0,0,0);
+  const todayStr = toDateStr(today);
+  const weekEnd  = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7);
+  const thisYear = today.getFullYear();
+  const thisMon  = today.getMonth();
+
+  let all = getAllEvents().sort((a, b) => {
+    const da = a.data_inicio + (a.hora_inicio || '00:00');
+    const db = b.data_inicio + (b.hora_inicio || '00:00');
+    return da > db ? 1 : -1;
+  });
+
+  // Filter
+  if (tipo)  all = all.filter(e => e.tipo === tipo);
+  if (assoc) all = all.filter(e => e.associacao_tipo === assoc);
+  if (search) all = all.filter(e => e.titulo.toLowerCase().includes(search) || (e.descricao || '').toLowerCase().includes(search));
+  if (periodo === 'hoje')   all = all.filter(e => e.data_inicio === todayStr);
+  if (periodo === 'semana') all = all.filter(e => { const d = parseDate(e.data_inicio); return d >= today && d < weekEnd; });
+  if (periodo === 'mes')    all = all.filter(e => { const d = parseDate(e.data_inicio); return d.getFullYear() === thisYear && d.getMonth() === thisMon; });
+
+  // Show/hide clear btn
+  const hasFilter = tipo || (periodo && periodo !== 'todos') || assoc || search;
+  document.getElementById('btn-clear-cf').style.display = hasFilter ? '' : 'none';
+  if (tipo || (periodo && periodo !== 'todos') || assoc) {
+    ['cf-tipo','cf-periodo','cf-assoc'].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.toggle('has-value', !!el.value && el.value !== 'todos');
+    });
+  }
+
+  const el = document.getElementById('cal-list-content');
+
+  if (!all.length) {
+    el.innerHTML = `<div class="cal-empty">
+      <div class="cal-empty-icon">📅</div>
+      <div class="cal-empty-title">Sem eventos agendados</div>
+      <div class="cal-empty-sub">Clica em "+ Novo Evento" para criar o primeiro</div>
+      <button class="btn btn-primary btn-sm" onclick="openNewModal()">+ Novo Evento</button>
+    </div>`;
+    return;
+  }
+
+  // Group by date
+  const groups = {};
+  all.forEach(ev => {
+    const d = ev.data_inicio;
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(ev);
+  });
+
+  let html = '<div class="cal-list-wrap">';
+  Object.keys(groups).sort().forEach(dateStr => {
+    const dateObj = parseDate(dateStr);
+    const label   = formatDateLabel(dateStr);
+    const isPast  = dateObj < today;
+
+    html += `<div class="cal-list-group">
+      <div class="cal-group-label">${label}</div>
+      <div class="cal-group-events">`;
+
+    groups[dateStr].forEach(ev => {
+      const pastClass   = (isPast && ev.estado !== 'concluido') ? ' past' : '';
+      const timeLabel   = ev.todo_dia ? 'Todo o dia' : (ev.hora_inicio ? ev.hora_inicio.slice(0,5) : '—');
+      const assocHtml   = ev.associacao_nome ? `<span class="cal-event-assoc">· ${escHtml(ev.associacao_nome)}</span>` : '';
+      const statusHtml  = `<span class="ev-status-badge ${ev.estado || 'agendado'}">${estadoLabel(ev.estado)}</span>`;
+      const followupBadge = ev.tipo === 'follow-up'
+        ? (isPast && ev.estado !== 'concluido'
+            ? '<span class="ev-status-badge pendente">Pendente</span>'
+            : '')
+        : '';
+      const syntheticInfo = ev.synthetic
+        ? `<span class="cal-event-assoc" style="font-style:italic">via ${ev.source}</span>`
+        : '';
+
+      const actionsHtml = ev.synthetic
+        ? `<a class="cal-act-btn" href="${sourceLink(ev)}" title="Ver origem" style="text-decoration:none;font-size:12px">↗</a>`
+        : `<div class="action-menu">
+             <button class="action-menu-btn" data-evid="${ev.id}" title="Ações">···</button>
+             <div class="action-dropdown" id="evdrop-${ev.id}">
+               <button class="action-dropdown-item" data-action="edit" data-evid="${ev.id}">✎ Editar</button>
+               <button class="action-dropdown-item del" data-action="delete" data-evid="${ev.id}">✕ Eliminar</button>
+             </div>
+           </div>`;
+
+      html += `<div class="cal-event-card ${ev.tipo}${pastClass}">
+        <div class="cal-event-time">${escHtml(timeLabel)}</div>
+        <div class="cal-event-body">
+          <div class="cal-event-title">${escHtml(ev.titulo)}</div>
+          <div class="cal-event-meta">
+            <span class="cal-event-badge ${ev.tipo}">${TIPO_LABELS[ev.tipo] || ev.tipo}</span>
+            ${assocHtml}
+            ${syntheticInfo}
+            ${followupBadge}
+          </div>
+        </div>
+        <div class="cal-event-actions">${actionsHtml}</div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+
+  // 3-dot menus
+  el.querySelectorAll('.action-menu-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id   = btn.dataset.evid;
+      const drop = document.getElementById(`evdrop-${id}`);
+      const rect = btn.getBoundingClientRect();
+      drop.style.top   = (rect.bottom + 4) + 'px';
+      drop.style.right = (window.innerWidth - rect.right) + 'px';
+      drop.style.left  = 'auto';
+      el.querySelectorAll('.action-dropdown.open').forEach(d => {
+        if (d.id !== `evdrop-${id}`) d.classList.remove('open');
+      });
+      drop.classList.toggle('open');
+    });
+  });
+
+  el.querySelectorAll('.action-dropdown-item').forEach(item => {
+    item.addEventListener('click', e => {
+      e.stopPropagation();
+      const id     = item.dataset.evid;
+      const action = item.dataset.action;
+      document.getElementById(`evdrop-${id}`).classList.remove('open');
+      if (action === 'edit')   openEditModal(id);
+      if (action === 'delete') openConfirmDelete(id);
+    });
+  });
+}
+
+// ─── VIEW MANAGEMENT ───
+function switchView(v) {
+  if (window.innerWidth < 768) v = 'lista';
+  calView = v;
+  localStorage.setItem('cal-view', v);
+
+  const isCalendar = v === 'calendar';
+  document.getElementById('cal-grid-section').style.display = isCalendar ? '' : 'none';
+  document.getElementById('cal-list-section').style.display = isCalendar ? 'none' : '';
+  document.getElementById('btn-view-cal').classList.toggle('active', isCalendar);
+  document.getElementById('btn-view-list').classList.toggle('active', !isCalendar);
+
+  if (isCalendar) {
+    renderCalendarGrid();
+  } else {
+    renderListView();
+  }
+}
+
+function applyView() {
+  if (window.innerWidth < 768) calView = 'lista';
+  switchView(calView);
+}
+
+// ─── POPOVER ───
+function showPopover(id, targetEl) {
+  const all = getAllEvents();
+  const ev  = all.find(e => String(e.id) === String(id));
+  if (!ev) return;
+
+  const pop  = document.getElementById('cal-popover');
+  const color = TIPO_COLORS[ev.tipo] || 'var(--text-muted)';
+
+  document.getElementById('cal-pop-type').textContent  = TIPO_LABELS[ev.tipo] || ev.tipo;
+  document.getElementById('cal-pop-type').style.color  = color;
+  document.getElementById('cal-pop-title').textContent = ev.titulo;
+
+  const time = ev.todo_dia ? 'Todo o dia · ' + formatDateShort(ev.data_inicio)
+    : (ev.hora_inicio ? ev.hora_inicio.slice(0,5) + ' · ' : '') + formatDateShort(ev.data_inicio);
+  document.getElementById('cal-pop-time').textContent  = '🕐 ' + time;
+  document.getElementById('cal-pop-assoc').textContent = ev.associacao_nome ? '🔗 ' + ev.associacao_nome : '';
+  document.getElementById('cal-pop-status').textContent = '● ' + estadoLabel(ev.estado);
+
+  const actEl = document.getElementById('cal-pop-actions');
+  if (ev.synthetic) {
+    actEl.innerHTML = `<a class="btn btn-ghost btn-sm" href="${sourceLink(ev)}" style="text-decoration:none">↗ Ver origem</a>`;
+  } else {
+    actEl.innerHTML = `
+      <button class="btn btn-ghost btn-sm" onclick="openEditModal('${ev.id}');closePopover()">Editar</button>
+      <button class="btn btn-ghost btn-sm" onclick="openConfirmDelete('${ev.id}');closePopover()">Eliminar</button>`;
+  }
+
+  // Position near target
+  const rect = targetEl.getBoundingClientRect();
+  pop.style.top  = Math.min(rect.bottom + 6, window.innerHeight - 260) + 'px';
+  pop.style.left = Math.min(rect.left, window.innerWidth - 300) + 'px';
+  pop.classList.add('open');
+}
+
+function closePopover() {
+  document.getElementById('cal-popover').classList.remove('open');
+}
+
+document.getElementById('cal-pop-close').addEventListener('click', closePopover);
+document.addEventListener('click', e => {
+  const pop = document.getElementById('cal-popover');
+  if (pop.classList.contains('open') && !pop.contains(e.target) && !e.target.closest('.cal-event-pill')) {
+    closePopover();
+  }
+  if (!e.target.closest('.action-menu')) {
+    document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// ─── MODAL ───
+function openNewModal(prefillDate) {
+  editingId = null;
+  document.getElementById('evento-modal-title').textContent = 'Novo Evento';
+  document.getElementById('evento-modal-save').textContent  = 'Guardar Evento';
+  document.getElementById('f-ev-titulo').value       = '';
+  document.getElementById('f-ev-tipo').value         = 'reuniao';
+  document.getElementById('f-ev-descricao').value    = '';
+  document.getElementById('f-ev-todo-dia').checked   = false;
+  document.getElementById('f-ev-data-inicio').value  = prefillDate || '';
+  document.getElementById('f-ev-hora-inicio').value  = '';
+  document.getElementById('f-ev-data-fim').value     = '';
+  document.getElementById('f-ev-hora-fim').value     = '';
+  document.getElementById('f-ev-assoc-tipo').value   = 'nenhum';
+  document.getElementById('f-ev-recorrente').checked = false;
+  document.getElementById('f-ev-frequencia').value   = 'semanalmente';
+  document.getElementById('f-ev-estado').value       = 'agendado';
+  document.getElementById('f-ev-lembrete').value     = 'sem_lembrete';
+  document.getElementById('ev-assoc-select-group').style.display = 'none';
+  document.getElementById('ev-freq-row').style.display = 'none';
+  toggleHoraFields();
+  document.querySelectorAll('#evento-modal-overlay .f-error').forEach(el => el.classList.remove('f-error'));
+  document.getElementById('evento-modal-overlay').classList.add('open');
+}
+
+function openEditModal(id) {
+  const ev = EVENTOS.find(e => String(e.id) === String(id));
+  if (!ev) return;
+  editingId = id;
+  document.getElementById('evento-modal-title').textContent = 'Editar Evento';
+  document.getElementById('evento-modal-save').textContent  = 'Guardar Alterações';
+  document.getElementById('f-ev-titulo').value       = ev.titulo || '';
+  document.getElementById('f-ev-tipo').value         = ev.tipo || 'outro';
+  document.getElementById('f-ev-descricao').value    = ev.descricao || '';
+  document.getElementById('f-ev-todo-dia').checked   = !!ev.todo_dia;
+  document.getElementById('f-ev-data-inicio').value  = ev.data_inicio || '';
+  document.getElementById('f-ev-hora-inicio').value  = ev.hora_inicio ? ev.hora_inicio.slice(0,5) : '';
+  document.getElementById('f-ev-data-fim').value     = ev.data_fim || '';
+  document.getElementById('f-ev-hora-fim').value     = ev.hora_fim ? ev.hora_fim.slice(0,5) : '';
+  document.getElementById('f-ev-estado').value       = ev.estado || 'agendado';
+  document.getElementById('f-ev-lembrete').value     = ev.lembrete || 'sem_lembrete';
+  document.getElementById('f-ev-recorrente').checked = !!ev.recorrente;
+  document.getElementById('f-ev-frequencia').value   = ev.frequencia || 'semanalmente';
+  document.getElementById('ev-freq-row').style.display = ev.recorrente ? '' : 'none';
+
+  const assocTipo = ev.associacao_tipo || 'nenhum';
+  document.getElementById('f-ev-assoc-tipo').value = assocTipo;
+  updateAssocSelect(assocTipo, ev.associacao_nome || '');
+
+  toggleHoraFields();
+  document.querySelectorAll('#evento-modal-overlay .f-error').forEach(el => el.classList.remove('f-error'));
+  document.getElementById('evento-modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('evento-modal-overlay').classList.remove('open');
+  editingId = null;
+}
+
+function toggleHoraFields() {
+  const allDay = document.getElementById('f-ev-todo-dia').checked;
+  document.getElementById('ev-hora-inicio-group').style.display = allDay ? 'none' : '';
+  document.getElementById('ev-hora-fim-group').style.display    = allDay ? 'none' : '';
+}
+
+function updateAssocSelect(tipo, currentVal) {
+  const grp   = document.getElementById('ev-assoc-select-group');
+  const sel   = document.getElementById('f-ev-assoc-nome');
+  const lbl   = document.getElementById('ev-assoc-select-label');
+
+  if (tipo === 'nenhum') { grp.style.display = 'none'; return; }
+  grp.style.display = '';
+
+  let items = [];
+  if (tipo === 'cliente')  { lbl.textContent = 'Cliente'; items = CLIENTES_DATA.map(c => c.name); }
+  if (tipo === 'lead')     { lbl.textContent = 'Lead';    items = LEADS_DATA.map(l => l.name); }
+  if (tipo === 'projeto')  { lbl.textContent = 'Projeto'; items = PROJECTS_DATA.map(p => p.name); }
+
+  sel.innerHTML = '<option value="">Selecionar...</option>' +
+    items.map(n => `<option value="${escHtml(n)}" ${n === currentVal ? 'selected' : ''}>${escHtml(n)}</option>`).join('');
+}
+
+document.getElementById('f-ev-todo-dia').addEventListener('change', toggleHoraFields);
+document.getElementById('f-ev-recorrente').addEventListener('change', () => {
+  document.getElementById('ev-freq-row').style.display = document.getElementById('f-ev-recorrente').checked ? '' : 'none';
+});
+document.getElementById('f-ev-assoc-tipo').addEventListener('change', function() {
+  updateAssocSelect(this.value, '');
+});
+
+// ─── SAVE ───
+document.getElementById('evento-modal-save').addEventListener('click', async () => {
+  const tituloEl = document.getElementById('f-ev-titulo');
+  const dataEl   = document.getElementById('f-ev-data-inicio');
+  const titulo   = tituloEl.value.trim();
+  const dataIn   = dataEl.value;
+
+  tituloEl.classList.toggle('f-error', !titulo);
+  dataEl.classList.toggle('f-error', !dataIn);
+  if (!titulo || !dataIn) return;
+
+  const allDay     = document.getElementById('f-ev-todo-dia').checked;
+  const recorrente = document.getElementById('f-ev-recorrente').checked;
+  const assocTipo  = document.getElementById('f-ev-assoc-tipo').value;
+  const assocNome  = assocTipo !== 'nenhum'
+    ? (document.getElementById('f-ev-assoc-nome').value || null)
+    : null;
+
+  const payload = {
+    titulo,
+    tipo:           document.getElementById('f-ev-tipo').value,
+    descricao:      document.getElementById('f-ev-descricao').value.trim() || null,
+    todo_dia:       allDay,
+    data_inicio:    dataIn,
+    hora_inicio:    (!allDay && document.getElementById('f-ev-hora-inicio').value) || null,
+    data_fim:       document.getElementById('f-ev-data-fim').value || null,
+    hora_fim:       (!allDay && document.getElementById('f-ev-hora-fim').value) || null,
+    associacao_tipo: assocTipo,
+    associacao_nome: assocNome,
+    recorrente,
+    frequencia:     recorrente ? document.getElementById('f-ev-frequencia').value : null,
+    estado:         document.getElementById('f-ev-estado').value,
+    lembrete:       document.getElementById('f-ev-lembrete').value,
+  };
+
+  if (editingId !== null) {
+    const { error } = await sb.from('calendario').update(payload).eq('id', editingId);
+    if (error) { console.error('Erro ao atualizar evento:', error); return; }
+  } else {
+    const { error } = await sb.from('calendario').insert(payload);
+    if (error) { console.error('Erro ao criar evento:', error); return; }
+  }
+
+  closeModal();
+  await loadCalendario();
+  renderKPIs();
+  if (calView === 'calendar') renderCalendarGrid();
+  else renderListView();
+});
+
+// ─── DELETE ───
+function openConfirmDelete(id) {
+  const ev = getAllEvents().find(e => String(e.id) === String(id));
+  pendingDeleteId = id;
+  document.getElementById('confirm-title').textContent = 'Eliminar evento';
+  document.getElementById('confirm-msg').textContent   =
+    `Tens a certeza que queres eliminar "${ev ? ev.titulo : 'este evento'}"? Esta ação não pode ser desfeita.`;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  await sb.from('calendario').delete().eq('id', pendingDeleteId);
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+  await loadCalendario();
+  renderKPIs();
+  if (calView === 'calendar') renderCalendarGrid();
+  else renderListView();
+});
+
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  pendingDeleteId = null;
+  document.getElementById('confirm-overlay').classList.remove('open');
+});
+
+// ─── MODAL CLOSE ───
+document.getElementById('evento-modal-close').addEventListener('click', closeModal);
+document.getElementById('evento-modal-cancel').addEventListener('click', closeModal);
+document.getElementById('evento-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('evento-modal-overlay')) closeModal();
+});
+
+// ─── NAV BUTTONS ───
+document.getElementById('btn-novo-evento').addEventListener('click', () => openNewModal());
+document.getElementById('btn-view-cal').addEventListener('click', () => switchView('calendar'));
+document.getElementById('btn-view-list').addEventListener('click', () => switchView('lista'));
+document.getElementById('cal-prev').addEventListener('click', () => {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendarGrid();
+});
+document.getElementById('cal-next').addEventListener('click', () => {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendarGrid();
+});
+document.getElementById('cal-today-btn').addEventListener('click', () => {
+  const t = new Date();
+  calYear  = t.getFullYear();
+  calMonth = t.getMonth();
+  renderCalendarGrid();
+});
+
+// ─── LIST FILTERS ───
+['cf-tipo','cf-periodo','cf-assoc','cf-search'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderListView);
+  document.getElementById(id).addEventListener('change', renderListView);
+});
+document.getElementById('btn-clear-cf').addEventListener('click', () => {
+  document.getElementById('cf-tipo').value    = '';
+  document.getElementById('cf-periodo').value = 'todos';
+  document.getElementById('cf-assoc').value   = '';
+  document.getElementById('cf-search').value  = '';
+  ['cf-tipo','cf-periodo','cf-assoc'].forEach(id => document.getElementById(id).classList.remove('has-value'));
+  renderListView();
+});
+
+// ─── HELPERS ───
+function toDateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function parseDate(str) {
+  if (!str) return new Date(0);
+  const [y, m, d] = str.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+}
+
+function formatDateLabel(dateStr) {
+  const d     = parseDate(dateStr);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tmrw  = new Date(today); tmrw.setDate(tmrw.getDate() + 1);
+  const full  = WEEKDAYS_PT[d.getDay()] + ', ' + d.getDate() + ' de ' + MONTHS_PT[d.getMonth()];
+  if (d.getTime() === today.getTime()) return 'Hoje — ' + full;
+  if (d.getTime() === tmrw.getTime())  return 'Amanhã — ' + full;
+  return full;
+}
+
+function formatDateShort(dateStr) {
+  if (!dateStr) return '';
+  const d = parseDate(dateStr);
+  return d.getDate() + ' ' + MONTHS_PT[d.getMonth()].slice(0,3) + ' ' + d.getFullYear();
+}
+
+function estadoLabel(e) {
+  return { agendado: 'Agendado', concluido: 'Concluído', cancelado: 'Cancelado' }[e] || (e || 'Agendado');
+}
+
+function sourceLink(ev) {
+  if (ev.source === 'projeto') return `projeto.html?id=${ev.source_id}`;
+  if (ev.source === 'lead')    return `lead.html?id=${ev.source_id}`;
+  return 'tasks.html';
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INIT ───
+(async () => {
+  const now = new Date();
+  calYear  = now.getFullYear();
+  calMonth = now.getMonth();
+  await Promise.all([loadCalendario(), loadLeads(), loadProjects(), loadTasks(), loadClientes()]);
+  renderKPIs();
+  applyView();
+})();
+</script>
+</body>
+</html>

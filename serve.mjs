@@ -25,7 +25,13 @@ const mime = {
 
 const server = http.createServer((req, res) => {
   let urlPath = req.url.split('?')[0];
-  if (urlPath === '/') urlPath = '/index.html';
+
+  // Root → homepage
+  if (urlPath === '/' || urlPath === '/index.html') urlPath = '/homepage.html';
+
+  // Extensionless paths → try .html (e.g. /homepage → /homepage.html)
+  if (!path.extname(urlPath)) urlPath += '.html';
+
   const filePath = path.join(__dirname, urlPath);
 
   fs.readFile(filePath, (err, data) => {
