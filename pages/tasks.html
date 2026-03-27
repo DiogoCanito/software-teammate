@@ -130,13 +130,6 @@
 
     <select class="filter-select" id="tf-project">
       <option value="">Projeto</option>
-      <option value="Redesign Web Corporativo">Redesign Web Corporativo</option>
-      <option value="Campanha de Lançamento">Campanha de Lançamento</option>
-      <option value="App Mobile v2.0">App Mobile v2.0</option>
-      <option value="Identidade Visual">Identidade Visual</option>
-      <option value="Automação CRM">Automação CRM</option>
-      <option value="Finanças">Finanças</option>
-      <option value="Interno">Interno</option>
     </select>
 
     <select class="filter-select" id="tf-client">
@@ -158,7 +151,7 @@
 
     <select class="filter-select" id="tf-status">
       <option value="">Estado</option>
-      <option value="a-fazer">A Fazer</option>
+      <option value="a-fazer">To do</option>
       <option value="em-curso">Em Curso</option>
       <option value="em-revisao">Em Revisão</option>
       <option value="bloqueada">Bloqueada</option>
@@ -236,13 +229,6 @@
           <label class="form-label">Projeto</label>
           <select class="form-select" id="f-task-project">
             <option value="">Selecionar...</option>
-            <option value="Redesign Web Corporativo">Redesign Web Corporativo</option>
-            <option value="Campanha de Lançamento">Campanha de Lançamento</option>
-            <option value="App Mobile v2.0">App Mobile v2.0</option>
-            <option value="Identidade Visual">Identidade Visual</option>
-            <option value="Automação CRM">Automação CRM</option>
-            <option value="Finanças">Finanças</option>
-            <option value="Interno">Interno</option>
           </select>
         </div>
         <div class="form-group">
@@ -256,7 +242,7 @@
         <div class="form-group">
           <label class="form-label">Estado</label>
           <select class="form-select" id="f-task-status">
-            <option value="a-fazer" selected>A Fazer</option>
+            <option value="a-fazer" selected>To do</option>
             <option value="em-curso">Em Curso</option>
             <option value="em-revisao">Em Revisão</option>
             <option value="bloqueada">Bloqueada</option>
@@ -283,9 +269,10 @@
 // ═══════════════════════════════════════════════
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let TASKS   = [];
+let TASKS    = [];
 let MEMBROS  = [];
 let CLIENTES = [];
+let PROJECTS = [];
 
 function darkenHex(hex, amount = 0.3) {
   const n = parseInt(hex.replace('#',''), 16);
@@ -323,6 +310,17 @@ async function loadClientes() {
   document.getElementById('f-task-client').innerHTML = '<option value="">Selecionar...</option>' + opts;
 }
 
+async function loadProjects() {
+  const { data } = await sb.from('projects').select('id,name,client').neq('phase','cancelado').order('name');
+  PROJECTS = data || [];
+  TASK_PROJECT_CLIENT = Object.fromEntries(PROJECTS.map(p => [p.name, p.client || '']));
+  const opts = PROJECTS.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  const filterOpts = '<option value="">Projeto</option>' + opts;
+  const modalOpts  = '<option value="">Selecionar...</option>' + opts;
+  document.getElementById('tf-project').innerHTML    = filterOpts;
+  document.getElementById('f-task-project').innerHTML = modalOpts;
+}
+
 function formatDue(dateStr) {
   if (!dateStr) return '—';
   const today = new Date(); today.setHours(0,0,0,0);
@@ -352,7 +350,7 @@ async function loadTasks() {
 
 
 const STATUS_META = {
-  'a-fazer':    { label: 'A Fazer',     badge: 'paused',  dot: '#3a3a3a',          colClass: 'kcol-afazer'   },
+  'a-fazer':    { label: 'To do',       badge: 'paused',  dot: '#3a3a3a',          colClass: 'kcol-afazer'   },
   'em-curso':   { label: 'Em Curso',    badge: 'active',  dot: '#0a8ab8',          colClass: 'kcol-emcurso'  },
   'em-revisao': { label: 'Em Revisão',  badge: 'review',  dot: '#f5c518',          colClass: 'kcol-revisao'  },
   'bloqueada':  { label: 'Bloqueada',   badge: 'overdue', dot: '#ff4d6d',          colClass: 'kcol-bloqueada'},
@@ -727,7 +725,7 @@ document.getElementById('btn-clear-filters').addEventListener('click', () => {
 });
 
 // ─── INIT ───
-(async () => { await loadMembros(); await loadClientes(); await loadTasks(); renderTasksPage(); })();
+(async () => { await Promise.all([loadMembros(), loadClientes(), loadProjects()]); await loadTasks(); renderTasksPage(); })();
 
 // ─── CLOSE DROPDOWNS ON OUTSIDE CLICK ───
 document.addEventListener('click', () => {
@@ -780,15 +778,7 @@ function setupDragDrop() {
 // ═══════════════════════════════════════════════
 // TASK MODAL
 // ═══════════════════════════════════════════════
-const TASK_PROJECT_CLIENT = {
-  'Redesign Web Corporativo': 'Nexus Tecnologia',
-  'Campanha de Lançamento':   'Orbita Studio',
-  'App Mobile v2.0':          'Viva Saúde',
-  'Identidade Visual':        'Serra & Filhos',
-  'Automação CRM':            'Prime Consult',
-  'Finanças':                 'Interno',
-  'Interno':                  'Interno',
-};
+let TASK_PROJECT_CLIENT = {};
 
 function openNewTaskModal() {
   editingTaskId = null;

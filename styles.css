@@ -133,7 +133,7 @@ body::after {
 .user-role { font-size: 10.5px; color: var(--text-muted); }
 
 /* ─── MAIN ─── */
-.main { padding: 32px 36px; overflow-y: auto; min-height: 100vh; }
+.main { padding: 32px 36px; min-height: 100vh; }
 
 /* ─── TOPBAR ─── */
 .topbar {
@@ -520,6 +520,8 @@ body::after {
 .tasks-table tbody tr:last-child td { border-bottom: none; }
 .tasks-table tbody tr { transition: background 0.1s; cursor: pointer; }
 .tasks-table tbody tr:hover td { background: var(--surface2); }
+.tasks-table tbody tr:last-child:hover td:first-child { border-radius: 0 0 0 13px; }
+.tasks-table tbody tr:last-child:hover td:last-child  { border-radius: 0 0 13px 0; }
 .tc-main-cell { min-width: 260px; }
 .tc-title { display: flex; align-items: center; gap: 9px; }
 .tc-mobile-card { display: none; }
@@ -1118,6 +1120,8 @@ body::after {
 .leads-table tbody tr:last-child td { border-bottom: none; }
 .leads-table tbody tr { transition: background 0.1s; }
 .leads-table tbody tr:hover td { background: var(--surface2); }
+.leads-table tbody tr:last-child:hover td:first-child { border-radius: 0 0 0 13px; }
+.leads-table tbody tr:last-child:hover td:last-child  { border-radius: 0 0 13px 0; }
 .lead-name { font-size: 13px; font-weight: 500; color: var(--text); }
 .lead-name-link { text-decoration: none; color: var(--blue-light); transition: color 0.15s; }
 .lead-name-link:hover { color: var(--text); text-decoration: underline; }
