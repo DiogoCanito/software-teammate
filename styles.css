@@ -20,6 +20,8 @@
 
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 
+html { overflow-x: hidden; }
+
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
@@ -1679,8 +1681,10 @@ body::after {
     box-shadow: 8px 0 40px rgba(0,0,0,0.5);
   }
 
-  /* Main content: add top padding for fixed header, reduce side padding */
-  .main { padding: 72px 16px 32px; }
+  /* Main content: add top padding for fixed header, reduce side padding.
+     min-width: 0 prevents the grid track from expanding beyond 1fr when
+     content has a large min-content width (e.g. nowrap text, filters bar). */
+  .main { padding: 72px 16px 32px; min-width: 0; }
 
   /* Page title */
   .page-title { font-size: 22px; }
@@ -1775,8 +1779,14 @@ body::after {
   /* Calendar: hide grid view on mobile, list-only */
   .cal-view-toggle { display: none; }
   .cal-section.grid-only { display: none; }
-  .cal-event-card { gap: 10px; }
+  .cal-event-card { gap: 10px; max-width: 100%; }
   .cal-event-time { min-width: 44px; font-size: 11px; }
-  .cal-list-section-inner { padding: 12px; }
+  .cal-list-section-inner { padding: 12px; overflow-x: hidden; }
   .cal-group-events { padding: 10px; }
+
+  /* Calendar filters bar: stack on mobile */
+  #cal-list-section .filters-bar { flex-direction: column; align-items: stretch; gap: 6px; }
+  #cal-list-section .filter-select { width: 100%; }
+  #cal-list-section .filter-search-wrap { width: 100%; }
+  #cal-list-section .filter-search { width: 100%; }
 }
