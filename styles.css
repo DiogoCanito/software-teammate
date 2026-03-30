@@ -20,14 +20,14 @@
 
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 
-html { overflow-x: hidden; }
+html { overflow-x: clip; }
 
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Ambient radial glows */
@@ -60,8 +60,10 @@ body::after {
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
   padding: 0;
-  position: sticky; top: 0;
+  position: fixed; top: 0; left: 0;
+  width: 244px;
   height: 100vh; overflow-y: auto;
+  z-index: 10;
 }
 
 .sidebar::-webkit-scrollbar { width: 3px; }
@@ -135,7 +137,7 @@ body::after {
 .user-role { font-size: 10.5px; color: var(--text-muted); }
 
 /* ─── MAIN ─── */
-.main { padding: 32px 36px; min-height: 100vh; }
+.main { padding: 32px 36px; min-height: 100vh; grid-column: 2; }
 
 /* ─── TOPBAR ─── */
 .topbar {
@@ -1684,7 +1686,7 @@ body::after {
   /* Main content: add top padding for fixed header, reduce side padding.
      min-width: 0 prevents the grid track from expanding beyond 1fr when
      content has a large min-content width (e.g. nowrap text, filters bar). */
-  .main { padding: 72px 16px 32px; min-width: 0; }
+  .main { padding: 72px 16px 32px; min-width: 0; grid-column: 1; }
 
   /* Page title */
   .page-title { font-size: 22px; }
