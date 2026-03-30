@@ -128,8 +128,8 @@
       <div class="kpi-label">Projetos Ativos</div>
       <div class="kpi-value" id="kpi-projects">—</div>
       <div class="kpi-meta">
-        <span class="kpi-delta up">↑ 2</span>
-        <span>novos este mês</span>
+        <span class="kpi-delta" id="kpi-proj-delta">—</span>
+        <span id="kpi-proj-delta-label">este mês</span>
       </div>
     </div>
     <div class="kpi-card coral">
@@ -321,13 +321,6 @@
           <label class="form-label">Projeto</label>
           <select class="form-select" id="f-task-project">
             <option value="">Selecionar...</option>
-            <option value="Redesign Web Corporativo">Redesign Web Corporativo</option>
-            <option value="Campanha de Lançamento">Campanha de Lançamento</option>
-            <option value="App Mobile v2.0">App Mobile v2.0</option>
-            <option value="Identidade Visual">Identidade Visual</option>
-            <option value="Automação CRM">Automação CRM</option>
-            <option value="Finanças">Finanças</option>
-            <option value="Interno">Interno</option>
           </select>
         </div>
         <div class="form-group">
@@ -405,7 +398,7 @@ async function loadDashboard() {
   ] = await Promise.all([
     sb.from('projects').select('*').neq('phase','cancelado').order('created_at', { ascending: false }).limit(5),
     sb.from('tasks').select('*').neq('status','concluida').order('due_date', { ascending: true }),
-    sb.from('projects').select('phase').neq('phase','cancelado'),
+    sb.from('projects').select('phase,created_at').neq('phase','cancelado'),
     sb.from('clientes').select('*').eq('status','ativo').order('name').limit(6),
     sb.from('propostas').select('*'),
     sb.from('custos').select('*'),
@@ -419,6 +412,40 @@ async function loadDashboard() {
   document.getElementById('kpi-tasks').textContent    = pending;
   document.getElementById('kpi-urgent').textContent   = `${urgent} urgentes`;
   document.getElementById('dash-urgent-pill').textContent = `${urgent} urgentes`;
+
+  // ─── PROJECTS KPI DELTA ───
+  const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+  const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  const newThisMonth = (allProjs || []).filter(p => {
+    if (!p.created_at) return false;
+    const d = new Date(p.created_at);
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+  }).length;
+  const newLastMonth = (allProjs || []).filter(p => {
+    if (!p.created_at) return false;
+    const d = new Date(p.created_at);
+    return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+  }).length;
+  const deltaEl = document.getElementById('kpi-proj-delta');
+  const deltaLabelEl = document.getElementById('kpi-proj-delta-label');
+  if (newThisMonth > 0 || newLastMonth > 0) {
+    const diff = newThisMonth - newLastMonth;
+    if (diff > 0) {
+      deltaEl.className = 'kpi-delta up';
+      deltaEl.textContent = `↑ ${newThisMonth}`;
+    } else if (diff < 0) {
+      deltaEl.className = 'kpi-delta down';
+      deltaEl.textContent = `↓ ${newThisMonth}`;
+    } else {
+      deltaEl.className = 'kpi-delta neutral';
+      deltaEl.textContent = `${newThisMonth}`;
+    }
+    deltaLabelEl.textContent = 'novos este mês';
+  } else {
+    deltaEl.className = 'kpi-delta neutral';
+    deltaEl.textContent = '—';
+    deltaLabelEl.textContent = 'novos este mês';
+  }
 
   // ─── FINANCIAL KPIs ───
   const receita = (propostas || [])
@@ -488,11 +515,29 @@ async function loadDashboard() {
   }).join('') || '<div style="text-align:center;color:var(--text-muted);padding:20px">Sem tarefas pendentes</div>';
 
   document.querySelectorAll('#dash-task-list .task-item').forEach(item => {
-    item.addEventListener('click', async () => {
+    item.addEventListener('click', async e => {
+      if (!e.target.closest('.task-check')) return;
       const id = parseInt(item.dataset.id);
-      const isDone = item.querySelector('.task-check').classList.contains('done');
-      await sb.from('tasks').update({ status: isDone ? 'a-fazer' : 'concluida' }).eq('id', id);
-      await loadDashboard();
+      const checkEl = item.querySelector('.task-check');
+      const isDone = checkEl.classList.contains('done');
+      if (!isDone) {
+        await sb.from('tasks').update({ status: 'concluida' }).eq('id', id);
+        checkEl.classList.add('done'); checkEl.textContent = '✓';
+        const textEl = item.querySelector('.task-text');
+        if (textEl) textEl.classList.add('done');
+        if (pendingDeletions[id]) clearTimeout(pendingDeletions[id]);
+        pendingDeletions[id] = setTimeout(async () => {
+          delete pendingDeletions[id];
+          await sb.from('tasks').delete().eq('id', id);
+          item.remove();
+        }, 4000);
+      } else {
+        if (pendingDeletions[id]) { clearTimeout(pendingDeletions[id]); delete pendingDeletions[id]; }
+        await sb.from('tasks').update({ status: 'a-fazer' }).eq('id', id);
+        checkEl.classList.remove('done'); checkEl.textContent = '';
+        const textEl = item.querySelector('.task-text');
+        if (textEl) textEl.classList.remove('done');
+      }
     });
   });
 
@@ -619,17 +664,10 @@ async function loadDashboard() {
 }
 
 // ─── TASK MODAL ───
-const TASK_PROJECT_CLIENT = {
-  'Redesign Web Corporativo': 'Nexus Tecnologia',
-  'Campanha de Lançamento':   'Orbita Studio',
-  'App Mobile v2.0':          'Viva Saúde',
-  'Identidade Visual':        'Serra & Filhos',
-  'Automação CRM':            'Prime Consult',
-  'Finanças':                 'Interno',
-  'Interno':                  'Interno',
-};
+let TASK_PROJECT_CLIENT = {};
 let MEMBROS  = [];
 let CLIENTES = [];
+const pendingDeletions = {};
 
 async function loadMembros() {
   const { data, error } = await sb.from('membros').select('id,name,initials,avatar_color').eq('status','ativo').order('name');
@@ -644,6 +682,14 @@ async function loadClientes() {
   CLIENTES = data || [];
   const opts = CLIENTES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
   document.getElementById('f-task-client').innerHTML = '<option value="">Selecionar...</option>' + opts;
+}
+
+async function loadProjects() {
+  const { data } = await sb.from('projects').select('id,name,client').neq('phase','cancelado').order('name');
+  const projects = data || [];
+  TASK_PROJECT_CLIENT = Object.fromEntries(projects.map(p => [p.name, p.client || '']));
+  const opts = projects.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  document.getElementById('f-task-project').innerHTML = '<option value="">Selecionar...</option>' + opts;
 }
 
 function getAssigneeInitials(name) {
@@ -697,6 +743,7 @@ document.getElementById('task-modal-save').addEventListener('click', async () =>
 // ─── INIT ───
 loadMembros();
 loadClientes();
+loadProjects();
 loadDashboard();
 </script>
 

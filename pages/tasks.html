@@ -370,6 +370,7 @@ const KANBAN_COLS = ['a-fazer','em-curso','em-revisao','bloqueada','concluida'];
 let taskView = 'list';
 let taskFilters = { search:'', assignee:'', project:'', client:'', priority:'', status:'' };
 let editingTaskId = null;
+const pendingDeletions = {};
 
 function getFilteredTasks() {
   return TASKS.filter(t => {
@@ -479,14 +480,29 @@ function renderListView(tasks) {
 
   document.querySelectorAll('#tasks-content tbody tr').forEach(row => {
     row.addEventListener('click', async e => {
-      if (e.target.closest('.row-actions-cell')) return;
+      if (!e.target.closest('.tc-cb')) return;
       const id = parseInt(row.dataset.id);
       const task = TASKS.find(t => t.id === id);
       if (!task) return;
-      const newStatus = task.status === 'concluida' ? 'a-fazer' : 'concluida';
-      await sb.from('tasks').update({ status: newStatus }).eq('id', id);
-      await loadTasks();
-      renderTasksPage();
+      if (task.status !== 'concluida') {
+        await sb.from('tasks').update({ status: 'concluida' }).eq('id', id);
+        task.status = 'concluida';
+        row.querySelectorAll('.tc-cb').forEach(cb => { cb.classList.add('done'); cb.textContent = '✓'; });
+        row.querySelectorAll('.tc-name').forEach(el => el.classList.add('done'));
+        if (pendingDeletions[id]) clearTimeout(pendingDeletions[id]);
+        pendingDeletions[id] = setTimeout(async () => {
+          delete pendingDeletions[id];
+          await sb.from('tasks').delete().eq('id', id);
+          TASKS = TASKS.filter(t => t.id !== id);
+          renderTasksPage();
+        }, 4000);
+      } else {
+        if (pendingDeletions[id]) { clearTimeout(pendingDeletions[id]); delete pendingDeletions[id]; }
+        await sb.from('tasks').update({ status: 'a-fazer' }).eq('id', id);
+        task.status = 'a-fazer';
+        row.querySelectorAll('.tc-cb').forEach(cb => { cb.classList.remove('done'); cb.textContent = ''; });
+        row.querySelectorAll('.tc-name').forEach(el => el.classList.remove('done'));
+      }
     });
   });
 
@@ -656,14 +672,33 @@ function renderProjectsView(tasks) {
   document.getElementById('tasks-content').innerHTML = `<div class="pv-container">${cards}</div>`;
 
   document.querySelectorAll('.pv-task-row').forEach(row => {
-    row.addEventListener('click', async () => {
+    row.addEventListener('click', async e => {
+      if (!e.target.closest('.tc-cb')) return;
       const id = parseInt(row.dataset.id);
       const task = TASKS.find(t => t.id === id);
       if (!task) return;
-      const newStatus = task.status === 'concluida' ? 'a-fazer' : 'concluida';
-      await sb.from('tasks').update({ status: newStatus }).eq('id', id);
-      await loadTasks();
-      renderTasksPage();
+      if (task.status !== 'concluida') {
+        await sb.from('tasks').update({ status: 'concluida' }).eq('id', id);
+        task.status = 'concluida';
+        const cb = row.querySelector('.tc-cb');
+        if (cb) { cb.classList.add('done'); cb.textContent = '✓'; }
+        row.querySelectorAll('.done, span').forEach(el => { if (el.tagName === 'SPAN') el.classList.add('done'); });
+        if (pendingDeletions[id]) clearTimeout(pendingDeletions[id]);
+        pendingDeletions[id] = setTimeout(async () => {
+          delete pendingDeletions[id];
+          await sb.from('tasks').delete().eq('id', id);
+          TASKS = TASKS.filter(t => t.id !== id);
+          renderTasksPage();
+        }, 4000);
+      } else {
+        if (pendingDeletions[id]) { clearTimeout(pendingDeletions[id]); delete pendingDeletions[id]; }
+        await sb.from('tasks').update({ status: 'a-fazer' }).eq('id', id);
+        task.status = 'a-fazer';
+        const cb = row.querySelector('.tc-cb');
+        if (cb) { cb.classList.remove('done'); cb.textContent = ''; }
+        await loadTasks();
+        renderTasksPage();
+      }
     });
   });
 }
