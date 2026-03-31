@@ -2,5 +2,8 @@
   "cleanUrls": true,
   "redirects": [
     { "source": "/", "destination": "/homepage" }
+  ],
+  "rewrites": [
+    { "source": "/documentos/:id", "destination": "/pages/documento-editor.html" }
   ]
 }
