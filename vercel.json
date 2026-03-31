@@ -4,7 +4,7 @@
     { "source": "/", "destination": "/homepage" }
   ],
   "rewrites": [
-    { "source": "/documentos/:id", "destination": "/pages/documento-editor.html" },
-    { "source": "/documentos", "destination": "/pages/documentos.html" }
+    { "source": "/documentos/:id", "destination": "/pages/documento-editor" },
+    { "source": "/documentos", "destination": "/pages/documentos" }
   ]
 }
