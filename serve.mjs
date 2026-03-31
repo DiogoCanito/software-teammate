@@ -29,6 +29,16 @@ const server = http.createServer((req, res) => {
   // Root → homepage
   if (urlPath === '/' || urlPath === '/index.html') urlPath = '/homepage.html';
 
+  // /documentos/[id] → editor page (pass id via query string rewrite)
+  const docEditorMatch = urlPath.match(/^\/documentos\/([^/]+)$/);
+  if (docEditorMatch) {
+    urlPath = '/pages/documento-editor.html';
+    // Preserve the id so the page can read it from document.location
+  }
+
+  // /documentos → documents list page
+  if (urlPath === '/documentos') urlPath = '/pages/documentos.html';
+
   // Extensionless paths → try .html (e.g. /homepage → /homepage.html)
   if (!path.extname(urlPath)) urlPath += '.html';
 
