@@ -259,11 +259,77 @@ body { overflow: hidden; }
   .save-status { min-width: 80px; }
 }
 @media (max-width: 767px) {
-  .editor-topbar { padding: 0 12px; height: 48px; }
-  .editor-topbar-right .btn-save,
-  .editor-topbar-right .editor-type-select { display: none; }
-  .editor-toolbar { padding: 4px 12px; }
-  .editor-scroll { padding: 20px 12px 60px; }
+  /* Clear fixed mobile-header (56px) */
+  .main {
+    margin-top: 56px;
+    height: calc(100vh - 56px);
+  }
+
+  /* Topbar: single row — back | title | save */
+  .editor-topbar {
+    padding: 0 10px;
+    height: 48px;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* Back button: square icon only, no label */
+  .editor-back {
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .back-text { display: none; }
+
+  /* Title: fills remaining space */
+  .editor-title-wrap {
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+  .editor-title-input {
+    text-align: left;
+    font-size: 15px;
+    max-width: 100%;
+  }
+
+  /* Right side: only save button */
+  .editor-topbar-right {
+    margin-left: 0;
+    flex-shrink: 0;
+  }
+  .save-status { display: none; }
+  .editor-type-select { display: none !important; }
+
+  /* Save button border states on mobile */
+  .btn-save.has-unsaved { border-color: var(--danger) !important; color: var(--danger); }
+  .btn-save.all-saved   { border-color: var(--success) !important; color: var(--success); }
+
+  /* Toolbar: scrollable, no wrap, larger touch targets */
+  .editor-toolbar {
+    padding: 6px 12px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 3px;
+    cursor: grab;
+    user-select: none;
+  }
+  .editor-toolbar::-webkit-scrollbar { display: none; }
+  .tb-btn {
+    width: 42px;
+    height: 38px;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .tb-sep { flex-shrink: 0; }
+
+  .editor-scroll { padding: 16px 10px 60px; }
   .editor-paper { padding: 24px 20px; border-radius: 8px; }
   #editor-body { font-size: 15px; }
   #editor-body h1 { font-size: 26px; }
@@ -306,18 +372,18 @@ body { overflow: hidden; }
 
   <div class="nav-group">
     <div class="nav-label">Trabalho</div>
-    <a class="nav-item" href="tasks.html">
+    <a class="nav-item" href="/pages/tasks.html">
       <span class="nav-icon">✓</span> Tarefas
       <span class="nav-badge" id="nav-badge-tarefas"></span>
     </a>
-    <a class="nav-item" href="projects.html">
+    <a class="nav-item" href="/pages/projects.html">
       <span class="nav-icon">◫</span> Projetos
       <span class="nav-badge blue" id="nav-badge-projetos"></span>
     </a>
-    <a class="nav-item" href="calendario.html">
+    <a class="nav-item" href="/pages/calendario.html">
       <span class="nav-icon">📅</span> Calendário
     </a>
-    <a class="nav-item active" href="documentos.html">
+    <a class="nav-item active" href="/documentos">
       <span class="nav-icon">🗂</span> Documentos
     </a>
     <a class="nav-item" href="#">
@@ -327,19 +393,19 @@ body { overflow: hidden; }
 
   <div class="nav-group">
     <div class="nav-label">Negócio</div>
-    <a class="nav-item" href="leads.html">
+    <a class="nav-item" href="/pages/leads.html">
       <span class="nav-icon">◎</span> Leads
     </a>
-    <a class="nav-item" href="clientes.html">
+    <a class="nav-item" href="/pages/clientes.html">
       <span class="nav-icon">👤</span> Clientes
     </a>
-    <a class="nav-item" href="custos.html">
+    <a class="nav-item" href="/pages/custos.html">
       <span class="nav-icon">💸</span> Custos
     </a>
     <a class="nav-item" href="#">
       <span class="nav-icon">€</span> Finanças
     </a>
-    <a class="nav-item" href="propostas.html">
+    <a class="nav-item" href="/pages/propostas.html">
       <span class="nav-icon">📋</span> Propostas
       <span class="nav-badge" id="nav-badge-propostas"></span>
     </a>
@@ -347,7 +413,7 @@ body { overflow: hidden; }
 
   <div class="nav-group">
     <div class="nav-label">Equipa</div>
-    <a class="nav-item" href="membros.html">
+    <a class="nav-item" href="/pages/membros.html">
       <span class="nav-icon">👥</span> Membros
     </a>
     <a class="nav-item" href="#">
@@ -372,7 +438,7 @@ body { overflow: hidden; }
 
 <!-- ─── TOPBAR ─── -->
 <div class="editor-topbar">
-  <a class="editor-back" id="btn-back" href="/documentos">← Documentos</a>
+  <a class="editor-back" id="btn-back" href="/documentos">←<span class="back-text"> Documentos</span></a>
 
   <div class="editor-title-wrap">
     <input class="editor-title-input" id="doc-title" type="text" placeholder="Documento sem título" autocomplete="off" spellcheck="false">
@@ -466,20 +532,24 @@ let saveStatusTimer = null;
 // ─── Save status ───
 function setSaveStatus(state) {
   const el = document.getElementById('save-status');
+  const btn = document.getElementById('btn-save-manual');
   clearTimeout(saveStatusTimer);
   el.className = 'save-status ' + state;
+  btn.classList.remove('has-unsaved', 'all-saved');
   if (state === 'saving') {
     el.innerHTML = '<div class="save-status-spinner"></div><span>A guardar...</span>';
+    btn.classList.add('has-unsaved');
   } else if (state === 'saved') {
     el.innerHTML = '<span>✓ Guardado</span>';
+    btn.classList.add('all-saved');
     saveStatusTimer = setTimeout(() => {
       el.className = 'save-status';
       el.innerHTML = '';
+      btn.classList.remove('all-saved');
     }, 3000);
   } else if (state === 'error') {
     el.innerHTML = '<span>✕ Erro ao guardar</span>';
-  } else {
-    el.innerHTML = '';
+    btn.classList.add('has-unsaved');
   }
 }
 
@@ -503,6 +573,9 @@ async function saveDocument(force = false) {
 // ─── Debounced autosave ───
 function scheduleAutosave() {
   isDirty = true;
+  const btn = document.getElementById('btn-save-manual');
+  btn.classList.add('has-unsaved');
+  btn.classList.remove('all-saved');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => saveDocument(), 1500);
 }
@@ -660,6 +733,33 @@ window.addEventListener('beforeunload', e => {
     e.returnValue = '';
   }
 });
+
+// ─── Toolbar drag-scroll (mouse) ───
+(function() {
+  const toolbar = document.querySelector('.editor-toolbar');
+  let isDown = false, startX, scrollLeft;
+  toolbar.addEventListener('mousedown', e => {
+    if (e.target.closest('.tb-btn') || e.target.closest('.tb-color-dot')) return;
+    isDown = true;
+    toolbar.style.cursor = 'grabbing';
+    startX = e.pageX - toolbar.offsetLeft;
+    scrollLeft = toolbar.scrollLeft;
+  });
+  document.addEventListener('mouseup', () => {
+    isDown = false;
+    toolbar.style.cursor = 'grab';
+  });
+  toolbar.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - toolbar.offsetLeft;
+    toolbar.scrollLeft = scrollLeft - (x - startX);
+  });
+  toolbar.addEventListener('mouseleave', () => {
+    isDown = false;
+    toolbar.style.cursor = 'grab';
+  });
+})();
 
 // ─── Init ───
 loadDocument();

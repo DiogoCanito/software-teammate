@@ -1672,7 +1672,7 @@ body::after {
   .layout { grid-template-columns: 1fr; position: static; }
 
   .sidebar {
-    position: fixed; left: 0; top: 0; bottom: 0;
+    position: fixed; left: 0; top: 56px; bottom: 0;
     width: 264px; z-index: 149;
     transform: translateX(-100%);
     transition: transform 0.25s cubic-bezier(0.22,1,0.36,1);
@@ -1682,6 +1682,9 @@ body::after {
     transform: translateX(0);
     box-shadow: 8px 0 40px rgba(0,0,0,0.5);
   }
+
+  /* Hide sidebar logo block on mobile — saves space, starts with nav groups */
+  .logo-wrap { display: none; }
 
   /* Main content: add top padding for fixed header, reduce side padding.
      min-width: 0 prevents the grid track from expanding beyond 1fr when
