@@ -5,6 +5,8 @@
   ],
   "rewrites": [
     { "source": "/documentos/:id", "destination": "/pages/documento-editor" },
-    { "source": "/documentos", "destination": "/pages/documentos" }
+    { "source": "/documentos", "destination": "/pages/documentos" },
+    { "source": "/agentes", "destination": "/pages/agentes" },
+    { "source": "/carrossel-instagram", "destination": "/pages/carrossel-instagram" }
   ]
 }

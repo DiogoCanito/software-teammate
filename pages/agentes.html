@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Agentes IA</title>
+<link rel="icon" type="image/png" href="../brand_assets/TeamMateLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../nav-badges.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
+<style>
+/* ─── AGENTS PAGE ─── */
+.agents-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.agents-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(5,102,141,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-icon {
+  font-size: 64px;
+  line-height: 1;
+  margin-bottom: 16px;
+  display: block;
+}
+.hero-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.hero-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  max-width: 520px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+.hero-pills {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+.hero-pill .pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue-light);
+}
+
+/* ─── FILTERS ─── */
+.agents-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.agents-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 50%;
+}
+.agents-search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.agents-search {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 9px 12px 9px 34px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.agents-search::placeholder { color: var(--text-muted); }
+.agents-search:focus { border-color: var(--blue); }
+
+.category-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cat-btn {
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.cat-btn:hover { background: var(--surface2); color: var(--text); }
+.cat-btn.active {
+  background: rgba(5,102,141,0.14);
+  border-color: rgba(5,102,141,0.3);
+  color: var(--blue-light);
+}
+
+/* ─── AGENTS GRID ─── */
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+/* ─── AGENT CARD ─── */
+.agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  cursor: default;
+}
+.agent-card:not(.coming-soon):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(5,102,141,0.15);
+  border-color: rgba(5,102,141,0.3);
+}
+.agent-card.coming-soon {
+  opacity: 0.5;
+}
+
+.agent-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.agent-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.agent-icon-wrap.marketing { background: rgba(255,149,107,0.12); }
+.agent-icon-wrap.vendas    { background: rgba(5,102,141,0.12); }
+.agent-icon-wrap.documentos{ background: rgba(130,80,220,0.12); }
+.agent-icon-wrap.analise   { background: rgba(45,212,160,0.12); }
+.agent-icon-wrap.operacional{ background: rgba(245,197,24,0.10); }
+
+.agent-cat-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.agent-cat-badge.marketing  { background: rgba(255,149,107,0.14); color: var(--coral); border: 1px solid rgba(255,149,107,0.22); }
+.agent-cat-badge.vendas     { background: rgba(5,102,141,0.14);   color: var(--blue-light); border: 1px solid rgba(5,102,141,0.22); }
+.agent-cat-badge.documentos { background: rgba(130,80,220,0.14);  color: #a370f7; border: 1px solid rgba(130,80,220,0.22); }
+.agent-cat-badge.analise    { background: rgba(45,212,160,0.14);  color: var(--success); border: 1px solid rgba(45,212,160,0.22); }
+.agent-cat-badge.operacional{ background: rgba(245,197,24,0.12);  color: var(--warning); border: 1px solid rgba(245,197,24,0.22); }
+.agent-cat-badge.em-breve   { background: var(--surface3); color: var(--text-muted); border: 1px solid var(--border); }
+
+.agent-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.agent-desc {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agent-divider {
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 14px;
+}
+
+.agent-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 18px;
+  flex: 1;
+}
+.agent-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 9px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-muted);
+}
+
+.agent-btn {
+  width: 100%;
+  padding: 9px 0;
+  border-radius: 9px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: var(--blue);
+  color: white;
+  border: 1px solid rgba(10,138,184,0.5);
+  transition: background 0.15s;
+  text-align: center;
+}
+.agent-btn:hover { background: var(--blue-light); }
+.agent-btn.disabled {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* ─── EMPTY STATE ─── */
+.agents-empty {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  grid-column: 1 / -1;
+}
+.agents-empty.visible { display: flex; }
+.empty-icon { font-size: 52px; color: var(--text-muted); margin-bottom: 20px; opacity: 0.5; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; }
+.empty-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+/* ─── PAGE FOOTER ─── */
+.agents-footer {
+  text-align: center;
+  padding: 20px 0 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .agents-grid { grid-template-columns: repeat(2, 1fr); }
+  .agents-search-wrap { max-width: 100%; }
+}
+@media (max-width: 580px) {
+  .agents-grid { grid-template-columns: 1fr; }
+  .agents-filters { flex-direction: column; align-items: stretch; }
+  .agents-search-wrap { max-width: 100%; }
+  .agents-hero { padding: 28px 20px; }
+  .hero-pills { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="/homepage">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge" id="nav-badge-tarefas"></span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue" id="nav-badge-projetos"></span>
+    </a>
+    <a class="nav-item" href="calendario.html">
+      <span class="nav-icon">📅</span> Calendário
+    </a>
+    <a class="nav-item" href="documentos.html">
+      <span class="nav-icon">🗂</span> Documentos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge" id="nav-badge-propostas"></span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item active" href="agentes.html">
+      <span class="nav-icon">✦</span> Agentes IA
+      <span class="nav-badge" style="background:var(--blue);font-size:8.5px;padding:1px 5px;letter-spacing:0.04em">NOVO</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Agentes IA</div>
+      <div class="page-sub">Ferramentas inteligentes para acelerar o teu negócio</div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="agents-hero">
+    <span class="hero-icon">✦</span>
+    <div class="hero-title">O teu copiloto de negócio</div>
+    <div class="hero-desc">Cada agente foi criado especificamente para as necessidades da TeamMate. Escolhe uma ferramenta, preenche os dados e recebe o resultado em segundos.</div>
+    <div class="hero-pills">
+      <div class="hero-pill"><span class="pill-dot"></span>1 Agente disponível</div>
+      <div class="hero-pill"><span class="pill-dot" style="background:var(--coral)"></span>Powered by Claude AI</div>
+      <div class="hero-pill"><span class="pill-dot" style="background:var(--success)"></span>Resultados em segundos</div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="agents-filters">
+    <div class="agents-search-wrap">
+      <span class="agents-search-icon">⌕</span>
+      <input class="agents-search" id="agent-search" type="text" placeholder="Pesquisar agentes...">
+    </div>
+    <div class="category-filters" id="cat-filters">
+      <button class="cat-btn active" data-cat="todos">Todos</button>
+      <button class="cat-btn" data-cat="marketing">Marketing</button>
+      <button class="cat-btn" data-cat="vendas">Vendas</button>
+      <button class="cat-btn" data-cat="documentos">Documentos</button>
+      <button class="cat-btn" data-cat="analise">Análise</button>
+      <button class="cat-btn" data-cat="operacional">Operacional</button>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="agents-grid" id="agents-grid">
+
+    <!-- Card 1: Carrossel Instagram (disponível) -->
+    <div class="agent-card" data-cat="marketing" data-name="carrossel instagram" data-desc="cria carrosséis prontos a publicar para o instagram da teammate. define o tema e recebe o conteúdo slide a slide.">
+      <div class="agent-card-top">
+        <div class="agent-icon-wrap marketing">📱</div>
+        <span class="agent-cat-badge marketing">Marketing</span>
+      </div>
+      <div class="agent-name">Carrossel Instagram</div>
+      <div class="agent-desc">Cria carrosséis prontos a publicar para o Instagram da TeamMate. Define o tema e recebe o conteúdo slide a slide.</div>
+      <div class="agent-divider"></div>
+      <div class="agent-tags">
+        <span class="agent-tag">Instagram</span>
+        <span class="agent-tag">Conteúdo</span>
+        <span class="agent-tag">Marketing</span>
+      </div>
+      <button class="agent-btn" onclick="window.location.href='carrossel-instagram.html'">Usar Agente</button>
+    </div>
+
+    <!-- Card 2: Email Marketing (em breve) -->
+    <div class="agent-card coming-soon" data-cat="marketing" data-name="email marketing" data-desc="gera emails de nurturing follow-up e campanhas prontos a enviar.">
+      <div class="agent-card-top">
+        <div class="agent-icon-wrap marketing">✉️</div>
+        <span class="agent-cat-badge em-breve">Em Breve</span>
+      </div>
+      <div class="agent-name">Email Marketing</div>
+      <div class="agent-desc">Gera emails de nurturing, follow-up e campanhas prontos a enviar.</div>
+      <div class="agent-divider"></div>
+      <div class="agent-tags">
+        <span class="agent-tag">Email</span>
+        <span class="agent-tag">Nurturing</span>
+        <span class="agent-tag">Leads</span>
+      </div>
+      <button class="agent-btn disabled" disabled>Em Breve</button>
+    </div>
+
+    <!-- Card 3: Proposta Comercial (em breve) -->
+    <div class="agent-card coming-soon" data-cat="vendas" data-name="proposta comercial" data-desc="gera propostas comerciais completas com base no cliente e serviço selecionado.">
+      <div class="agent-card-top">
+        <div class="agent-icon-wrap vendas">💼</div>
+        <span class="agent-cat-badge em-breve">Em Breve</span>
+      </div>
+      <div class="agent-name">Proposta Comercial</div>
+      <div class="agent-desc">Gera propostas comerciais completas com base no cliente e serviço selecionado.</div>
+      <div class="agent-divider"></div>
+      <div class="agent-tags">
+        <span class="agent-tag">Proposta</span>
+        <span class="agent-tag">Vendas</span>
+        <span class="agent-tag">PDF</span>
+      </div>
+      <button class="agent-btn disabled" disabled>Em Breve</button>
+    </div>
+
+    <!-- Card 4: Briefing de Lead (em breve) -->
+    <div class="agent-card coming-soon" data-cat="vendas" data-name="briefing de lead" data-desc="analisa uma lead e prepara um briefing completo para a chamada de prospeção.">
+      <div class="agent-card-top">
+        <div class="agent-icon-wrap vendas">🎯</div>
+        <span class="agent-cat-badge em-breve">Em Breve</span>
+      </div>
+      <div class="agent-name">Briefing de Lead</div>
+      <div class="agent-desc">Analisa uma lead e prepara um briefing completo para a chamada de prospeção.</div>
+      <div class="agent-divider"></div>
+      <div class="agent-tags">
+        <span class="agent-tag">Lead</span>
+        <span class="agent-tag">Prospeção</span>
+        <span class="agent-tag">Análise</span>
+      </div>
+      <button class="agent-btn disabled" disabled>Em Breve</button>
+    </div>
+
+    <!-- Card 5: Relatório de Performance (em breve) -->
+    <div class="agent-card coming-soon" data-cat="analise" data-name="relatório de performance" data-desc="gera um relatório executivo com base nos dados do software.">
+      <div class="agent-card-top">
+        <div class="agent-icon-wrap analise">📊</div>
+        <span class="agent-cat-badge em-breve">Em Breve</span>
+      </div>
+      <div class="agent-name">Relatório de Performance</div>
+      <div class="agent-desc">Gera um relatório executivo com base nos dados do software.</div>
+      <div class="agent-divider"></div>
+      <div class="agent-tags">
+        <span class="agent-tag">Relatório</span>
+        <span class="agent-tag">Analytics</span>
+        <span class="agent-tag">Gestão</span>
+      </div>
+      <button class="agent-btn disabled" disabled>Em Breve</button>
+    </div>
+
+    <!-- Card 6: Script de Chamada (em breve) -->
+    <div class="agent-card coming-soon" data-cat="documentos" data-name="script de chamada" data-desc="cria um guião completo para chamadas de prospeção ou reuniões com clientes.">
+      <div class="agent-card-top">
+        <div class="agent-icon-wrap documentos">📝</div>
+        <span class="agent-cat-badge em-breve">Em Breve</span>
+      </div>
+      <div class="agent-name">Script de Chamada</div>
+      <div class="agent-desc">Cria um guião completo para chamadas de prospeção ou reuniões com clientes.</div>
+      <div class="agent-divider"></div>
+      <div class="agent-tags">
+        <span class="agent-tag">Chamada</span>
+        <span class="agent-tag">Vendas</span>
+        <span class="agent-tag">Script</span>
+      </div>
+      <button class="agent-btn disabled" disabled>Em Breve</button>
+    </div>
+
+    <!-- Empty state -->
+    <div class="agents-empty" id="agents-empty">
+      <div class="empty-icon">✦</div>
+      <div class="empty-title">Nenhum agente encontrado</div>
+      <div class="empty-sub">Tenta pesquisar por outro termo<br>ou explora todas as categorias</div>
+      <button class="btn btn-ghost btn-sm" id="btn-clear-search">Ver todos os agentes</button>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="agents-footer">
+    <span>✦</span>
+    Mais agentes em desenvolvimento. Powered by Claude AI.
+  </div>
+
+</div>
+</main>
+</div>
+
+<script>
+const cards = Array.from(document.querySelectorAll('.agent-card:not(.agents-empty)'));
+const emptyState = document.getElementById('agents-empty');
+const searchInput = document.getElementById('agent-search');
+const catBtns = document.querySelectorAll('.cat-btn');
+const btnClearSearch = document.getElementById('btn-clear-search');
+
+let activeCat = 'todos';
+let searchTerm = '';
+
+function filterCards() {
+  let visibleCount = 0;
+  cards.forEach(card => {
+    const cat = card.dataset.cat;
+    const name = card.dataset.name || '';
+    const desc = card.dataset.desc || '';
+    const matchesCat = activeCat === 'todos' || cat === activeCat;
+    const matchesSearch = !searchTerm || name.includes(searchTerm) || desc.includes(searchTerm);
+    const show = matchesCat && matchesSearch;
+    card.style.display = show ? '' : 'none';
+    if (show) visibleCount++;
+  });
+
+  if (visibleCount === 0) {
+    emptyState.classList.add('visible');
+    emptyState.style.display = 'flex';
+  } else {
+    emptyState.classList.remove('visible');
+    emptyState.style.display = 'none';
+  }
+}
+
+catBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    catBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    filterCards();
+  });
+});
+
+searchInput.addEventListener('input', () => {
+  searchTerm = searchInput.value.trim().toLowerCase();
+  filterCards();
+});
+
+btnClearSearch.addEventListener('click', () => {
+  searchInput.value = '';
+  searchTerm = '';
+  activeCat = 'todos';
+  catBtns.forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-cat="todos"]').classList.add('active');
+  filterCards();
+});
+</script>
+</body>
+</html>

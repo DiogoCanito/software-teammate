@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carrossel Instagram — TeamMate</title>
+<link rel="icon" type="image/png" href="../brand_assets/TeamMateLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../nav-badges.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* ─── FORM SECTION ─── */
+.agent-form-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 28px;
+}
+.agent-form-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 17px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px;
+}
+.agent-form-sub {
+  font-size: 12px; color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.form-grid .full { grid-column: 1 / -1; }
+
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.form-input, .form-select, .form-textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
+.form-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.form-textarea { resize: vertical; min-height: 100px; line-height: 1.55; }
+
+/* Color preview select */
+.select-color-wrap { position: relative; }
+.color-swatch {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+  pointer-events: none; z-index: 1;
+}
+.select-color-wrap .form-select { padding-left: 36px; }
+
+/* File input */
+.form-file {
+  background: var(--surface2);
+  border: 1px dashed var(--border);
+  border-radius: 9px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: border-color 0.15s;
+  font-size: 13px; color: var(--text-muted);
+}
+.form-file:hover { border-color: var(--blue); color: var(--text-dim); }
+.form-file input[type="file"] { display: none; }
+.file-label-text { flex: 1; }
+
+/* Submit row */
+.form-actions {
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: 12px; margin-top: 24px;
+}
+.form-hint { font-size: 11.5px; color: var(--text-muted); }
+
+/* ─── LOADING ─── */
+.loading-section {
+  display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 80px 20px; gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px; margin-bottom: 28px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-spinner {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid var(--surface3);
+  border-top-color: var(--blue);
+  animation: spin 0.8s linear infinite;
+}
+.loading-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.loading-sub { font-size: 12px; color: var(--text-muted); }
+
+/* ─── ERROR BANNER ─── */
+.error-banner {
+  display: none;
+  background: rgba(255,77,109,0.1);
+  border: 1px solid rgba(255,77,109,0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 13px; color: #ff4d6d;
+  margin-bottom: 20px;
+}
+
+/* ─── RESULTS ─── */
+.results-section { display: none; }
+
+.results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+}
+.results-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 20px; font-weight: 700; color: var(--text);
+}
+.results-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.ig-preview-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  width: 420px;
+  flex-shrink: 0;
+}
+.ig-preview-box iframe {
+  width: 420px;
+  height: 660px;
+  display: block;
+  border: none;
+}
+
+.caption-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.caption-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.caption-card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+
+.caption-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 16px 18px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; line-height: 1.6;
+  resize: vertical; min-height: 180px;
+  outline: none;
+}
+
+.hashtags-box {
+  padding: 16px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--blue-light);
+  line-height: 1.8;
+  word-break: break-word;
+}
+
+.results-footer {
+  display: flex; justify-content: flex-start;
+  margin-top: 8px;
+}
+
+/* ─── BACK LINK ─── */
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 500; color: var(--text-muted);
+  text-decoration: none; margin-bottom: 20px;
+  transition: color 0.15s;
+}
+.back-link:hover { color: var(--text); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 960px) {
+  .preview-grid { grid-template-columns: 1fr; }
+  .ig-preview-box { width: 100%; }
+  .ig-preview-box iframe { width: 100%; height: 560px; }
+}
+@media (max-width: 700px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .full { grid-column: 1; }
+  .agent-form-wrap { padding: 20px; }
+  .results-header { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="/homepage">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge" id="nav-badge-tarefas"></span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue" id="nav-badge-projetos"></span>
+    </a>
+    <a class="nav-item" href="calendario.html">
+      <span class="nav-icon">📅</span> Calendário
+    </a>
+    <a class="nav-item" href="documentos.html">
+      <span class="nav-icon">🗂</span> Documentos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⏱</span> Registo de Tempo
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">€</span> Finanças
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge" id="nav-badge-propostas"></span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item active" href="agentes.html">
+      <span class="nav-icon">✦</span> Agentes IA
+      <span class="nav-badge" style="background:var(--blue);font-size:8.5px;padding:1px 5px;letter-spacing:0.04em">NOVO</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- BACK LINK -->
+  <a class="back-link" href="agentes.html">← Agentes IA</a>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">📱 Carrossel Instagram</div>
+      <div class="page-sub">Preenche o formulário e recebe o teu carrossel pronto a publicar</div>
+    </div>
+  </div>
+
+  <!-- ERROR BANNER -->
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- ─── FORM ─── -->
+  <div class="agent-form-wrap" id="form-section">
+    <div class="agent-form-title">Configuração do Carrossel</div>
+    <div class="agent-form-sub">A marca TeamMate (cores, fontes e logo) é aplicada automaticamente</div>
+
+    <form id="carousel-form">
+      <div class="form-grid">
+
+        <!-- Handle -->
+        <div class="form-group">
+          <label class="form-label" for="handle">Handle Instagram</label>
+          <input class="form-input" id="handle" type="text" placeholder="@teammatept" value="@teammatept">
+        </div>
+
+        <!-- Tema -->
+        <div class="form-group">
+          <label class="form-label" for="tema">Tema do carrossel *</label>
+          <input class="form-input" id="tema" type="text" placeholder="ex: 3 razões para usar IA no teu negócio" required>
+        </div>
+
+        <!-- Formato -->
+        <div class="form-group">
+          <label class="form-label" for="formato">Formato</label>
+          <select class="form-select" id="formato">
+            <option value="Standard 7 slides">Standard — 7 slides</option>
+            <option value="Listicle">Listicle (lista de itens)</option>
+            <option value="Tutorial 7 slides">Tutorial — passo a passo</option>
+            <option value="Comparação 5 slides">Comparação — lado a lado</option>
+          </select>
+        </div>
+
+        <!-- Hook type -->
+        <div class="form-group">
+          <label class="form-label" for="hookType">Tipo de hook (1º slide)</label>
+          <select class="form-select" id="hookType">
+            <option value="Afirmação polémica">Afirmação polémica</option>
+            <option value="Número + benefício">Número + benefício</option>
+            <option value="Pergunta que dói">Pergunta que dói</option>
+            <option value="Resultado concreto">Resultado concreto</option>
+            <option value="Inversão de expectativa">Inversão de expectativa</option>
+          </select>
+        </div>
+
+        <!-- Fundo 1º slide -->
+        <div class="form-group">
+          <label class="form-label" for="fundo">Fundo do 1º slide</label>
+          <div class="select-color-wrap">
+            <span class="color-swatch" id="color-swatch"></span>
+            <select class="form-select" id="fundo">
+              <option value="#0a0a0a">Black #0a0a0a</option>
+              <option value="#05668d" selected>Blue #05668d</option>
+              <option value="#ff956b">Coral #ff956b</option>
+              <option value="#f5f0e8">Branco #f5f0e8</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="form-group">
+          <label class="form-label" for="cta">CTA do slide final</label>
+          <input class="form-input" id="cta" type="text" placeholder="ex: Segue-nos no Instagram" value="Segue-nos no Instagram">
+        </div>
+
+        <!-- Descrição -->
+        <div class="form-group full">
+          <label class="form-label" for="descricao">O que vai ser abordado *</label>
+          <textarea class="form-textarea" id="descricao" rows="5"
+            placeholder="Descreve detalhadamente o conteúdo de cada slide, os pontos principais a abordar, qualquer dado ou estatística que queiras incluir, e o tom da mensagem." required></textarea>
+        </div>
+
+        <!-- Imagem (opcional) -->
+        <div class="form-group full">
+          <label class="form-label">Imagem de fundo (opcional)</label>
+          <label class="form-file" id="file-label" for="imagem">
+            <input type="file" id="imagem" accept="image/*">
+            <span style="font-size:18px;opacity:0.5">⬆</span>
+            <span class="file-label-text" id="file-label-text">Clica para escolher uma imagem (JPG, PNG, WebP)</span>
+          </label>
+        </div>
+
+      </div><!-- /form-grid -->
+
+      <div class="form-actions">
+        <span class="form-hint">O carrossel pode demorar 30–60 segundos a gerar</span>
+        <button class="btn btn-primary" id="btn-submit" type="submit">
+          Gerar Carrossel →
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ─── LOADING ─── -->
+  <div class="loading-section" id="loading-section">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">A criar o teu carrossel...</div>
+    <div class="loading-sub">O Claude está a gerar os slides, a legenda e as hashtags. Pode demorar 30–60 segundos.</div>
+  </div>
+
+  <!-- ─── RESULTS ─── -->
+  <div class="results-section" id="results-section">
+
+    <div class="results-header">
+      <div class="results-title">O teu carrossel está pronto</div>
+      <div class="results-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-regenerate">← Novo carrossel</button>
+        <button class="btn btn-coral" id="btn-download">⬇ Download ZIP</button>
+      </div>
+    </div>
+
+    <div class="preview-grid">
+
+      <!-- Instagram preview (iframe) -->
+      <div class="ig-preview-box">
+        <iframe id="carousel-frame" srcdoc="" title="Preview do carrossel"></iframe>
+      </div>
+
+      <!-- Caption + Hashtags -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <div class="caption-card">
+          <div class="caption-card-header">
+            <div class="caption-card-title">Legenda Instagram</div>
+            <button class="btn btn-ghost btn-sm" id="btn-copy-caption">Copiar</button>
+          </div>
+          <textarea class="caption-textarea" id="caption-textarea" rows="9" placeholder="A legenda vai aparecer aqui..."></textarea>
+          <div class="caption-card-header" style="border-top:1px solid var(--border);border-bottom:none;padding-top:12px;padding-bottom:12px;">
+            <div class="caption-card-title" style="font-size:12px;">Hashtags</div>
+            <button class="btn btn-ghost btn-sm" id="btn-copy-hashtags">Copiar</button>
+          </div>
+          <div class="hashtags-box" id="hashtags-display"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="results-footer">
+      <span style="font-size:11.5px;color:var(--text-muted)">✦ Powered by Claude AI · Os slides exportados têm 1080×1350px (formato Instagram)</span>
+    </div>
+
+  </div>
+
+</div>
+</main>
+</div>
+
+<script>
+// ─── Color swatch sync ───
+const fundoSelect = document.getElementById('fundo');
+const colorSwatch = document.getElementById('color-swatch');
+function syncSwatch() { colorSwatch.style.background = fundoSelect.value; }
+fundoSelect.addEventListener('change', syncSwatch);
+syncSwatch();
+
+// ─── File input label ───
+document.getElementById('imagem').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  document.getElementById('file-label-text').textContent = file ? file.name : 'Clica para escolher uma imagem (JPG, PNG, WebP)';
+});
+
+// ─── Helpers ───
+function fileToBase64(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+function countSlides(html) {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const slides = doc.querySelectorAll('.slide');
+    return slides.length > 0 ? slides.length : 7;
+  } catch { return 7; }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideError() { document.getElementById('error-banner').style.display = 'none'; }
+
+function showLoading() {
+  document.getElementById('form-section').style.display = 'none';
+  document.getElementById('loading-section').style.display = 'flex';
+  document.getElementById('results-section').style.display = 'none';
+  hideError();
+}
+function showResults() {
+  document.getElementById('loading-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'block';
+  document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function showForm() {
+  document.getElementById('form-section').style.display = 'block';
+  document.getElementById('loading-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Form submit ───
+let carouselHTML = '';
+let totalSlides  = 7;
+
+document.getElementById('carousel-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  showLoading();
+
+  const body = {
+    handle:   document.getElementById('handle').value.trim(),
+    tema:     document.getElementById('tema').value.trim(),
+    descricao:document.getElementById('descricao').value.trim(),
+    formato:  document.getElementById('formato').value,
+    fundo:    document.getElementById('fundo').value,
+    hookType: document.getElementById('hookType').value,
+    cta:      document.getElementById('cta').value.trim(),
+  };
+
+  const imgFile = document.getElementById('imagem').files[0];
+  if (imgFile) {
+    body.imagemBase64 = await fileToBase64(imgFile);
+    body.imagemMime   = imgFile.type;
+  }
+
+  try {
+    const res = await fetch('/api/generate-carousel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    carouselHTML = data.html;
+    totalSlides  = countSlides(data.html);
+
+    document.getElementById('carousel-frame').srcdoc = data.html;
+    document.getElementById('caption-textarea').value = data.caption || '';
+    document.getElementById('hashtags-display').textContent = data.hashtags || '';
+
+    showResults();
+  } catch (err) {
+    showForm();
+    showError('Erro ao gerar o carrossel: ' + err.message + '. Verifica a tua API key em .env e tenta novamente.');
+  }
+});
+
+// ─── Regenerate ───
+document.getElementById('btn-regenerate').addEventListener('click', showForm);
+
+// ─── Copy buttons ───
+document.getElementById('btn-copy-caption').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('caption-textarea').value)
+    .then(() => {
+      const btn = document.getElementById('btn-copy-caption');
+      btn.textContent = 'Copiado!';
+      setTimeout(() => btn.textContent = 'Copiar', 2000);
+    });
+});
+document.getElementById('btn-copy-hashtags').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('hashtags-display').textContent)
+    .then(() => {
+      const btn = document.getElementById('btn-copy-hashtags');
+      btn.textContent = 'Copiado!';
+      setTimeout(() => btn.textContent = 'Copiar', 2000);
+    });
+});
+
+// ─── Download ZIP ───
+document.getElementById('btn-download').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-download');
+  btn.textContent = 'A exportar...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/export-slides', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html: carouselHTML, totalSlides }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    const zip    = new JSZip();
+    const folder = zip.folder('carrossel-instagram');
+    data.slides.forEach((b64, i) => {
+      folder.file(`slide_${String(i + 1).padStart(2, '0')}.png`, b64, { base64: true });
+    });
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'carrossel-instagram.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    showError('Erro ao exportar slides: ' + err.message);
+  } finally {
+    btn.textContent = '⬇ Download ZIP';
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
