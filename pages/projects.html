@@ -60,9 +60,6 @@
     <a class="nav-item" href="documentos.html">
       <span class="nav-icon">🗂</span> Documentos
     </a>
-    <a class="nav-item" href="#">
-      <span class="nav-icon">⏱</span> Registo de Tempo
-    </a>
   </div>
 
   <div class="nav-group">
@@ -75,9 +72,6 @@
     </a>
     <a class="nav-item" href="custos.html">
       <span class="nav-icon">💸</span> Custos
-    </a>
-    <a class="nav-item" href="#">
-      <span class="nav-icon">€</span> Finanças
     </a>
     <a class="nav-item" href="propostas.html">
       <span class="nav-icon">📋</span> Propostas
@@ -130,7 +124,6 @@
         <button class="view-btn active" id="btn-proj-list">≡ Lista</button>
         <button class="view-btn" id="btn-proj-kanban">⊞ Kanban</button>
       </div>
-      <button class="btn btn-coral open-new-task-modal">+ Nova Tarefa</button>
       <button class="btn btn-primary" id="btn-open-modal-proj">+ Novo Projeto</button>
     </div>
   </div>
@@ -188,12 +181,33 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Valor (€)</label>
-          <input class="form-input" id="f-value" type="number" min="0" placeholder="0">
+          <label class="form-label">Tipo de Projeto</label>
+          <select class="form-select" id="f-tipo">
+            <option value="">Selecionar...</option>
+            <option value="setup">Setup</option>
+            <option value="mensalidade">Mensalidade</option>
+            <option value="setup_mensalidade">Setup + Mensalidade</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">Prazo</label>
           <input class="form-input" id="f-deadline" type="date">
+        </div>
+      </div>
+      <div class="form-row" id="grp-setup" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Valor de Setup (€)</label>
+          <input class="form-input" id="f-valor-setup" type="number" min="0" step="0.01" placeholder="0">
+        </div>
+      </div>
+      <div class="form-row" id="grp-mensal" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Valor Mensal (€)</label>
+          <input class="form-input" id="f-valor-mensal" type="number" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dia de Pagamento</label>
+          <input class="form-input" id="f-dia-pagamento" type="number" min="1" max="31" placeholder="Ex: 1">
         </div>
       </div>
       <div class="form-group">
@@ -344,6 +358,19 @@ function projIsLate(dateStr) {
   return new Date(dateStr + 'T23:59:59') < new Date();
 }
 
+function projFormatValor(p) {
+  const fmt = v => `€${Number(v).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  if (p.tipo === 'setup')             return p.valor_setup  != null ? fmt(p.valor_setup)  : '—';
+  if (p.tipo === 'mensalidade')       return p.valor_mensal != null ? `${fmt(p.valor_mensal)}/mês` : '—';
+  if (p.tipo === 'setup_mensalidade') {
+    const s = p.valor_setup  != null ? fmt(p.valor_setup)  : null;
+    const m = p.valor_mensal != null ? `${fmt(p.valor_mensal)}/mês` : null;
+    if (s && m) return `${s} + ${m}`;
+    return s || m || '—';
+  }
+  return p.value != null ? fmt(p.value) : '—';
+}
+
 function renderProjListView() {
   const prioStyles = {
     alta:  { bg:'rgba(255,77,109,0.12)',  text:'var(--danger)'  },
@@ -356,7 +383,7 @@ function renderProjListView() {
     const phase = PHASES.find(ph => ph.id === p.phase) || PHASES[0];
     const dl    = p.deadline ? projFormatDeadline(p.deadline) : '—';
     const late  = projIsLate(p.deadline);
-    const val   = p.value != null ? `€${p.value.toLocaleString('pt-PT')}` : '—';
+    const val   = projFormatValor(p);
     const ps    = prioStyles[p.priority] || prioStyles.media;
     const pl    = prioLabels[p.priority] || p.priority;
     return `<tr class="proj-list-row" onclick="event.target.closest('.row-actions-wrap') || (window.location='projeto.html?id=${p.id}')" style="cursor:pointer">
@@ -399,7 +426,8 @@ function renderProjKanbanView() {
     const cardsHtml = cards.map(p => {
       const dl   = p.deadline ? projFormatDeadline(p.deadline) : null;
       const late = projIsLate(p.deadline);
-      const val  = p.value != null ? `€${p.value.toLocaleString('pt-PT')}` : null;
+      const valStr = projFormatValor(p);
+      const val  = valStr !== '—' ? valStr : null;
       const prioColor = p.priority==='alta' ? '#ff4d6d' : p.priority==='media' ? '#f5c518' : '#2dd4a0';
       return `<div class="proj-kcard" data-id="${p.id}" draggable="true" onclick="this.dataset.skipNav||window.location.assign('projeto.html?id=${p.id}')">
         <button class="proj-kcard-trash-btn" data-id="${p.id}" title="Eliminar" onclick="event.stopPropagation()">🗑</button>
@@ -527,6 +555,15 @@ document.getElementById('btn-proj-kanban').addEventListener('click', () => {
 // ─── PROJECT MODAL ───
 let editingProjId = null;
 
+function updateTipoFields() {
+  const tipo = document.getElementById('f-tipo').value;
+  const showSetup  = tipo === 'setup'  || tipo === 'setup_mensalidade';
+  const showMensal = tipo === 'mensalidade' || tipo === 'setup_mensalidade';
+  document.getElementById('grp-setup').style.display  = showSetup  ? '' : 'none';
+  document.getElementById('grp-mensal').style.display = showMensal ? '' : 'none';
+}
+document.getElementById('f-tipo').addEventListener('change', updateTipoFields);
+
 function openProjModal() {
   editingProjId = null;
   document.querySelector('#modal-projeto .modal-title').textContent = 'Novo Projeto';
@@ -544,7 +581,11 @@ function openEditProjModal(id) {
   document.getElementById('f-name').value     = proj.name;
   document.getElementById('f-client').value   = proj.client;
   document.getElementById('f-phase').value    = proj.phase;
-  document.getElementById('f-value').value    = proj.value != null ? proj.value : '';
+  document.getElementById('f-tipo').value          = proj.tipo || '';
+  document.getElementById('f-valor-setup').value   = proj.valor_setup  != null ? proj.valor_setup  : '';
+  document.getElementById('f-valor-mensal').value  = proj.valor_mensal != null ? proj.valor_mensal : '';
+  document.getElementById('f-dia-pagamento').value = proj.dia_pagamento != null ? proj.dia_pagamento : '';
+  updateTipoFields();
   document.getElementById('f-deadline').value = proj.deadline || '';
   document.getElementById('f-priority').value = proj.priority;
   document.getElementById('f-desc').value     = proj.desc || '';
@@ -562,11 +603,14 @@ function closeProjModal() {
 }
 
 function resetProjForm() {
-  ['f-name','f-client','f-value','f-deadline','f-desc'].forEach(id => {
+  ['f-name','f-client','f-deadline','f-desc','f-valor-setup','f-valor-mensal','f-dia-pagamento'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('f-phase').value    = 'desenvolvimento';
   document.getElementById('f-priority').value = 'media';
+  document.getElementById('f-tipo').value     = '';
+  document.getElementById('grp-setup').style.display  = 'none';
+  document.getElementById('grp-mensal').style.display = 'none';
   document.getElementById('f-name').style.borderColor = '';
 }
 
@@ -586,21 +630,29 @@ document.getElementById('btn-save-proj').addEventListener('click', async () => {
     return;
   }
   document.getElementById('f-name').style.borderColor = '';
-  const rawVal = parseFloat(document.getElementById('f-value').value);
+  const tipo = document.getElementById('f-tipo').value;
   const projData = {
     name, client,
-    phase:       document.getElementById('f-phase').value,
-    value:       isNaN(rawVal) ? null : rawVal,
-    deadline:    document.getElementById('f-deadline').value || null,
-    priority:    document.getElementById('f-priority').value,
-    description: document.getElementById('f-desc').value.trim(),
+    phase:         document.getElementById('f-phase').value,
+    tipo:          tipo || null,
+    valor_setup:   (tipo === 'setup' || tipo === 'setup_mensalidade')
+      ? (parseFloat(document.getElementById('f-valor-setup').value) || null) : null,
+    valor_mensal:  (tipo === 'mensalidade' || tipo === 'setup_mensalidade')
+      ? (parseFloat(document.getElementById('f-valor-mensal').value) || null) : null,
+    dia_pagamento: (tipo === 'mensalidade' || tipo === 'setup_mensalidade')
+      ? (parseInt(document.getElementById('f-dia-pagamento').value) || null) : null,
+    deadline:      document.getElementById('f-deadline').value || null,
+    priority:      document.getElementById('f-priority').value,
+    description:   document.getElementById('f-desc').value.trim(),
   };
 
+  let error;
   if (editingProjId !== null) {
-    await sb.from('projects').update(projData).eq('id', editingProjId);
+    ({ error } = await sb.from('projects').update(projData).eq('id', editingProjId));
   } else {
-    await sb.from('projects').insert(projData);
+    ({ error } = await sb.from('projects').insert(projData));
   }
+  if (error) { alert('Erro ao guardar projeto: ' + error.message); return; }
 
   closeProjModal();
   resetProjForm();

@@ -27,6 +27,15 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const skillMdPath = path.join(__dirname, 'instagram-carousel', 'SKILL.md');
 const systemPrompt = fs.readFileSync(skillMdPath, 'utf8');
 
+// ─── Persistent Puppeteer browser (launched once, reused per request) ───
+let browser = null;
+async function getBrowser() {
+  if (!browser || !browser.connected) {
+    browser = await puppeteer.launch({ headless: true });
+  }
+  return browser;
+}
+
 // ─── MIME types ───
 const mime = {
   '.html': 'text/html',
@@ -48,19 +57,24 @@ const mime = {
 // ─── Helper: read POST body as JSON ───
 function readBody(req, maxBytes = 20 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
-    let data = '';
+    const chunks = [];
     let size = 0;
     req.on('data', chunk => {
       size += chunk.length;
       if (size > maxBytes) { req.destroy(); reject(new Error('Payload too large')); return; }
-      data += chunk;
+      chunks.push(chunk);
     });
     req.on('end', () => {
-      try { resolve(JSON.parse(data)); }
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
       catch (e) { reject(new Error('Invalid JSON')); }
     });
     req.on('error', reject);
   });
+}
+
+// ─── Helper: extract XML-delimited tag from Claude response ───
+function extractTag(text, tag) {
+  return (text.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)) || [])[1]?.trim() ?? '';
 }
 
 // ─── Helper: send JSON response ───
@@ -116,9 +130,9 @@ Devolve a resposta EXATAMENTE neste formato (sem texto fora dos delimitadores):
     });
 
     const raw = message.content[0].text;
-    const html     = (raw.match(/<CAROUSEL_HTML>([\s\S]*?)<\/CAROUSEL_HTML>/) || [])[1]?.trim() ?? '';
-    const caption  = (raw.match(/<CAPTION>([\s\S]*?)<\/CAPTION>/)             || [])[1]?.trim() ?? '';
-    const hashtags = (raw.match(/<HASHTAGS>([\s\S]*?)<\/HASHTAGS>/)           || [])[1]?.trim() ?? '';
+    const html     = extractTag(raw, 'CAROUSEL_HTML');
+    const caption  = extractTag(raw, 'CAPTION');
+    const hashtags = extractTag(raw, 'HASHTAGS');
 
     if (!html) {
       return sendJSON(res, 500, { error: 'O modelo não devolveu HTML. Tenta novamente.' });
@@ -140,10 +154,10 @@ async function handleExportSlides(req, res) {
   const { html, totalSlides = 7 } = body;
   if (!html) return sendJSON(res, 400, { error: 'HTML em falta' });
 
-  let browser;
+  let page;
   try {
-    browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
+    const br = await getBrowser();
+    page = await br.newPage();
 
     const VIEW_W = 420;
     const VIEW_H = 525;
@@ -151,7 +165,7 @@ async function handleExportSlides(req, res) {
 
     await page.setViewport({ width: VIEW_W, height: VIEW_H, deviceScaleFactor: SCALE });
     await page.setContent(html, { waitUntil: 'networkidle0' });
-    await new Promise(r => setTimeout(r, 3000)); // wait for Google Fonts
+    await page.waitForFunction(() => document.fonts.ready, { timeout: 5000 }).catch(() => {});
 
     // Strip IG chrome, expose raw carousel viewport
     await page.evaluate(() => {
@@ -173,15 +187,15 @@ async function handleExportSlides(req, res) {
           track.style.transform = `translateX(${-idx * 420}px)`;
         }
       }, i);
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 80));
       const buf = await page.screenshot({ clip: { x: 0, y: 0, width: VIEW_W, height: VIEW_H } });
       slides.push(buf.toString('base64'));
     }
 
-    await browser.close();
+    await page.close();
     sendJSON(res, 200, { slides });
   } catch (e) {
-    if (browser) await browser.close().catch(() => {});
+    if (page) await page.close().catch(() => {});
     console.error('Puppeteer error:', e);
     sendJSON(res, 500, { error: e.message || 'Erro ao exportar slides' });
   }

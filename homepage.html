@@ -60,9 +60,6 @@
     <a class="nav-item" href="pages/documentos.html">
       <span class="nav-icon">🗂</span> Documentos
     </a>
-    <a class="nav-item" href="#">
-      <span class="nav-icon">⏱</span> Registo de Tempo
-    </a>
   </div>
 
   <div class="nav-group">
@@ -75,9 +72,6 @@
     </a>
     <a class="nav-item" href="pages/custos.html">
       <span class="nav-icon">💸</span> Custos
-    </a>
-    <a class="nav-item" href="#">
-      <span class="nav-icon">€</span> Finanças
     </a>
     <a class="nav-item" href="pages/propostas.html">
       <span class="nav-icon">📋</span> Propostas
@@ -128,7 +122,7 @@
     <div class="topbar-actions">
       <button class="btn btn-ghost">⬇ Exportar</button>
       <button class="btn btn-coral open-new-task-modal">+ Nova Tarefa</button>
-      <a class="btn btn-primary" href="pages/projects.html">+ Novo Projeto</a>
+      <button class="btn btn-primary" id="btn-open-proj-modal">+ Novo Projeto</button>
     </div>
   </div>
 
@@ -295,6 +289,88 @@
 </div><!-- /page -->
 </main>
 </div><!-- /layout -->
+
+<!-- ─── MODAL: Novo Projeto ─── -->
+<div class="modal-overlay" id="modal-projeto-home">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Novo Projeto</div>
+      <button class="modal-close" id="btn-close-proj-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nome do Projeto <span class="form-required">*</span></label>
+        <input class="form-input" id="hp-f-name" type="text" placeholder="Ex: Redesign Web Corporativo">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cliente <span class="form-required">*</span></label>
+          <select class="form-select" id="hp-f-client">
+            <option value="">Selecionar...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fase</label>
+          <select class="form-select" id="hp-f-phase">
+            <option value="credenciais">Credenciais</option>
+            <option value="desenvolvimento" selected>Desenvolvimento</option>
+            <option value="testes">Testes</option>
+            <option value="lancamento">Lançamento</option>
+            <option value="followup">Follow Up</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo de Projeto</label>
+          <select class="form-select" id="hp-f-tipo">
+            <option value="">Selecionar...</option>
+            <option value="setup">Setup</option>
+            <option value="mensalidade">Mensalidade</option>
+            <option value="setup_mensalidade">Setup + Mensalidade</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prazo</label>
+          <input class="form-input" id="hp-f-deadline" type="date">
+        </div>
+      </div>
+      <div class="form-row" id="hp-grp-setup" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Valor de Setup (€)</label>
+          <input class="form-input" id="hp-f-valor-setup" type="number" min="0" step="0.01" placeholder="0">
+        </div>
+      </div>
+      <div class="form-row" id="hp-grp-mensal" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Valor Mensal (€)</label>
+          <input class="form-input" id="hp-f-valor-mensal" type="number" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dia de Pagamento</label>
+          <input class="form-input" id="hp-f-dia-pagamento" type="number" min="1" max="31" placeholder="Ex: 1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prioridade</label>
+        <select class="form-select" id="hp-f-priority">
+          <option value="alta">Alta</option>
+          <option value="media" selected>Média</option>
+          <option value="baixa">Baixa</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-textarea" id="hp-f-desc" placeholder="Descrição opcional do projeto..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-proj-modal">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-proj">Criar Projeto</button>
+    </div>
+  </div>
+</div>
 
 <!-- ─── MODAL: Nova Tarefa ─── -->
 <div class="modal-overlay" id="task-modal-overlay">
@@ -674,12 +750,82 @@ async function loadDashboard() {
     : '<div style="text-align:center;color:var(--text-muted);font-size:12.5px;padding:12px 0">Sem custos registados</div>'}`;
 }
 
+// ─── PROJECT MODAL (homepage) ───
+function hpUpdateTipoFields() {
+  const tipo = document.getElementById('hp-f-tipo').value;
+  const showSetup  = tipo === 'setup'  || tipo === 'setup_mensalidade';
+  const showMensal = tipo === 'mensalidade' || tipo === 'setup_mensalidade';
+  document.getElementById('hp-grp-setup').style.display  = showSetup  ? '' : 'none';
+  document.getElementById('hp-grp-mensal').style.display = showMensal ? '' : 'none';
+}
+
+function openProjModalHome() {
+  document.getElementById('modal-projeto-home').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProjModalHome() {
+  document.getElementById('modal-projeto-home').classList.remove('open');
+  document.body.style.overflow = '';
+  ['hp-f-name','hp-f-deadline','hp-f-desc','hp-f-valor-setup','hp-f-valor-mensal','hp-f-dia-pagamento'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('hp-f-client').value   = '';
+  document.getElementById('hp-f-phase').value    = 'desenvolvimento';
+  document.getElementById('hp-f-tipo').value     = '';
+  document.getElementById('hp-f-priority').value = 'media';
+  document.getElementById('hp-grp-setup').style.display  = 'none';
+  document.getElementById('hp-grp-mensal').style.display = 'none';
+  document.getElementById('hp-f-name').style.borderColor = '';
+}
+
+document.getElementById('hp-f-tipo').addEventListener('change', hpUpdateTipoFields);
+document.getElementById('btn-open-proj-modal').addEventListener('click', openProjModalHome);
+document.getElementById('btn-close-proj-modal').addEventListener('click', closeProjModalHome);
+document.getElementById('btn-cancel-proj-modal').addEventListener('click', closeProjModalHome);
+document.getElementById('modal-projeto-home').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-projeto-home')) closeProjModalHome();
+});
+
+document.getElementById('btn-save-proj').addEventListener('click', async () => {
+  const nameEl   = document.getElementById('hp-f-name');
+  const clientEl = document.getElementById('hp-f-client');
+  const name   = nameEl.value.trim();
+  const client = clientEl.value.trim();
+  if (!name || !client) {
+    nameEl.style.borderColor = !name ? 'var(--danger)' : '';
+    if (!name) { nameEl.focus(); return; }
+    clientEl.style.borderColor = 'var(--danger)';
+    return;
+  }
+  nameEl.style.borderColor   = '';
+  clientEl.style.borderColor = '';
+  const tipo = document.getElementById('hp-f-tipo').value;
+  const projData = {
+    name, client,
+    phase:         document.getElementById('hp-f-phase').value,
+    tipo:          tipo || null,
+    valor_setup:   (tipo === 'setup' || tipo === 'setup_mensalidade')
+      ? (parseFloat(document.getElementById('hp-f-valor-setup').value) || null) : null,
+    valor_mensal:  (tipo === 'mensalidade' || tipo === 'setup_mensalidade')
+      ? (parseFloat(document.getElementById('hp-f-valor-mensal').value) || null) : null,
+    dia_pagamento: (tipo === 'mensalidade' || tipo === 'setup_mensalidade')
+      ? (parseInt(document.getElementById('hp-f-dia-pagamento').value) || null) : null,
+    deadline:      document.getElementById('hp-f-deadline').value || null,
+    priority:      document.getElementById('hp-f-priority').value,
+    description:   document.getElementById('hp-f-desc').value.trim(),
+  };
+  const { error } = await sb.from('projects').insert(projData);
+  if (error) { alert('Erro ao criar projeto: ' + error.message); return; }
+  closeProjModalHome();
+  await loadDashboard();
+});
+
 // ─── TASK MODAL ───
 let TASK_PROJECT_CLIENT = {};
 let MEMBROS  = [];
 let CLIENTES = [];
 const pendingDeletions = {};
-let editingTaskId = null;
 
 async function loadMembros() {
   const { data, error } = await sb.from('membros').select('id,name,initials,avatar_color').eq('status','ativo').order('name');
@@ -693,7 +839,8 @@ async function loadClientes() {
   const { data } = await sb.from('clientes').select('id,name').eq('status','ativo').order('name');
   CLIENTES = data || [];
   const opts = CLIENTES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-  document.getElementById('f-task-client').innerHTML = '<option value="">Selecionar...</option>' + opts;
+  document.getElementById('f-task-client').innerHTML  = '<option value="">Selecionar...</option>' + opts;
+  document.getElementById('hp-f-client').innerHTML    = '<option value="">Selecionar...</option>' + opts;
 }
 
 async function loadProjects() {
@@ -710,17 +857,11 @@ function getAssigneeInitials(name) {
 }
 
 function openNewTaskModal() {
-  editingTaskId = null;
-  document.querySelector('#task-modal-overlay .modal-title').textContent = 'Nova Tarefa';
-  document.getElementById('task-modal-save').textContent = '+ Criar Tarefa';
   document.getElementById('task-modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-task-title').focus(), 80);
 }
 function closeNewTaskModal() {
   document.getElementById('task-modal-overlay').classList.remove('open');
-  editingTaskId = null;
-  document.querySelector('#task-modal-overlay .modal-title').textContent = 'Nova Tarefa';
-  document.getElementById('task-modal-save').textContent = '+ Criar Tarefa';
   ['f-task-title','f-task-due'].forEach(id => document.getElementById(id).value = '');
   ['f-task-assignee','f-task-project','f-task-client'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-task-priority').value = 'media';
