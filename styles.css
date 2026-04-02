@@ -1730,6 +1730,8 @@ body::after {
 
   /* Modal form rows: 1 column */
   .form-row { grid-template-columns: 1fr; }
+  .form-group { min-width: 0; }
+  input[type="date"].form-input { min-width: 0; width: 100%; }
 
   /* Modal: slide up from bottom on mobile */
   .modal {
@@ -1740,6 +1742,7 @@ body::after {
     transform: translateY(100%);
     overflow-x: hidden;
   }
+  .modal-body { overflow-x: hidden; }
   .modal-overlay.open .modal { transform: translateY(0); }
   .modal-overlay { align-items: flex-end; }
 

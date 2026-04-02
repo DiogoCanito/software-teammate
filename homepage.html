@@ -345,7 +345,7 @@
         <div class="form-group">
           <label class="form-label">Estado</label>
           <select class="form-select" id="f-task-status">
-            <option value="a-fazer" selected>A Fazer</option>
+            <option value="a-fazer" selected>To do</option>
             <option value="em-curso">Em Curso</option>
             <option value="em-revisao">Em Revisão</option>
             <option value="bloqueada">Bloqueada</option>
@@ -679,6 +679,7 @@ let TASK_PROJECT_CLIENT = {};
 let MEMBROS  = [];
 let CLIENTES = [];
 const pendingDeletions = {};
+let editingTaskId = null;
 
 async function loadMembros() {
   const { data, error } = await sb.from('membros').select('id,name,initials,avatar_color').eq('status','ativo').order('name');
@@ -709,11 +710,17 @@ function getAssigneeInitials(name) {
 }
 
 function openNewTaskModal() {
+  editingTaskId = null;
+  document.querySelector('#task-modal-overlay .modal-title').textContent = 'Nova Tarefa';
+  document.getElementById('task-modal-save').textContent = '+ Criar Tarefa';
   document.getElementById('task-modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-task-title').focus(), 80);
 }
 function closeNewTaskModal() {
   document.getElementById('task-modal-overlay').classList.remove('open');
+  editingTaskId = null;
+  document.querySelector('#task-modal-overlay .modal-title').textContent = 'Nova Tarefa';
+  document.getElementById('task-modal-save').textContent = '+ Criar Tarefa';
   ['f-task-title','f-task-due'].forEach(id => document.getElementById(id).value = '');
   ['f-task-assignee','f-task-project','f-task-client'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-task-priority').value = 'media';
