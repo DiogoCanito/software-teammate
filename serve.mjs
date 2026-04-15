@@ -24,7 +24,7 @@ if (fs.existsSync(envPath)) {
 
 // ─── Anthropic client + SKILL.md system prompt ───
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const skillMdPath = path.join(__dirname, 'instagram-carousel', 'SKILL.md');
+const skillMdPath = path.join(__dirname, 'skills', 'instagram-carousel', 'SKILL.md');
 const systemPrompt = fs.readFileSync(skillMdPath, 'utf8');
 
 // ─── Persistent Puppeteer browser (launched once, reused per request) ───
