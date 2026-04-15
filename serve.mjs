@@ -1,4 +1,5 @@
 import http from 'http';
+import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -26,6 +27,56 @@ if (fs.existsSync(envPath)) {
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const skillMdPath = path.join(__dirname, 'skills', 'instagram-carousel', 'SKILL.md');
 const systemPrompt = fs.readFileSync(skillMdPath, 'utf8');
+
+// ─── n8n Builder skill system prompt + tools ───
+const n8nSkillBase = path.join(__dirname, 'skills', 'n8n-builder');
+const N8N_SYSTEM_PROMPT = [
+  fs.readFileSync(path.join(n8nSkillBase, 'CLAUDE.md'), 'utf8'),
+  '---',
+  '## n8n Workflow Patterns',
+  fs.readFileSync(path.join(n8nSkillBase, 'n8n-skills', 'skills', 'n8n-workflow-patterns', 'SKILL.md'), 'utf8'),
+  '---',
+  '## n8n MCP Tools Expert',
+  fs.readFileSync(path.join(n8nSkillBase, 'n8n-skills', 'skills', 'n8n-mcp-tools-expert', 'SKILL.md'), 'utf8'),
+  '---',
+  '## Workflow Management Guide',
+  fs.readFileSync(path.join(n8nSkillBase, 'n8n-skills', 'skills', 'n8n-mcp-tools-expert', 'WORKFLOW_GUIDE.md'), 'utf8'),
+  '---',
+  `## Instructions for this session
+You are building an n8n workflow via tool calls. The user will describe what they want automated.
+Use the n8n_create_workflow tool to create the workflow directly in n8n Cloud.
+If the user requested auto-activation, use n8n_activate_workflow after creation.
+Build the COMPLETE workflow in a single n8n_create_workflow call — do not split into multiple creates.
+After successfully creating (and optionally activating) the workflow, confirm success briefly.`,
+].join('\n\n');
+
+const N8N_TOOLS = [
+  {
+    name: 'n8n_create_workflow',
+    description: 'Create a new workflow in n8n Cloud. Returns the created workflow with its ID.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name:        { type: 'string', description: 'Workflow name' },
+        nodes:       { type: 'array',  items: { type: 'object' }, description: 'Array of workflow nodes' },
+        connections: { type: 'object', description: 'Node connections object' },
+        settings:    { type: 'object', description: 'Workflow settings (e.g. {"executionOrder":"v1"})' },
+      },
+      required: ['name', 'nodes', 'connections'],
+    },
+  },
+  {
+    name: 'n8n_activate_workflow',
+    description: 'Activate a workflow so it runs automatically on its trigger.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Workflow ID returned by n8n_create_workflow' },
+      },
+      required: ['id'],
+    },
+  },
+];
 
 // ─── Persistent Puppeteer browser (launched once, reused per request) ───
 let browser = null;
@@ -201,14 +252,155 @@ async function handleExportSlides(req, res) {
   }
 }
 
+// ─── Helper: call n8n REST API ───
+function callN8nApi(method, endpoint, body) {
+  return new Promise((resolve, reject) => {
+    const n8nUrl = process.env.N8N_API_URL || 'https://teamm8.app.n8n.cloud';
+    const apiKey = process.env.N8N_API_KEY;
+    if (!apiKey) { reject(new Error('N8N_API_KEY não configurada no servidor.')); return; }
+
+    const url = new URL(n8nUrl + endpoint);
+    const postData = body ? JSON.stringify(body) : undefined;
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (url.protocol === 'https:' ? 443 : 80),
+      path: url.pathname + url.search,
+      method,
+      headers: {
+        'X-N8N-API-KEY': apiKey,
+        'Accept': 'application/json',
+        ...(postData ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) } : {}),
+      },
+    };
+
+    const proto = url.protocol === 'https:' ? https : http;
+    const req = proto.request(options, (res2) => {
+      let data = '';
+      res2.on('data', c => data += c);
+      res2.on('end', () => {
+        if (res2.statusCode < 200 || res2.statusCode >= 300) {
+          let detail = '';
+          try { detail = JSON.parse(data)?.message || data; } catch {}
+          reject(new Error(`n8n API ${res2.statusCode}: ${detail}`));
+        } else {
+          try { resolve(JSON.parse(data)); }
+          catch { resolve(data); }
+        }
+      });
+    });
+    req.on('error', reject);
+    if (postData) req.write(postData);
+    req.end();
+  });
+}
+
+// ─── API: POST /api/build-n8n-workflow ───
+async function handleBuildN8nWorkflow(req, res) {
+  let body;
+  try { body = await readBody(req); }
+  catch (e) { return sendJSON(res, 400, { error: e.message }); }
+
+  const {
+    nomeWorkflow, objetivo, tipoTrigger,
+    webhookPath, scheduleFrequencia, scheduleCron,
+    integracoes, logicaAdicional, ativarAutomaticamente,
+  } = body;
+
+  if (!nomeWorkflow || !objetivo || !tipoTrigger)
+    return sendJSON(res, 400, { error: 'Campos obrigatórios em falta: nome, objetivo e tipo de trigger.' });
+
+  const intList = Array.isArray(integracoes) && integracoes.length
+    ? integracoes.join(', ')
+    : 'nenhuma especificada';
+
+  let triggerDetails = '';
+  if (tipoTrigger === 'Webhook') {
+    triggerDetails = webhookPath ? `caminho: /${webhookPath}` : 'caminho auto-gerado';
+  } else if (tipoTrigger === 'Schedule') {
+    triggerDetails = scheduleCron
+      ? `cron customizado: ${scheduleCron}`
+      : `frequência: ${scheduleFrequencia || 'Diária'}`;
+  } else {
+    triggerDetails = 'execução manual';
+  }
+
+  const userMessage = [
+    `Cria um workflow n8n com as seguintes especificações:`,
+    `Nome: ${nomeWorkflow}`,
+    `Objetivo: ${objetivo}`,
+    `Tipo de trigger: ${tipoTrigger} (${triggerDetails})`,
+    `Integrações necessárias: ${intList}`,
+    logicaAdicional ? `Lógica adicional: ${logicaAdicional}` : '',
+    ativarAutomaticamente ? 'Ativar automaticamente após criação: sim' : '',
+  ].filter(Boolean).join('\n');
+
+  const messages = [{ role: 'user', content: userMessage }];
+  const n8nApiUrl = process.env.N8N_API_URL || 'https://teamm8.app.n8n.cloud';
+  let workflowId = null;
+
+  try {
+    for (let i = 0; i < 10; i++) {
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8000,
+        system: N8N_SYSTEM_PROMPT,
+        tools: N8N_TOOLS,
+        messages,
+      });
+
+      messages.push({ role: 'assistant', content: response.content });
+
+      if (response.stop_reason === 'end_turn') break;
+
+      if (response.stop_reason === 'tool_use') {
+        const toolResults = [];
+        for (const block of response.content) {
+          if (block.type !== 'tool_use') continue;
+          let result;
+          try {
+            if (block.name === 'n8n_create_workflow') {
+              const created = await callN8nApi('POST', '/api/v1/workflows', block.input);
+              workflowId = created.id;
+              result = { success: true, id: workflowId, url: `${n8nApiUrl}/workflow/${workflowId}` };
+            } else if (block.name === 'n8n_activate_workflow') {
+              await callN8nApi('POST', `/api/v1/workflows/${block.input.id}/activate`);
+              result = { success: true, message: 'Workflow activated' };
+            } else {
+              result = { error: `Unknown tool: ${block.name}` };
+            }
+          } catch (err) {
+            result = { error: err.message };
+          }
+          toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: JSON.stringify(result) });
+        }
+        messages.push({ role: 'user', content: toolResults });
+      }
+    }
+  } catch (e) {
+    console.error('n8n builder error:', e);
+    return sendJSON(res, 500, { error: e.message || 'Erro ao construir o workflow.' });
+  }
+
+  if (!workflowId)
+    return sendJSON(res, 500, { error: 'Não foi possível criar o workflow. Verifica os detalhes e tenta novamente.' });
+
+  sendJSON(res, 200, {
+    success: true,
+    workflowId,
+    workflowUrl: `${n8nApiUrl}/workflow/${workflowId}`,
+    workflowName: nomeWorkflow,
+  });
+}
+
 // ─── HTTP Server ───
 const server = http.createServer(async (req, res) => {
   let urlPath = req.url.split('?')[0];
 
   // ── API routes (POST) ──
   if (req.method === 'POST') {
-    if (urlPath === '/api/generate-carousel') return handleGenerateCarousel(req, res);
-    if (urlPath === '/api/export-slides')     return handleExportSlides(req, res);
+    if (urlPath === '/api/generate-carousel')    return handleGenerateCarousel(req, res);
+    if (urlPath === '/api/export-slides')        return handleExportSlides(req, res);
+    if (urlPath === '/api/build-n8n-workflow')   return handleBuildN8nWorkflow(req, res);
     res.writeHead(404); res.end('Not found');
     return;
   }
@@ -226,6 +418,7 @@ const server = http.createServer(async (req, res) => {
   if (urlPath === '/documentos')          urlPath = '/pages/documentos.html';
   if (urlPath === '/agentes')             urlPath = '/pages/agentes.html';
   if (urlPath === '/carrossel-instagram') urlPath = '/pages/carrossel-instagram.html';
+  if (urlPath === '/n8n-builder')         urlPath = '/pages/n8n-builder.html';
 
   // Extensionless paths → try .html
   if (!path.extname(urlPath)) urlPath += '.html';

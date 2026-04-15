@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>n8n Builder — TeamMate</title>
+<link rel="icon" type="image/png" href="../brand_assets/TeamMateLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../nav-badges.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
+<style>
+/* ─── FORM ─── */
+.agent-form-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 28px;
+}
+.agent-form-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 17px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px;
+}
+.agent-form-sub {
+  font-size: 12px; color: var(--text-muted);
+  margin-bottom: 28px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.form-grid .full { grid-column: 1 / -1; }
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.form-input, .form-select, .form-textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
+.form-select {
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+}
+.form-textarea { resize: vertical; min-height: 100px; line-height: 1.55; }
+.form-actions {
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: 12px; margin-top: 24px;
+}
+.form-hint { font-size: 11.5px; color: var(--text-muted); }
+
+/* ─── CONDITIONAL FIELDS ─── */
+.conditional-field { display: none; }
+.conditional-field.visible { display: flex; }
+
+/* ─── CHECKBOX ROW ─── */
+.checkbox-row {
+  display: flex; align-items: center; gap: 10px;
+}
+.form-checkbox {
+  width: 17px; height: 17px;
+  accent-color: var(--blue); cursor: pointer; flex-shrink: 0;
+}
+.checkbox-label {
+  font-size: 13px; color: var(--text-dim); cursor: pointer;
+}
+
+/* ─── TAG INPUT ─── */
+.tag-input-wrap {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 6px 10px;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  cursor: text; transition: border-color 0.15s;
+  min-height: 42px; align-items: center;
+}
+.tag-input-wrap:focus-within { border-color: var(--blue); }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(5,102,141,0.18);
+  border: 1px solid rgba(5,102,141,0.3);
+  color: var(--blue-light);
+  border-radius: 20px; font-size: 12px; font-weight: 500; padding: 3px 10px;
+}
+.tag-chip-remove {
+  cursor: pointer; font-size: 15px; line-height: 1;
+  background: none; border: none; padding: 0;
+  color: var(--text-muted); transition: color 0.12s;
+}
+.tag-chip-remove:hover { color: #ff4d6d; }
+.tag-text-input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-family: 'Inter', sans-serif;
+  font-size: 13px; min-width: 160px; flex: 1; padding: 2px 0;
+}
+.tag-text-input::placeholder { color: var(--text-muted); }
+
+/* ─── SERVICE PILLS ─── */
+.service-presets {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+}
+.service-pill {
+  font-size: 11.5px; font-weight: 500; padding: 3px 11px;
+  background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text-dim);
+  cursor: pointer; transition: background 0.13s, border-color 0.13s, color 0.13s;
+}
+.service-pill:hover {
+  background: rgba(5,102,141,0.12);
+  border-color: rgba(5,102,141,0.28); color: var(--blue-light);
+}
+.service-pill.selected {
+  background: rgba(5,102,141,0.18);
+  border-color: rgba(5,102,141,0.35); color: var(--blue-light);
+}
+
+/* ─── LOADING ─── */
+.loading-section {
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; padding: 80px 20px; gap: 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; margin-bottom: 28px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-spinner {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid var(--surface3); border-top-color: var(--blue);
+  animation: spin 0.8s linear infinite;
+}
+.loading-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.loading-sub { font-size: 12px; color: var(--text-muted); text-align: center; max-width: 340px; }
+
+/* ─── ERROR BANNER ─── */
+.error-banner {
+  display: none;
+  background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.25);
+  border-radius: 10px; padding: 14px 18px;
+  font-size: 13px; color: #ff4d6d; margin-bottom: 20px;
+}
+
+/* ─── RESULTS ─── */
+.results-section { display: none; margin-bottom: 28px; }
+
+.success-card {
+  background: var(--surface);
+  border: 1px solid rgba(45,212,160,0.2);
+  border-radius: 16px; padding: 48px 40px;
+  text-align: center;
+}
+.success-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(45,212,160,0.1);
+  border: 1px solid rgba(45,212,160,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; margin: 0 auto 22px; color: #2dd4a0;
+  font-weight: 700;
+}
+.success-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 21px; font-weight: 700; color: var(--text); margin-bottom: 10px;
+}
+.success-sub {
+  font-size: 13px; color: var(--text-dim);
+  margin-bottom: 30px; line-height: 1.6;
+}
+.workflow-link-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 26px;
+  background: var(--blue); border: 1px solid rgba(10,138,184,0.45);
+  border-radius: 10px; color: #fff;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+  text-decoration: none; transition: background 0.15s; margin-bottom: 20px;
+}
+.workflow-link-btn:hover { background: var(--blue-light); }
+.workflow-meta {
+  font-size: 11.5px; color: var(--text-muted); margin-bottom: 28px;
+  word-break: break-all;
+}
+.success-footer {
+  padding-top: 22px; border-top: 1px solid var(--border);
+}
+
+/* ─── BACK LINK ─── */
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 500; color: var(--text-muted);
+  text-decoration: none; margin-bottom: 20px; transition: color 0.15s;
+}
+.back-link:hover { color: var(--text); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 700px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .full { grid-column: 1; }
+  .agent-form-wrap { padding: 20px; }
+  .success-card { padding: 32px 20px; }
+}
+</style>
+</head>
+<body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="/homepage">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge" id="nav-badge-tarefas"></span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue" id="nav-badge-projetos"></span>
+    </a>
+    <a class="nav-item" href="calendario.html">
+      <span class="nav-icon">📅</span> Calendário
+    </a>
+    <a class="nav-item" href="documentos.html">
+      <span class="nav-icon">🗂</span> Documentos
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item" href="propostas.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge" id="nav-badge-propostas"></span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item active" href="agentes.html">
+      <span class="nav-icon">✦</span> Agentes IA
+      <span class="nav-badge" style="background:var(--blue);font-size:8.5px;padding:1px 5px;letter-spacing:0.04em">NOVO</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- BACK LINK -->
+  <a class="back-link" href="agentes.html">← Agentes IA</a>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">⚙ n8n Builder</div>
+      <div class="page-sub">Descreve a automação que precisas e o workflow é criado diretamente no n8n Cloud</div>
+    </div>
+  </div>
+
+  <!-- ERROR BANNER -->
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- ─── FORM ─── -->
+  <div class="agent-form-wrap" id="form-section">
+    <div class="agent-form-title">Configuração do Workflow</div>
+    <div class="agent-form-sub">O workflow será criado automaticamente na tua conta n8n Cloud</div>
+
+    <form id="n8n-form">
+      <div class="form-grid">
+
+        <!-- Nome -->
+        <div class="form-group">
+          <label class="form-label" for="nome-workflow">Nome do Workflow *</label>
+          <input class="form-input" id="nome-workflow" type="text"
+            placeholder="ex: Notificação de novo lead" required>
+        </div>
+
+        <!-- Tipo de Trigger -->
+        <div class="form-group">
+          <label class="form-label" for="tipo-trigger">Tipo de Trigger *</label>
+          <select class="form-select" id="tipo-trigger" required>
+            <option value="Webhook">Webhook (recebe pedidos HTTP)</option>
+            <option value="Schedule">Schedule (executa por horário)</option>
+            <option value="Manual">Manual (execução manual)</option>
+          </select>
+        </div>
+
+        <!-- Objetivo -->
+        <div class="form-group full">
+          <label class="form-label" for="objetivo">Objetivo / Descrição *</label>
+          <textarea class="form-textarea" id="objetivo" rows="4" required
+            placeholder="Descreve o que este workflow deve fazer. Quanto mais detalhe deres, melhor será o resultado.&#10;&#10;ex: Quando receber um POST com dados de lead, envia uma mensagem no Slack #vendas com o nome, email e empresa da lead."></textarea>
+        </div>
+
+        <!-- Conditional: Webhook Path -->
+        <div class="form-group full conditional-field" id="conditional-webhook">
+          <label class="form-label" for="webhook-path">Caminho do Webhook (opcional)</label>
+          <input class="form-input" id="webhook-path" type="text"
+            placeholder="ex: novo-lead (fica acessível em /webhook/novo-lead)">
+        </div>
+
+        <!-- Conditional: Schedule Frequência -->
+        <div class="form-group conditional-field" id="conditional-schedule">
+          <label class="form-label" for="schedule-freq">Frequência</label>
+          <select class="form-select" id="schedule-freq">
+            <option value="Diária">Diária (todos os dias)</option>
+            <option value="Semanal">Semanal (uma vez por semana)</option>
+            <option value="Horária">Horária (de hora a hora)</option>
+            <option value="Customizado">Customizado (expressão cron)</option>
+          </select>
+        </div>
+
+        <!-- Conditional: Cron Expression -->
+        <div class="form-group conditional-field" id="conditional-cron">
+          <label class="form-label" for="schedule-cron">Expressão Cron</label>
+          <input class="form-input" id="schedule-cron" type="text"
+            placeholder="ex: 0 9 * * 1-5 (dias úteis às 9h)">
+        </div>
+
+        <!-- Integrações -->
+        <div class="form-group full">
+          <label class="form-label">Integrações Necessárias</label>
+          <div class="tag-input-wrap" id="tag-wrap">
+            <input class="tag-text-input" id="integration-input" type="text"
+              placeholder="Adiciona uma integração e prime Enter...">
+          </div>
+          <div class="service-presets" id="service-presets">
+            <button type="button" class="service-pill" data-service="Slack">Slack</button>
+            <button type="button" class="service-pill" data-service="Gmail">Gmail</button>
+            <button type="button" class="service-pill" data-service="Google Sheets">Google Sheets</button>
+            <button type="button" class="service-pill" data-service="HTTP Request">HTTP Request</button>
+            <button type="button" class="service-pill" data-service="Postgres">Postgres</button>
+            <button type="button" class="service-pill" data-service="Airtable">Airtable</button>
+            <button type="button" class="service-pill" data-service="Notion">Notion</button>
+            <button type="button" class="service-pill" data-service="Email">Email</button>
+          </div>
+        </div>
+
+        <!-- Lógica Adicional -->
+        <div class="form-group full">
+          <label class="form-label" for="logica-adicional">Lógica Adicional (opcional)</label>
+          <textarea class="form-textarea" id="logica-adicional" rows="3"
+            placeholder="Descreve condições, transformações de dados, tratamento de erros, ou qualquer lógica específica que o workflow deva ter."></textarea>
+        </div>
+
+        <!-- Ativar automaticamente -->
+        <div class="form-group full">
+          <div class="checkbox-row">
+            <input class="form-checkbox" type="checkbox" id="ativar-auto">
+            <label class="checkbox-label" for="ativar-auto">Ativar o workflow automaticamente após criação</label>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <span class="form-hint">A criação pode demorar 20–40 segundos</span>
+        <button class="btn btn-primary" type="submit" id="btn-submit">Construir Workflow →</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ─── LOADING ─── -->
+  <div class="loading-section" id="loading-section">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">A construir o teu workflow...</div>
+    <div class="loading-sub">O Claude está a desenhar a automação e a criá-la no n8n Cloud. Pode demorar 20–40 segundos.</div>
+  </div>
+
+  <!-- ─── RESULTADO ─── -->
+  <div class="results-section" id="results-section">
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+      <div class="success-title">O teu workflow foi construído com sucesso!</div>
+      <div class="success-sub">
+        O workflow "<strong id="result-name"></strong>" foi criado e está disponível no n8n Cloud.
+      </div>
+      <a class="workflow-link-btn" id="workflow-link" href="#" target="_blank" rel="noopener">
+        Abrir no n8n Cloud ↗
+      </a>
+      <div class="workflow-meta" id="workflow-meta"></div>
+      <div class="success-footer">
+        <button class="btn btn-ghost btn-sm" id="btn-new-workflow">← Criar novo workflow</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+</div>
+
+<script>
+// ─── State helpers ───
+const errorBanner   = document.getElementById('error-banner');
+const formSection   = document.getElementById('form-section');
+const loadingSection = document.getElementById('loading-section');
+const resultsSection = document.getElementById('results-section');
+
+function showError(msg) {
+  errorBanner.textContent = msg;
+  errorBanner.style.display = 'block';
+}
+function hideError() {
+  errorBanner.style.display = 'none';
+}
+function showLoading() {
+  hideError();
+  formSection.style.display    = 'none';
+  loadingSection.style.display = 'flex';
+  resultsSection.style.display = 'none';
+}
+function showResults() {
+  loadingSection.style.display = 'none';
+  resultsSection.style.display = 'block';
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function showForm() {
+  formSection.style.display    = 'block';
+  loadingSection.style.display = 'none';
+  resultsSection.style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Conditional fields ───
+const tipoTrigger  = document.getElementById('tipo-trigger');
+const scheduleFreq = document.getElementById('schedule-freq');
+
+function updateConditionalFields() {
+  const v = tipoTrigger.value;
+  document.getElementById('conditional-webhook').classList.toggle('visible', v === 'Webhook');
+  document.getElementById('conditional-schedule').classList.toggle('visible', v === 'Schedule');
+  updateCronVisibility();
+}
+function updateCronVisibility() {
+  const show = tipoTrigger.value === 'Schedule' && scheduleFreq.value === 'Customizado';
+  document.getElementById('conditional-cron').classList.toggle('visible', show);
+}
+
+tipoTrigger.addEventListener('change', updateConditionalFields);
+scheduleFreq.addEventListener('change', updateCronVisibility);
+updateConditionalFields(); // Init on page load
+
+// ─── Integration tags ───
+let integracoes = [];
+
+const tagWrap       = document.getElementById('tag-wrap');
+const integrationInput = document.getElementById('integration-input');
+
+tagWrap.addEventListener('click', (e) => {
+  if (e.target !== integrationInput) integrationInput.focus();
+});
+
+integrationInput.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ',') && integrationInput.value.trim()) {
+    e.preventDefault();
+    addIntegration(integrationInput.value.trim());
+    integrationInput.value = '';
+  }
+  if (e.key === 'Backspace' && !integrationInput.value && integracoes.length) {
+    removeIntegration(integracoes[integracoes.length - 1]);
+  }
+});
+
+function addIntegration(name) {
+  const n = name.replace(/,/g, '').trim();
+  if (!n || integracoes.includes(n)) return;
+  integracoes.push(n);
+  renderTags();
+  updatePills();
+}
+
+function removeIntegration(name) {
+  integracoes = integracoes.filter(i => i !== name);
+  renderTags();
+  updatePills();
+}
+
+function renderTags() {
+  tagWrap.querySelectorAll('.tag-chip').forEach(el => el.remove());
+  integracoes.forEach(name => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${name}<button type="button" class="tag-chip-remove" aria-label="Remover ${name}">&times;</button>`;
+    chip.querySelector('button').addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeIntegration(name);
+    });
+    tagWrap.insertBefore(chip, integrationInput);
+  });
+}
+
+function updatePills() {
+  document.querySelectorAll('.service-pill').forEach(pill => {
+    pill.classList.toggle('selected', integracoes.includes(pill.dataset.service));
+  });
+}
+
+document.querySelectorAll('.service-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    if (integracoes.includes(pill.dataset.service)) {
+      removeIntegration(pill.dataset.service);
+    } else {
+      addIntegration(pill.dataset.service);
+    }
+  });
+});
+
+// ─── Form submit ───
+document.getElementById('n8n-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  showLoading();
+
+  const payload = {
+    nomeWorkflow:         document.getElementById('nome-workflow').value.trim(),
+    objetivo:             document.getElementById('objetivo').value.trim(),
+    tipoTrigger:          document.getElementById('tipo-trigger').value,
+    webhookPath:          document.getElementById('webhook-path').value.trim(),
+    scheduleFrequencia:   document.getElementById('schedule-freq').value,
+    scheduleCron:         document.getElementById('schedule-cron').value.trim(),
+    integracoes:          [...integracoes],
+    logicaAdicional:      document.getElementById('logica-adicional').value.trim(),
+    ativarAutomaticamente: document.getElementById('ativar-auto').checked,
+  };
+
+  try {
+    const res = await fetch('/api/build-n8n-workflow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+
+    document.getElementById('result-name').textContent   = data.workflowName;
+    document.getElementById('workflow-link').href        = data.workflowUrl;
+    document.getElementById('workflow-meta').textContent = `ID: ${data.workflowId} · ${data.workflowUrl}`;
+
+    showResults();
+  } catch (err) {
+    showForm();
+    showError('Erro ao construir o workflow: ' + err.message);
+  }
+});
+
+// ─── New workflow button ───
+document.getElementById('btn-new-workflow').addEventListener('click', showForm);
+</script>
+</body>
+</html>
