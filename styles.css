@@ -1328,6 +1328,18 @@ body::after {
 .prop-badge.expirada      { background: rgba(245,197,24,0.13);  color: #d4a506;           border-color: rgba(245,197,24,0.28); }
 .prop-num  { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; }
 .serv-tag  { display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 500; padding: 1px 7px; border-radius: 5px; background: rgba(255,255,255,0.06); color: var(--text-dim); border: 1px solid var(--border); margin: 1px 2px 1px 0; white-space: nowrap; }
+
+/* ─── AGENT CAT BADGE (reutilizável fora de agentes.html) ─── */
+.agent-cat-badge { display:inline-flex; align-items:center; font-size:10px; font-weight:600; padding:2px 9px; border-radius:20px; letter-spacing:0.03em; border:1px solid transparent; white-space:nowrap; }
+.agent-cat-badge.marketing   { background:rgba(255,149,107,0.14); color:var(--coral);       border-color:rgba(255,149,107,0.22); }
+.agent-cat-badge.vendas      { background:rgba(5,102,141,0.14);   color:var(--blue);        border-color:rgba(5,102,141,0.22); }
+.agent-cat-badge.documentos  { background:rgba(130,80,220,0.14);  color:#a370f7;            border-color:rgba(130,80,220,0.22); }
+.agent-cat-badge.analise     { background:rgba(45,212,160,0.14);  color:var(--success);     border-color:rgba(45,212,160,0.22); }
+.agent-cat-badge.operacional { background:rgba(245,197,24,0.12);  color:var(--warning);     border-color:rgba(245,197,24,0.22); }
+.agent-cat-badge.blue        { background:rgba(5,102,141,0.14);   color:var(--blue);        border-color:rgba(5,102,141,0.22); }
+.agent-cat-badge.coral       { background:rgba(255,149,107,0.14); color:var(--coral);       border-color:rgba(255,149,107,0.22); }
+.agent-cat-badge.green       { background:rgba(45,212,160,0.14);  color:var(--success);     border-color:rgba(45,212,160,0.22); }
+.agent-cat-badge.em-breve    { background:var(--surface3);        color:var(--text-muted);  border-color:var(--border); }
 .form-select[multiple] { height: auto; min-height: 96px; }
 
 /* --- LOGIN PAGE --- */

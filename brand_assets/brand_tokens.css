@@ -1,0 +1,14 @@
+:root {
+    --tm-bg: #0a0a0a;
+    --tm-surface: #111111;
+    --tm-surface-2: #1a1a1a;
+    --tm-border: #282626;
+    --tm-accent: #05668d;
+    --tm-accent-glow: #0580b0;
+    --tm-coral: #ff956b;
+    --tm-text: #ffffff;
+    --tm-text-dim: #a0a0a0;
+    --font-mono: "Roboto Mono", ui-monospace, Menlo, monospace;
+    --font-display: "Funnel Display", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+}

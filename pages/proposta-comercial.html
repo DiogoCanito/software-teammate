@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Propostas Comerciais IA</title>
+<link rel="icon" type="image/png" href="../brand_assets/TeamMateLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<style>
+.row-menu-wrap { position: relative; display: flex; justify-content: flex-end; }
+.row-menu-btn {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 18px; padding: 2px 8px;
+  border-radius: 6px; transition: background 0.15s, color 0.15s; line-height: 1;
+}
+.row-menu-btn:hover { background: var(--surface2); color: var(--text); }
+.row-menu-drop {
+  display: none; position: absolute; right: 0; top: calc(100% + 4px); z-index: 200;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 4px; min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.row-menu-drop.open { display: block; }
+.row-menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  background: none; border: none; color: var(--text-dim);
+  font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 12px;
+  text-align: left; border-radius: 6px; cursor: pointer;
+  text-decoration: none; transition: background 0.15s, color 0.15s;
+}
+.row-menu-item:hover { background: var(--surface2); color: var(--text); }
+.row-menu-item.danger { color: var(--danger); }
+.row-menu-item.danger:hover { background: rgba(255,77,109,0.08); }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../nav-badges.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
+</head>
+<body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="/homepage">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+      <span class="nav-badge" id="nav-badge-tarefas"></span>
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+      <span class="nav-badge blue" id="nav-badge-projetos"></span>
+    </a>
+    <a class="nav-item" href="calendario.html">
+      <span class="nav-icon">📅</span> Calendário
+    </a>
+    <a class="nav-item" href="documentos.html">
+      <span class="nav-icon">🗂</span> Documentos
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item active" href="proposta-comercial.html">
+      <span class="nav-icon">📋</span> Propostas
+      <span class="nav-badge" id="nav-badge-propostas"></span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item" href="agentes.html">
+      <span class="nav-icon">✦</span> Agentes IA
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title">Propostas Comerciais IA</div>
+      <div class="page-sub">Geradas automaticamente com base na Discovery Phase</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" id="btn-variaveis">⚙ Variáveis</button>
+      <a class="btn btn-coral" href="proposta-comercial-nova.html">+ Criar Proposta</a>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid" id="pc-kpis"></div>
+
+  <!-- FILTER BAR -->
+  <div class="filters-bar">
+    <select class="filter-select" id="pcf-estado">
+      <option value="">Estado</option>
+      <option value="rascunho">Rascunho</option>
+      <option value="enviada">Enviada</option>
+      <option value="em-negociacao">Em Negociação</option>
+      <option value="aceite">Aceite</option>
+      <option value="recusada">Recusada</option>
+    </select>
+    <select class="filter-select" id="pcf-nicho">
+      <option value="">Nicho</option>
+    </select>
+    <select class="filter-select" id="pcf-tipo">
+      <option value="">Tipo de Solução</option>
+      <option value="automacoes">Automações</option>
+      <option value="software">Software</option>
+      <option value="software_automacoes">Software + Automações</option>
+    </select>
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">⌕</span>
+      <input class="filter-search" id="pcf-search" type="text" placeholder="Pesquisar cliente ou número...">
+    </div>
+    <button class="btn btn-ghost btn-sm" id="btn-clear-pcf" style="display:none">✕ Limpar</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="leads-table-wrap">
+    <table class="leads-table">
+      <thead>
+        <tr>
+          <th>Nº Proposta</th>
+          <th>Cliente</th>
+          <th>Nicho</th>
+          <th>Tipo de Solução</th>
+          <th>Valor</th>
+          <th>ROI Estimado</th>
+          <th>Estado</th>
+          <th>Data</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="pc-tbody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /page -->
+</main>
+</div><!-- /layout -->
+
+<!-- ─── MODAL: VARIÁVEIS ─── -->
+<div class="modal-overlay" id="variaveis-modal-overlay">
+  <div class="modal" style="max-width:700px;max-height:90vh;overflow-y:auto">
+    <div class="modal-header">
+      <div class="modal-title">Variáveis de Configuração</div>
+      <button class="modal-close" id="variaveis-modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="variaveis-modal-body">
+
+      <div class="form-section-label">Configuração da IA</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Modelo Claude</label>
+          <select class="form-select" id="vs-modelo">
+            <option value="claude-opus-4-7">Claude Opus 4.7 (melhor qualidade)</option>
+            <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (equilibrado)</option>
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (mais rápido)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-label">Preços — Automações (PBV)</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Captura de Valor Mín. (%)</label>
+          <input class="form-input" id="vs-banda-min" type="number" min="1" max="50" step="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Captura de Valor Máx. (%)</label>
+          <input class="form-input" id="vs-banda-max" type="number" min="1" max="50" step="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preço Mínimo por Projeto (€)</label>
+          <input class="form-input" id="vs-preco-min" type="number" min="500" step="100">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tier 1 — Mín. (€)</label>
+          <input class="form-input" id="vs-t1-min" type="number" step="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tier 1 — Máx. (€)</label>
+          <input class="form-input" id="vs-t1-max" type="number" step="100">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tier 2 — Mín. (€)</label>
+          <input class="form-input" id="vs-t2-min" type="number" step="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tier 2 — Máx. (€)</label>
+          <input class="form-input" id="vs-t2-max" type="number" step="100">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tier 3 — Mín. (€)</label>
+          <input class="form-input" id="vs-t3-min" type="number" step="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tier 3 — Máx. (€)</label>
+          <input class="form-input" id="vs-t3-max" type="number" step="100">
+        </div>
+      </div>
+
+      <div class="form-section-label">Preços — Software</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Preço Base por Módulo (€)</label>
+          <input class="form-input" id="vs-base-modulo" type="number" step="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Multiplicador Básico</label>
+          <input class="form-input" id="vs-mult-basico" type="number" min="0.5" step="0.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Multiplicador Médio</label>
+          <input class="form-input" id="vs-mult-medio" type="number" min="0.5" step="0.1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Multiplicador Avançado</label>
+          <input class="form-input" id="vs-mult-avancado" type="number" min="0.5" step="0.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Multiplicador Enterprise</label>
+          <input class="form-input" id="vs-mult-enterprise" type="number" min="0.5" step="0.1">
+        </div>
+      </div>
+
+      <div class="form-section-label">Custos e Referências</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Custo/Hora Referência (€/h)</label>
+          <input class="form-input" id="vs-custo-hora" type="number" min="5" step="1">
+        </div>
+      </div>
+
+      <div class="form-section-label">Termos Comerciais</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Validade da Proposta (dias)</label>
+          <input class="form-input" id="vs-validade" type="number" min="5" max="90" step="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Suporte Gratuito Inicial (dias)</label>
+          <input class="form-input" id="vs-suporte" type="number" min="0" max="180" step="1">
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-ghost btn-sm" id="btn-variaveis-reset">Restaurar Padrão</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" id="variaveis-modal-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-variaveis-save">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── CONFIRM DELETE ─── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑</div>
+    <div class="confirm-title">Eliminar proposta</div>
+    <div class="confirm-msg">Esta ação não pode ser desfeita.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let PROPOSTAS = [];
+let SETTINGS  = null;
+let pendingDeleteId = null;
+
+const ESTADOS_LABELS = {
+  rascunho: 'Rascunho', enviada: 'Enviada', 'em-negociacao': 'Em Negociação',
+  aceite: 'Aceite', recusada: 'Recusada', expirada: 'Expirada'
+};
+
+const TIPO_LABELS = {
+  automacoes: 'Automações', software: 'Software', software_automacoes: 'Software + Automações'
+};
+
+function formatCurrency(val) {
+  if (val == null || val === 0) return '—';
+  return '€ ' + Number(val).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T12:00:00'));
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ─── LOAD ───
+async function loadPropostas() {
+  const { data, error } = await sb.from('propostas')
+    .select('*').eq('origem','ia').order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+  PROPOSTAS = data || [];
+  renderKPIs();
+  renderTable();
+}
+
+// ─── KPIs ───
+function renderKPIs() {
+  const total    = PROPOSTAS.length;
+  const geradas  = PROPOSTAS.filter(p => p.pdf_tecnica_url).length;
+  const valor    = PROPOSTAS.reduce((s, p) => s + (p.valor || 0), 0);
+  const aceites  = PROPOSTAS.filter(p => p.estado === 'aceite').length;
+
+  document.getElementById('pc-kpis').innerHTML = `
+    <div class="kpi-card blue">
+      <div class="kpi-icon">🤖</div>
+      <div class="kpi-label">Propostas IA</div>
+      <div class="kpi-value">${total}</div>
+      <div class="kpi-delta neutral"><span>${geradas} com PDFs gerados</span></div>
+    </div>
+    <div class="kpi-card coral">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Valor Total em Pipeline</div>
+      <div class="kpi-value">${formatCurrency(valor)}</div>
+      <div class="kpi-delta neutral"><span>soma das propostas IA</span></div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">✓</div>
+      <div class="kpi-label">Aceites</div>
+      <div class="kpi-value">${aceites}</div>
+      <div class="kpi-delta neutral"><span>de ${total} propostas</span></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-label">ROI Médio</div>
+      <div class="kpi-value">${calcRoiMedio()}x</div>
+      <div class="kpi-delta neutral"><span>retorno estimado médio</span></div>
+    </div>
+  `;
+}
+
+function calcRoiMedio() {
+  const valid = PROPOSTAS.filter(p => p.roi_estimado > 0);
+  if (!valid.length) return '—';
+  const avg = valid.reduce((s, p) => s + p.roi_estimado, 0) / valid.length;
+  return avg.toFixed(1);
+}
+
+// ─── FILTERS ───
+function populateNichos() {
+  const nichos = [...new Set(PROPOSTAS.map(p => p.nicho).filter(Boolean))].sort();
+  const sel = document.getElementById('pcf-nicho');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Nicho</option>' + nichos.map(n => `<option value="${n}">${n}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function renderTable() {
+  populateNichos();
+  const search = document.getElementById('pcf-search').value.toLowerCase().trim();
+  const estado = document.getElementById('pcf-estado').value;
+  const nicho  = document.getElementById('pcf-nicho').value;
+  const tipo   = document.getElementById('pcf-tipo').value;
+
+  let filtered = [...PROPOSTAS];
+  if (estado)  filtered = filtered.filter(p => p.estado === estado);
+  if (nicho)   filtered = filtered.filter(p => p.nicho === nicho);
+  if (tipo)    filtered = filtered.filter(p => p.tipo_solucao === tipo);
+  if (search)  filtered = filtered.filter(p =>
+    (p.numero || '').toLowerCase().includes(search) ||
+    (p.cliente || '').toLowerCase().includes(search) ||
+    (p.nome || '').toLowerCase().includes(search)
+  );
+
+  const hasFilter = search || estado || nicho || tipo;
+  document.getElementById('btn-clear-pcf').style.display = hasFilter ? '' : 'none';
+
+  const tbody = document.getElementById('pc-tbody');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:64px 0;color:var(--text-muted)">
+      <div style="font-size:36px;opacity:0.15;margin-bottom:12px">💼</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-dim);margin-bottom:8px">Nenhuma proposta IA encontrada</div>
+      <div style="font-size:12px;margin-bottom:20px">Cria a tua primeira proposta comercial com IA</div>
+      <a class="btn btn-coral" href="proposta-comercial-nova.html">+ Criar Proposta</a>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(p => {
+    const tipoLabel = TIPO_LABELS[p.tipo_solucao] || p.tipo_solucao || '—';
+    const tipoCls   = p.tipo_solucao === 'automacoes' ? 'blue' : p.tipo_solucao === 'software' ? 'coral' : 'green';
+    const hasPdfs   = p.pdf_tecnica_url && p.pdf_comercial_url;
+    return `
+    <tr style="cursor:pointer" onclick="window.location.href='proposta-comercial-detalhe.html?id=${p.id}'">
+      <td><span class="prop-num">${p.numero || '—'}</span></td>
+      <td>
+        <div class="lead-name">${p.cliente || p.nome || '—'}</div>
+        ${hasPdfs ? '<div style="font-size:10px;color:var(--success);margin-top:2px">✓ PDFs prontos</div>' : '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Sem PDFs</div>'}
+      </td>
+      <td style="font-size:12px;color:var(--text-dim)">${p.nicho || '—'}</td>
+      <td><span class="agent-cat-badge ${tipoCls}" style="font-size:10px">${tipoLabel}</span></td>
+      <td class="cost-value">${formatCurrency(p.valor)}</td>
+      <td style="font-size:13px;font-weight:600;color:var(--blue)">${p.roi_estimado ? p.roi_estimado + 'x' : '—'}</td>
+      <td><span class="prop-badge ${p.estado}">${ESTADOS_LABELS[p.estado] || p.estado || 'rascunho'}</span></td>
+      <td style="font-size:12px;color:var(--text-dim)">${formatDate(p.created_at)}</td>
+      <td onclick="event.stopPropagation()" style="text-align:right">
+        <div class="row-menu-wrap">
+          <button class="row-menu-btn" onclick="toggleRowMenu(this)">⋯</button>
+          <div class="row-menu-drop">
+            ${hasPdfs ? `
+              <a class="row-menu-item" href="${p.pdf_tecnica_url}" target="_blank">📄 PDF Técnica</a>
+              <a class="row-menu-item" href="${p.pdf_comercial_url}" target="_blank">📋 PDF Comercial</a>
+            ` : ''}
+            <button class="row-menu-item" onclick="window.location.href='proposta-comercial-detalhe.html?id=${p.id}'">◉ Ver detalhe</button>
+            <button class="row-menu-item danger" onclick="openConfirmDelete('${p.id}')">✕ Eliminar</button>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── DELETE ───
+function openConfirmDelete(id) {
+  pendingDeleteId = id;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  pendingDeleteId = null;
+});
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  await sb.from('propostas').delete().eq('id', pendingDeleteId);
+  document.getElementById('confirm-overlay').classList.remove('open');
+  pendingDeleteId = null;
+  await loadPropostas();
+});
+
+// ─── FILTERS EVENTS ───
+['pcf-estado','pcf-nicho','pcf-tipo'].forEach(id =>
+  document.getElementById(id).addEventListener('change', renderTable)
+);
+document.getElementById('pcf-search').addEventListener('input', renderTable);
+document.getElementById('btn-clear-pcf').addEventListener('click', () => {
+  document.getElementById('pcf-estado').value = '';
+  document.getElementById('pcf-nicho').value  = '';
+  document.getElementById('pcf-tipo').value   = '';
+  document.getElementById('pcf-search').value = '';
+  renderTable();
+});
+
+// ─── VARIÁVEIS MODAL ───
+const SETTINGS_DEFAULTS = {
+  modelo_claude: 'claude-opus-4-7',
+  validade_proposta_dias: 15, suporte_gratuito_dias: 30,
+  preco_minimo_projeto: 1500, banda_valor_min_pct: 10, banda_valor_max_pct: 30,
+  custo_hora_referencia: 15, tier1_min: 1500, tier1_max: 3000,
+  tier2_min: 3000, tier2_max: 6000, tier3_min: 6000, tier3_max: 15000,
+  preco_base_modulo: 500,
+  multiplicador_simples: 1, multiplicador_media: 1.5,
+  multiplicador_alta: 2, multiplicador_muito_alta: 3
+};
+
+const SETTINGS_FIELDS = {
+  'vs-modelo'        : 'modelo_claude',
+  'vs-banda-min'     : 'banda_valor_min_pct',
+  'vs-banda-max'     : 'banda_valor_max_pct',
+  'vs-preco-min'     : 'preco_minimo_projeto',
+  'vs-t1-min'        : 'tier1_min',
+  'vs-t1-max'        : 'tier1_max',
+  'vs-t2-min'        : 'tier2_min',
+  'vs-t2-max'        : 'tier2_max',
+  'vs-t3-min'        : 'tier3_min',
+  'vs-t3-max'        : 'tier3_max',
+  'vs-base-modulo'   : 'preco_base_modulo',
+  'vs-mult-basico'   : 'multiplicador_simples',
+  'vs-mult-medio'    : 'multiplicador_media',
+  'vs-mult-avancado' : 'multiplicador_alta',
+  'vs-mult-enterprise': 'multiplicador_muito_alta',
+  'vs-custo-hora'    : 'custo_hora_referencia',
+  'vs-validade'      : 'validade_proposta_dias',
+  'vs-suporte'       : 'suporte_gratuito_dias'
+};
+
+function fillVariaveisModal(data) {
+  Object.entries(SETTINGS_FIELDS).forEach(([elId, col]) => {
+    const el = document.getElementById(elId);
+    if (el) el.value = data[col] ?? SETTINGS_DEFAULTS[col] ?? '';
+  });
+}
+
+async function openVariaveisModal() {
+  if (!SETTINGS?.id) {
+    const { data } = await sb.from('proposal_settings').select('*').limit(1);
+    SETTINGS = data?.[0] || {};
+  }
+  fillVariaveisModal({ ...SETTINGS_DEFAULTS, ...SETTINGS });
+  document.getElementById('variaveis-modal-overlay').classList.add('open');
+}
+
+async function saveVariaveis() {
+  if (!SETTINGS?.id) {
+    const { data } = await sb.from('proposal_settings').select('id').limit(1);
+    if (!data?.[0]?.id) { alert('Erro ao guardar: não foi possível obter o ID das definições.'); return; }
+    SETTINGS = { ...SETTINGS, id: data[0].id };
+  }
+  const update = {};
+  Object.entries(SETTINGS_FIELDS).forEach(([elId, col]) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    update[col] = el.tagName === 'SELECT' ? el.value : parseFloat(el.value) || el.value;
+  });
+  const { data: rows, error } = await sb.from('proposal_settings').update(update).eq('id', SETTINGS.id).select();
+  if (error) { alert('Erro ao guardar: ' + error.message); return; }
+  SETTINGS = rows?.[0] || SETTINGS;
+  document.getElementById('variaveis-modal-overlay').classList.remove('open');
+}
+
+document.getElementById('btn-variaveis').addEventListener('click', openVariaveisModal);
+document.getElementById('variaveis-modal-close').addEventListener('click', () =>
+  document.getElementById('variaveis-modal-overlay').classList.remove('open')
+);
+document.getElementById('variaveis-modal-cancel').addEventListener('click', () =>
+  document.getElementById('variaveis-modal-overlay').classList.remove('open')
+);
+document.getElementById('btn-variaveis-save').addEventListener('click', saveVariaveis);
+document.getElementById('btn-variaveis-reset').addEventListener('click', () => {
+  fillVariaveisModal(SETTINGS_DEFAULTS);
+});
+document.getElementById('variaveis-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('variaveis-modal-overlay'))
+    document.getElementById('variaveis-modal-overlay').classList.remove('open');
+});
+
+// ─── ROW MENU ───
+function toggleRowMenu(btn) {
+  const drop = btn.nextElementSibling;
+  const isOpen = drop.classList.contains('open');
+  document.querySelectorAll('.row-menu-drop.open').forEach(d => d.classList.remove('open'));
+  if (!isOpen) drop.classList.add('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.row-menu-wrap')) {
+    document.querySelectorAll('.row-menu-drop.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// ─── INIT ───
+loadPropostas();
+</script>
+</body>
+</html>

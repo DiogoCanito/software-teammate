@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta Comercial — {{NOME_EMPRESA}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: #1a1a1a;
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  /* ── CAPA ── */
+  .cover {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+  }
+
+  .cover-header {
+    background: #1a1a1a;
+    padding: 48px 60px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .cover-logo {
+    height: 40px;
+    filter: brightness(0) invert(1);
+  }
+
+  .cover-body {
+    flex: 1;
+    padding: 80px 60px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .cover-tag {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #05668d;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+
+  .cover-title {
+    font-family: 'Funnel Display', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  .cover-empresa {
+    font-family: 'Funnel Display', sans-serif;
+    font-size: 28px;
+    font-weight: 500;
+    color: #05668d;
+    margin-bottom: 48px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cover-meta-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .cover-meta-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .cover-footer {
+    padding: 24px 60px;
+    border-top: 3px solid #ff956b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cover-footer-text {
+    font-size: 10px;
+    color: #999;
+  }
+
+  .cover-validity {
+    font-size: 10px;
+    color: #05668d;
+    font-weight: 600;
+  }
+
+  /* ── PÁGINAS INTERIORES ── */
+  .page {
+    padding: 40px 50px;
+    page-break-after: always;
+  }
+
+  .page:last-child {
+    page-break-after: avoid;
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 28px;
+  }
+
+  .page-header-logo {
+    height: 22px;
+  }
+
+  .page-header-title {
+    font-size: 10px;
+    color: #999;
+    font-weight: 500;
+  }
+
+  /* ── TIPOGRAFIA ── */
+  h1 {
+    font-family: 'Funnel Display', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a1a;
+    border-bottom: 3px solid #05668d;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-family: 'Funnel Display', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    border-left: 4px solid #05668d;
+    padding-left: 12px;
+    margin: 28px 0 14px;
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-family: 'Funnel Display', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #05668d;
+    margin: 18px 0 8px;
+    line-height: 1.3;
+  }
+
+  p {
+    margin-bottom: 12px;
+    color: #1a1a1a;
+    line-height: 1.65;
+  }
+
+  strong { font-weight: 600; }
+
+  ul, ol {
+    margin: 8px 0 12px 20px;
+  }
+
+  li {
+    margin-bottom: 5px;
+    line-height: 1.5;
+  }
+
+  em {
+    font-style: italic;
+    color: #555;
+    font-size: 10px;
+  }
+
+  /* ── TABELAS ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px;
+    font-size: 10.5px;
+  }
+
+  th {
+    background: #1a1a1a;
+    color: #fff;
+    font-weight: 600;
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #1a1a1a;
+  }
+
+  tr:nth-child(odd) td { background: #f8f9fa; }
+
+  /* Linha de total (última linha antes do fim) */
+  tr.total-row td {
+    background: #05668d !important;
+    color: #fff !important;
+    font-weight: 700;
+    border-bottom: none;
+    font-size: 11px;
+  }
+
+  tr.subtotal-row td {
+    background: #f0f9ff;
+    font-weight: 600;
+    color: #05668d;
+  }
+
+  tr.iva-row td {
+    background: #f8f9fa;
+    color: #555;
+    font-style: italic;
+  }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    background: #f0f9ff;
+    border-left: 4px solid #05668d;
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .callout-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #05668d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .callout-value {
+    font-family: 'Funnel Display', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .callout-desc {
+    font-size: 10px;
+    color: #555;
+    line-height: 1.4;
+  }
+
+  /* ── FASE TIMELINE ── */
+  .timeline {
+    margin: 12px 0 20px;
+    padding: 0;
+    list-style: none;
+    counter-reset: fase;
+  }
+
+  .timeline li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    counter-increment: fase;
+  }
+
+  .timeline li::before {
+    content: counter(fase);
+    min-width: 24px;
+    height: 24px;
+    background: #05668d;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+
+  .timeline-content strong {
+    display: block;
+    font-size: 11px;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+  }
+
+  .timeline-content span {
+    font-size: 10px;
+    color: #555;
+  }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    margin-top: 32px;
+    padding-top: 10px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #999;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cover { page-break-after: always; }
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+  <div class="cover-header">
+    <img src="{{LOGO_BASE64}}" alt="TeamMate" class="cover-logo" onerror="this.style.display='none'">
+    <span style="font-family:'Funnel Display',sans-serif;font-size:22px;font-weight:700;color:#fff;">TeamMate</span>
+  </div>
+  <div class="cover-body">
+    <div class="cover-tag">Proposta Comercial</div>
+    <div class="cover-title">Proposta Comercial</div>
+    <div class="cover-empresa">{{NOME_EMPRESA}}</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Data de Emissão</span>
+        <span class="cover-meta-value">{{DATA_EMISSAO}}</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Válida até</span>
+        <span class="cover-meta-value">{{DATA_VALIDADE}}</span>
+      </div>
+    </div>
+  </div>
+  <div class="cover-footer">
+    <span class="cover-footer-text">TeamMate — Proposta Comercial</span>
+  </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="page">
+  <div class="page-header">
+    <img src="{{LOGO_BASE64}}" alt="TeamMate" class="page-header-logo" onerror="this.style.display='none'">
+    <span class="page-header-title">Proposta Comercial — {{NOME_EMPRESA}}</span>
+  </div>
+
+  <div class="content">
+    {{CONTEUDO_HTML}}
+  </div>
+
+  <div class="page-footer">
+    <span>TeamMate</span>
+    <span>{{DATA_EMISSAO}}</span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Nova Proposta Comercial</title>
+<link rel="icon" type="image/png" href="../brand_assets/TeamMateLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../auth.js"></script>
+<script src="../mobile-sidebar.js"></script>
+<style>
+.form-group { gap: 8px; }
+.form-row { margin-bottom: 18px; }
+.step > .form-group { margin-bottom: 18px; }
+
+/* ─── WIZARD LAYOUT ─── */
+.wizard-wrap {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.wizard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 16px;
+}
+
+.wizard-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.wizard-back:hover { color: var(--text); }
+
+.wizard-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.wizard-save-draft {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.wizard-save-draft:hover { border-color: var(--blue); color: var(--blue); }
+
+/* ─── PROGRESS ─── */
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 36px;
+}
+
+.progress-seg {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background 0.25s;
+}
+.progress-seg.done  { background: var(--blue); }
+.progress-seg.active { background: var(--blue); opacity: 0.5; }
+
+.progress-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  margin-top: -28px;
+}
+
+/* ─── STEP ─── */
+.step { display: none; }
+.step.active { display: block; }
+
+.step-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* ─── TAREFAS ARRAY ─── */
+.tarefa-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.tarefa-remove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.tarefa-remove:hover { color: var(--danger); background: rgba(239,68,68,0.08); }
+
+/* ─── NAVIGATION ─── */
+.wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── RADIO GROUP ─── */
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.radio-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-dim);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  user-select: none;
+}
+.radio-opt:hover { border-color: var(--blue); }
+.radio-opt input[type=radio] { display:none; }
+.radio-opt.selected { border-color: var(--blue); background: rgba(5,102,141,0.08); color: var(--blue); }
+
+/* ─── CHECKBOX GRID ─── */
+.check-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.check-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  user-select: none;
+}
+.check-opt:hover { border-color: var(--blue); }
+.check-opt input[type=checkbox] { display:none; }
+.check-opt.selected { border-color: var(--blue); background: rgba(5,102,141,0.08); color: var(--blue); }
+
+/* ─── EQUIPA TAGS ─── */
+.equipa-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.equipa-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.equipa-tag button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0 0 0 4px;
+}
+/* ─── MOBILE WARNING ─── */
+.mobile-warning {
+  display: none;
+  background: rgba(245,197,24,0.1);
+  border-bottom: 1px solid rgba(245,197,24,0.25);
+  padding: 10px 20px;
+  font-size: 12px;
+  color: var(--warning);
+  text-align: center;
+}
+@media (max-width: 767px) {
+  .mobile-warning { display: block; }
+  .wizard-wrap { padding: 20px 16px 80px; }
+  .wizard-header { flex-wrap: wrap; gap: 10px; }
+  .roi-grid { grid-template-columns: 1fr 1fr; }
+  .form-row { flex-direction: column; }
+  .form-row .form-group { width: 100%; }
+}
+</style>
+</head>
+<body>
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <img src="../brand_assets/logo-teammate.svg" alt="TeamMate" class="mobile-logo">
+  <div class="mobile-header-spacer"></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="layout">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="../brand_assets/logo-teammate.svg" alt="TeamMate">
+    <div class="logo-sub">Team Dashboard</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <a class="nav-item" href="/homepage">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📈</span> Relatórios
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Trabalho</div>
+    <a class="nav-item" href="tasks.html">
+      <span class="nav-icon">✓</span> Tarefas
+    </a>
+    <a class="nav-item" href="projects.html">
+      <span class="nav-icon">◫</span> Projetos
+    </a>
+    <a class="nav-item" href="calendario.html">
+      <span class="nav-icon">📅</span> Calendário
+    </a>
+    <a class="nav-item" href="documentos.html">
+      <span class="nav-icon">🗂</span> Documentos
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Negócio</div>
+    <a class="nav-item" href="leads.html">
+      <span class="nav-icon">◎</span> Leads
+    </a>
+    <a class="nav-item" href="clientes.html">
+      <span class="nav-icon">👤</span> Clientes
+    </a>
+    <a class="nav-item" href="custos.html">
+      <span class="nav-icon">💸</span> Custos
+    </a>
+    <a class="nav-item active" href="proposta-comercial.html">
+      <span class="nav-icon">📋</span> Propostas
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Ferramentas</div>
+    <a class="nav-item" href="agentes.html">
+      <span class="nav-icon">✦</span> Agentes IA
+      <span class="nav-badge" style="background:var(--blue);font-size:8.5px;padding:1px 5px;letter-spacing:0.04em">NOVO</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Equipa</div>
+    <a class="nav-item" href="membros.html">
+      <span class="nav-icon">👥</span> Membros
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙</span> Definições
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">DM</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">Diogo M.</div>
+        <div class="user-role">Admin · TeamMate</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="confirmLogout()">⏻ Terminar Sessão</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main">
+<div class="page active">
+
+<div class="mobile-warning">
+  ⚠ Este formulário foi desenhado para desktop. Em mobile pode ter uma experiência limitada.
+</div>
+
+<div class="wizard-wrap">
+
+  <!-- HEADER -->
+  <div class="wizard-header">
+    <a class="wizard-back" href="proposta-comercial.html">← Propostas IA</a>
+    <div class="wizard-title">Nova Proposta Comercial</div>
+    <button class="wizard-save-draft" id="btn-save-draft">Guardar rascunho</button>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar" id="progress-bar">
+    <div class="progress-seg" data-seg="1"></div>
+    <div class="progress-seg" data-seg="2"></div>
+    <div class="progress-seg" data-seg="3"></div>
+    <div class="progress-seg" data-seg="4"></div>
+    <div class="progress-seg" data-seg="5"></div>
+    <div class="progress-seg" data-seg="6"></div>
+    <div class="progress-seg" data-seg="7"></div>
+    <div class="progress-seg" data-seg="8"></div>
+  </div>
+  <div class="progress-label" id="progress-label">Passo 1 de 8</div>
+
+  <!-- ─── STEP 1: Empresa e Contacto ─── -->
+  <div class="step active" data-step="1">
+    <div class="step-title">Empresa e Contacto</div>
+    <div class="step-desc">Começa por nos falar sobre a empresa e quem iremos contactar.</div>
+
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Nome da Empresa <span class="form-required">*</span></label>
+        <input class="form-input" id="s1-nome-empresa" type="text" placeholder="Ex: Lopes & Filhos Lda">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nicho / Setor</label>
+        <input class="form-input" id="s1-nicho" type="text" placeholder="Ex: Construção Civil, Contabilidade, Retalho...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo de Solução Inicial</label>
+        <select class="form-select" id="s1-tipo-solucao-inicial">
+          <option value="automacoes">Automações</option>
+          <option value="software">Software</option>
+          <option value="software_automacoes">Software + Automações</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nome do Contacto</label>
+        <input class="form-input" id="s1-nome-contacto" type="text" placeholder="Ex: António Lopes">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cargo</label>
+        <input class="form-input" id="s1-cargo-contacto" type="text" placeholder="Ex: Sócio-Gerente, CEO...">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Email de Contacto</label>
+        <input class="form-input" id="s1-email-contacto" type="email" placeholder="contacto@empresa.pt">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefone</label>
+        <input class="form-input" id="s1-telefone" type="tel" placeholder="Ex: +351 912 345 678">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Localização</label>
+        <input class="form-input" id="s1-localizacao" type="text" placeholder="Ex: Lisboa, Porto, Braga...">
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 2: O Negócio ─── -->
+  <div class="step" data-step="2">
+    <div class="step-title">O Negócio</div>
+    <div class="step-desc">Conta-nos como funciona a empresa e como está organizada.</div>
+
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Descrição da Atividade</label>
+        <textarea class="form-textarea" id="s2-area-negocio" rows="3" placeholder="Descreve o que a empresa faz, os principais serviços/produtos e o mercado onde atua..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex; align-items:flex-end; gap:16px; margin-bottom:18px;">
+      <div class="form-group" style="flex-shrink:0; width:180px;">
+        <label class="form-label" style="white-space:nowrap;">Número de Colaboradores</label>
+        <input class="form-input" id="s2-numero-pessoas" type="number" min="1" placeholder="Ex: 15">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">Tipo de Mercado</label>
+        <div class="radio-group" id="s2-tipo-mercado-group" style="flex-wrap:nowrap; margin-top:0;">
+          <label class="radio-opt"><input type="radio" name="tipo-mercado" value="B2B"> B2B</label>
+          <label class="radio-opt"><input type="radio" name="tipo-mercado" value="B2C"> B2C</label>
+          <label class="radio-opt"><input type="radio" name="tipo-mercado" value="B2B e B2C"> Ambos</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Têm equipas ou departamentos separados?</label>
+        <div class="radio-group" id="s2-equipas-sep-group">
+          <label class="radio-opt"><input type="radio" name="equipas-sep" value="true"> Sim, têm</label>
+          <label class="radio-opt"><input type="radio" name="equipas-sep" value="false"> Não, trabalham todos juntos</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" id="s2-equipas-wrap" style="display:none">
+      <label class="form-label">Quais as equipas/departamentos?</label>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="s2-equipa-input" type="text" placeholder="Ex: Comercial, Operacional..." style="flex:1">
+        <button class="btn btn-ghost btn-sm" type="button" id="btn-add-equipa">Adicionar</button>
+      </div>
+      <div class="equipa-tags" id="s2-equipas-tags"></div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 3: Ferramentas Digitais ─── -->
+  <div class="step" data-step="3">
+    <div class="step-title">Ferramentas Digitais</div>
+    <div class="step-desc">O que já usam e como estão ligados os sistemas?</div>
+
+    <div class="form-group">
+      <label class="form-label">Que ferramentas digitais usam atualmente?</label>
+      <div class="check-grid" id="s3-ferramentas-group">
+        <label class="check-opt"><input type="checkbox" value="Faturação"> Faturação</label>
+        <label class="check-opt"><input type="checkbox" value="CRM"> CRM</label>
+        <label class="check-opt"><input type="checkbox" value="ERP"> ERP</label>
+        <label class="check-opt"><input type="checkbox" value="Folhas de cálculo"> Folhas de cálculo (Excel/Sheets)</label>
+        <label class="check-opt"><input type="checkbox" value="Email"> Email (Gmail/Outlook)</label>
+        <label class="check-opt"><input type="checkbox" value="WhatsApp Business"> WhatsApp Business</label>
+        <label class="check-opt"><input type="checkbox" value="Redes Sociais"> Redes Sociais</label>
+        <label class="check-opt"><input type="checkbox" value="Gestão de projetos"> Gestão de projetos (Trello, Asana...)</label>
+        <label class="check-opt"><input type="checkbox" value="Website"> Website</label>
+        <label class="check-opt"><input type="checkbox" value="Nenhuma"> Nenhuma em especial</label>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Esses sistemas comunicam entre si ou é tudo manual?</label>
+        <textarea class="form-textarea" id="s3-sistemas-integrados" rows="2" placeholder="Ex: O CRM exporta para o Excel, mas o resto é manual. / Temos tudo em silos separados..."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Há quanto tempo utilizam essas ferramentas?</label>
+        <div class="radio-group" id="s3-tempo-ferramentas-group">
+          <label class="radio-opt"><input type="radio" name="tempo-ferramentas" value="Menos de 1 ano"> Menos de 1 ano</label>
+          <label class="radio-opt"><input type="radio" name="tempo-ferramentas" value="1-3 anos"> 1-3 anos</label>
+          <label class="radio-opt"><input type="radio" name="tempo-ferramentas" value="Mais de 3 anos"> Mais de 3 anos</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Experiência de utilização dessas ferramentas?</label>
+        <div class="radio-group" id="s3-experiencia-ferramentas-group">
+          <label class="radio-opt"><input type="radio" name="experiencia-ferramentas" value="Baixa"> Baixa (uso básico)</label>
+          <label class="radio-opt"><input type="radio" name="experiencia-ferramentas" value="Média"> Média (usam bem)</label>
+          <label class="radio-opt"><input type="radio" name="experiencia-ferramentas" value="Alta"> Alta (dominam as ferramentas)</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 4: O Dia-a-Dia ─── -->
+  <div class="step" data-step="4">
+    <div class="step-title">O Dia-a-Dia</div>
+    <div class="step-desc">Como é um dia típico? Onde é que o tempo está a ser perdido?</div>
+
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Como é um dia típico na empresa?</label>
+        <textarea class="form-textarea" id="s4-dia-tipico" rows="3" placeholder="Descreve as principais atividades de um dia normal — o que acontece de manhã, ao longo do dia, etc."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Que tarefas repetitivas ocupam mais tempo?</label>
+        <textarea class="form-textarea" id="s4-tarefas-repetitivas" rows="2" placeholder="Ex: enviar orçamentos, atualizar folhas de Excel, responder aos mesmos emails..."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Com que frequência copiam e colam informação entre sistemas?</label>
+        <div class="radio-group" id="s4-copiar-colar-group">
+          <label class="radio-opt"><input type="radio" name="copiar-colar" value="Muito"> Muito (diariamente)</label>
+          <label class="radio-opt"><input type="radio" name="copiar-colar" value="Às vezes"> Às vezes</label>
+          <label class="radio-opt"><input type="radio" name="copiar-colar" value="Raramente"> Raramente</label>
+          <label class="radio-opt"><input type="radio" name="copiar-colar" value="Nunca"> Nunca</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Recebem muitos pedidos manuais que podiam ser automatizados?</label>
+        <div class="radio-group" id="s4-pedidos-manuais-group">
+          <label class="radio-opt"><input type="radio" name="pedidos-manuais" value="Sim, muitos"> Sim, muitos</label>
+          <label class="radio-opt"><input type="radio" name="pedidos-manuais" value="Alguns"> Alguns</label>
+          <label class="radio-opt"><input type="radio" name="pedidos-manuais" value="Poucos"> Poucos</label>
+          <label class="radio-opt"><input type="radio" name="pedidos-manuais" value="Não"> Não</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Existem documentos padrão na empresa?</label>
+        <div class="radio-group" id="s4-documentos-padrao-group">
+          <label class="radio-opt"><input type="radio" name="documentos-padrao" value="Sim"> Sim</label>
+          <label class="radio-opt"><input type="radio" name="documentos-padrao" value="Não"> Não</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" id="s4-documentos-padrao-wrap" style="display:none;margin-bottom:18px">
+      <label class="form-label">Quais os documentos padrão que utilizam?</label>
+      <textarea class="form-textarea" id="s4-documentos-padrao-quais" rows="2" placeholder="Ex: Orçamentos, contratos, relatórios de obra, fichas de cliente..."></textarea>
+    </div>
+  </div>
+
+  <!-- ─── STEP 5: Tarefas a Eliminar ─── -->
+  <div class="step" data-step="5">
+    <div class="step-title">Tarefas a Eliminar</div>
+    <div class="step-desc">Vamos quantificar o impacto. Adiciona as principais tarefas repetitivas que querem automatizar.</div>
+
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Quais as 3 tarefas que mais gostariam de eliminar?</label>
+        <textarea class="form-textarea" id="s5-tres-tarefas" rows="2" placeholder="Ex: Orçamentos manuais, relatórios de obra, controlo de horas em Excel"></textarea>
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Detalhe das Tarefas</div>
+        <button class="btn btn-ghost btn-sm" type="button" id="btn-add-tarefa">+ Adicionar Tarefa</button>
+      </div>
+      <div id="tarefas-list"></div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 6: Impacto ─── -->
+  <div class="step" data-step="6">
+    <div class="step-title">Impacto Esperado</div>
+    <div class="step-desc">Ajuda-nos a calcular o ROI real para a tua empresa.</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Custo médio por hora de um colaborador (€/h)</label>
+        <input class="form-input" id="s6-custo-hora" type="number" min="5" step="1" placeholder="Ex: 15">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Inclui salário + encargos. Se não sabe, use 15€/h.</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">O que mudaria na empresa se estas tarefas fossem automatizadas?</label>
+        <textarea class="form-textarea" id="s6-impacto" rows="2" placeholder="Ex: A equipa poderia focar-se em vendas, responder mais rápido aos clientes..."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Sentem que os processos atuais estão a travar o crescimento?</label>
+        <div class="radio-group" id="s6-crescimento-group">
+          <label class="radio-opt"><input type="radio" name="crescimento" value="Sim, claramente"> Sim, claramente</label>
+          <label class="radio-opt"><input type="radio" name="crescimento" value="Não, os processos travam"> Em parte</label>
+          <label class="radio-opt"><input type="radio" name="crescimento" value="Não"> Não</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 7: Decisão ─── -->
+  <div class="step" data-step="7">
+    <div class="step-title">Decisão e Orçamento</div>
+    <div class="step-desc">Para sabermos como apresentar a proposta da forma mais adequada.</div>
+
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Quem toma a decisão final?</label>
+        <div class="radio-group" id="s7-decisor-group">
+          <label class="radio-opt"><input type="radio" name="decisor" value="Só eu"> Só eu</label>
+          <label class="radio-opt"><input type="radio" name="decisor" value="Eu e mais alguém"> Eu e mais alguém</label>
+          <label class="radio-opt"><input type="radio" name="decisor" value="Outra pessoa"> Outra pessoa</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Têm um orçamento definido?</label>
+        <div class="radio-group" id="s7-orcamento-group">
+          <label class="radio-opt"><input type="radio" name="orcamento" value="Sim, até 2.000€"> Sim, até 2.000€</label>
+          <label class="radio-opt"><input type="radio" name="orcamento" value="Sim, até 5.000€"> Sim, até 5.000€</label>
+          <label class="radio-opt"><input type="radio" name="orcamento" value="Sim, até 10.000€"> Sim, até 10.000€</label>
+          <label class="radio-opt"><input type="radio" name="orcamento" value="Sim, acima de 10.000€"> Sim, acima de 10k</label>
+          <label class="radio-opt"><input type="radio" name="orcamento" value="Não, queremos avaliar primeiro"> Sem limite definido</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Qual a urgência para avançar?</label>
+        <div class="radio-group" id="s7-urgencia-group">
+          <label class="radio-opt"><input type="radio" name="urgencia" value="Imediata (esta semana)"> Imediata (esta semana)</label>
+          <label class="radio-opt"><input type="radio" name="urgencia" value="Curto prazo (1-3 meses)"> Curto prazo (1-3 meses)</label>
+          <label class="radio-opt"><input type="radio" name="urgencia" value="Médio prazo (3-6 meses)"> Médio prazo (3-6 meses)</label>
+          <label class="radio-opt"><input type="radio" name="urgencia" value="Sem urgência definida"> Sem urgência definida</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Já investiram em soluções informáticas no passado?</label>
+        <div class="radio-group" id="s7-investiu-informatica-group">
+          <label class="radio-opt"><input type="radio" name="investiu-informatica" value="Sim"> Sim</label>
+          <label class="radio-opt"><input type="radio" name="investiu-informatica" value="Não"> Não</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" id="s7-investiu-informatica-wrap" style="display:none;margin-bottom:18px">
+      <label class="form-label">Contexto sobre esse investimento (custo e opinião)</label>
+      <textarea class="form-textarea" id="s7-investiu-informatica-contexto" rows="3" placeholder="Ex: Investiram 5.000€ num software de gestão há 3 anos, mas nunca chegaram a usar a maioria das funcionalidades..."></textarea>
+    </div>
+  </div>
+
+  <!-- ─── STEP 8: Notas e Conclusão ─── -->
+  <div class="step" data-step="8">
+    <div class="step-title">Resumo e Configuração Final</div>
+    <div class="step-desc">Última etapa antes de gerar a proposta.</div>
+
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Qual a principal preocupação ou dor do cliente?</label>
+        <textarea class="form-textarea" id="s8-preocupacao" rows="2" placeholder="Ex: O tempo perdido em papelada em vez de estar em obra. / A falta de visibilidade sobre o que cada equipa está a fazer..."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tipo de Solução Final</label>
+        <select class="form-select" id="s8-tipo-solucao-final">
+          <option value="automacoes">Automações</option>
+          <option value="software">Software</option>
+          <option value="software_automacoes">Software + Automações</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full">
+        <label class="form-label">Notas Internas (não aparecem na proposta)</label>
+        <textarea class="form-textarea" id="s8-notas" rows="3" placeholder="Observações internas sobre o cliente, sinais de qualificação, contexto da reunião..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <div class="wizard-nav">
+    <button class="btn btn-ghost" id="btn-prev" style="display:none">← Anterior</button>
+    <div style="flex:1"></div>
+    <button class="btn btn-primary" id="btn-next">Próximo →</button>
+    <button class="btn btn-coral" id="btn-finish" style="display:none">Finalizar →</button>
+  </div>
+
+</div><!-- /wizard-wrap -->
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const TOTAL_STEPS = 8;
+let currentStep = 1;
+let propostaId = null;
+let equipasList = [];
+let tarefasList = [];
+
+// ─── STATE PERSISTENCE ───
+const DRAFT_KEY = 'proposta-form-draft';
+
+function getFormData() {
+  return {
+    // Step 1
+    nome_empresa:         document.getElementById('s1-nome-empresa').value.trim(),
+    nicho:                document.getElementById('s1-nicho').value.trim(),
+    tipo_solucao_inicial: document.getElementById('s1-tipo-solucao-inicial').value,
+    nome_contacto:        document.getElementById('s1-nome-contacto').value.trim(),
+    cargo_contacto:       document.getElementById('s1-cargo-contacto').value.trim(),
+    email_contacto:       document.getElementById('s1-email-contacto').value.trim(),
+    telefone_contacto:    document.getElementById('s1-telefone').value.trim(),
+    localizacao:          document.getElementById('s1-localizacao').value.trim(),
+    // Step 2
+    area_negocio:         document.getElementById('s2-area-negocio').value.trim(),
+    numero_pessoas:       parseInt(document.getElementById('s2-numero-pessoas').value) || null,
+    tipo_mercado:         getRadioValue('tipo-mercado'),
+    equipas_separadas:    getRadioValue('equipas-sep') === 'true',
+    equipas_lista:        [...equipasList],
+    // Step 3
+    ferramentas_digitais:     getCheckboxValues('s3-ferramentas-group'),
+    sistemas_integrados:      document.getElementById('s3-sistemas-integrados').value.trim(),
+    tempo_ferramentas:        getRadioValue('tempo-ferramentas'),
+    experiencia_ferramentas:  getRadioValue('experiencia-ferramentas'),
+    // Step 4
+    dia_tipico:           document.getElementById('s4-dia-tipico').value.trim(),
+    tarefas_repetitivas:  document.getElementById('s4-tarefas-repetitivas').value.trim(),
+    copiar_colar_nivel:         getRadioValue('copiar-colar'),
+    pedidos_manuais:            getRadioValue('pedidos-manuais'),
+    documentos_padrao:          getRadioValue('documentos-padrao'),
+    documentos_padrao_quais:    document.getElementById('s4-documentos-padrao-quais').value.trim(),
+    // Step 5
+    tres_tarefas_eliminar: document.getElementById('s5-tres-tarefas').value.trim(),
+    tarefas_detalhadas:   tarefasList.map(t => ({
+      nome:       t.nome || '',
+      frequencia: t.frequencia || 'Semanal',
+      vezes:      parseInt(t.vezes) || 1,
+      tempo_min:  parseInt(t.tempo_min) || 30,
+      pessoas:    parseInt(t.pessoas) || 1
+    })),
+    // Step 6
+    custo_hora_colaboradores: parseFloat(document.getElementById('s6-custo-hora').value) || null,
+    impacto_mudanca:          document.getElementById('s6-impacto').value.trim(),
+    crescimento_percepcao:    getRadioValue('crescimento'),
+    // Step 7
+    decisor:                      getRadioValue('decisor'),
+    orcamento_definido:           getRadioValue('orcamento'),
+    urgencia:                     getRadioValue('urgencia'),
+    investiu_informatica:         getRadioValue('investiu-informatica'),
+    investiu_informatica_contexto: document.getElementById('s7-investiu-informatica-contexto').value.trim(),
+    // Step 8
+    preocupacao_principal: document.getElementById('s8-preocupacao').value.trim(),
+    tipo_solucao_final:    document.getElementById('s8-tipo-solucao-final').value,
+    notas_internas:        document.getElementById('s8-notas').value.trim(),
+  };
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      formData: getFormData(), equipasList, tarefasList, propostaId
+    }));
+  } catch(e) {}
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const { formData: fd, equipasList: el, tarefasList: tl, propostaId: pid } = JSON.parse(raw);
+    if (!fd) return;
+    propostaId = pid || null;
+    fillForm(fd, el, tl);
+  } catch(e) { console.warn('Erro ao carregar rascunho:', e); }
+}
+
+// ─── RADIO / CHECKBOX HELPERS ───
+function getRadioValue(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '';
+}
+
+function setRadio(name, value) {
+  const el = document.querySelector(`input[name="${name}"][value="${value}"]`);
+  if (el) {
+    el.checked = true;
+    el.closest('.radio-opt')?.classList.add('selected');
+  }
+}
+
+function getCheckboxValues(groupId) {
+  return Array.from(document.querySelectorAll(`#${groupId} input[type=checkbox]:checked`)).map(cb => cb.value);
+}
+
+function setCheckboxes(groupId, values) {
+  values.forEach(v => {
+    const cb = document.querySelector(`#${groupId} input[value="${v}"]`);
+    if (cb) { cb.checked = true; cb.closest('.check-opt')?.classList.add('selected'); }
+  });
+}
+
+// ─── RADIO CLICK STYLE ───
+document.querySelectorAll('.radio-group').forEach(group => {
+  group.querySelectorAll('.radio-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const name = opt.querySelector('input').name;
+      document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.closest('.radio-opt')?.classList.remove('selected'));
+      opt.classList.add('selected');
+    });
+  });
+});
+
+// ─── CHECKBOX CLICK STYLE ───
+document.querySelectorAll('.check-opt').forEach(opt => {
+  const cb = opt.querySelector('input[type=checkbox]');
+  cb.addEventListener('change', () => opt.classList.toggle('selected', cb.checked));
+});
+
+// ─── EQUIPAS ───
+function renderEquipasTags() {
+  const wrap = document.getElementById('s2-equipas-tags');
+  wrap.innerHTML = equipasList.map((e, i) => `
+    <span class="equipa-tag">${e}<button type="button" onclick="removeEquipa(${i})">✕</button></span>
+  `).join('');
+}
+
+function removeEquipa(i) {
+  equipasList.splice(i, 1);
+  renderEquipasTags();
+}
+
+document.getElementById('btn-add-equipa').addEventListener('click', () => {
+  const inp = document.getElementById('s2-equipa-input');
+  const val = inp.value.trim();
+  if (val && !equipasList.includes(val)) {
+    equipasList.push(val);
+    renderEquipasTags();
+    inp.value = '';
+  }
+});
+document.getElementById('s2-equipa-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btn-add-equipa').click(); }
+});
+
+document.querySelectorAll('input[name="equipas-sep"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('s2-equipas-wrap').style.display = r.value === 'true' ? '' : 'none';
+  });
+});
+
+document.querySelectorAll('input[name="documentos-padrao"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('s4-documentos-padrao-wrap').style.display = r.value === 'Sim' ? '' : 'none';
+  });
+});
+
+document.querySelectorAll('input[name="investiu-informatica"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('s7-investiu-informatica-wrap').style.display = r.value === 'Sim' ? '' : 'none';
+  });
+});
+
+// ─── TAREFAS ───
+function renderTarefas() {
+  const container = document.getElementById('tarefas-list');
+  if (tarefasList.length === 0) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:12px 0">Nenhuma tarefa adicionada ainda. Clica em "+ Adicionar Tarefa".</div>';
+    return;
+  }
+  container.innerHTML = tarefasList.map((t, i) => `
+    <div class="tarefa-card">
+      <button class="tarefa-remove" type="button" onclick="removeTarefa(${i})">✕</button>
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label">Nome da Tarefa</label>
+          <input class="form-input" type="text" value="${t.nome || ''}" onchange="updateTarefa(${i},'nome',this.value)" placeholder="Ex: Criar orçamento de obra">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Frequência</label>
+          <select class="form-select" onchange="updateTarefa(${i},'frequencia',this.value)">
+            <option value="Diária" ${t.frequencia==='Diária'?'selected':''}>Diária</option>
+            <option value="Semanal" ${t.frequencia==='Semanal'||!t.frequencia?'selected':''}>Semanal</option>
+            <option value="Mensal" ${t.frequencia==='Mensal'?'selected':''}>Mensal</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vezes por período</label>
+          <input class="form-input" type="number" min="1" value="${t.vezes || 1}" onchange="updateTarefa(${i},'vezes',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tempo por execução (min)</label>
+          <input class="form-input" type="number" min="1" value="${t.tempo_min || 30}" onchange="updateTarefa(${i},'tempo_min',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pessoas envolvidas</label>
+          <input class="form-input" type="number" min="1" value="${t.pessoas || 1}" onchange="updateTarefa(${i},'pessoas',this.value)">
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateTarefa(i, field, val) {
+  tarefasList[i][field] = val;
+}
+
+function removeTarefa(i) {
+  tarefasList.splice(i, 1);
+  renderTarefas();
+}
+
+document.getElementById('btn-add-tarefa').addEventListener('click', () => {
+  tarefasList.push({ nome: '', frequencia: 'Semanal', vezes: 1, tempo_min: 30, pessoas: 1 });
+  renderTarefas();
+});
+
+// ─── STEP NAVIGATION ───
+function updateProgress() {
+  document.getElementById('progress-label').textContent = `Passo ${currentStep} de ${TOTAL_STEPS}`;
+  document.querySelectorAll('.progress-seg').forEach((seg, i) => {
+    seg.className = 'progress-seg';
+    if (i + 1 < currentStep) seg.classList.add('done');
+    else if (i + 1 === currentStep) seg.classList.add('active');
+  });
+
+  document.getElementById('btn-prev').style.display   = currentStep > 1 ? '' : 'none';
+  document.getElementById('btn-next').style.display   = currentStep < TOTAL_STEPS ? '' : 'none';
+  document.getElementById('btn-finish').style.display = currentStep === TOTAL_STEPS ? '' : 'none';
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.step[data-step="${n}"]`).classList.add('active');
+  currentStep = n;
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep() {
+  const required = {
+    1: ['s1-nome-empresa']
+  };
+  const fields = required[currentStep] || [];
+  let ok = true;
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || !el.value.trim()) {
+      el?.classList.add('f-error');
+      ok = false;
+    } else {
+      el?.classList.remove('f-error');
+    }
+  });
+  return ok;
+}
+
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (!validateStep()) return;
+  saveDraft();
+  showStep(currentStep + 1);
+});
+
+document.getElementById('btn-prev').addEventListener('click', () => {
+  saveDraft();
+  showStep(currentStep - 1);
+});
+
+// ─── SAVE DRAFT (manual button) ───
+document.getElementById('btn-save-draft').addEventListener('click', async () => {
+  saveDraft();
+  const btn = document.getElementById('btn-save-draft');
+  if (!propostaId) {
+    await persistDraftToDb();
+  }
+  btn.textContent = '✓ Guardado';
+  setTimeout(() => { btn.textContent = 'Guardar rascunho'; }, 2000);
+});
+
+async function persistDraftToDb() {
+  const fd = getFormData();
+  const numero = 'PC-' + Date.now().toString(36).toUpperCase();
+  const { data, error } = await sb.from('propostas').insert({
+    numero,
+    nome: fd.nome_empresa || 'Nova Proposta',
+    cliente: fd.nome_empresa || '',
+    valor: 0,
+    origem: 'ia',
+    estado: 'rascunho',
+    data_criacao: new Date().toISOString().split('T')[0],
+  }).select().single();
+  if (error) { console.error('Erro ao criar proposta:', error); return null; }
+  propostaId = data.id;
+
+  await sb.from('proposal_form_responses').insert({ proposta_id: propostaId, ...fd });
+  saveDraft();
+  return propostaId;
+}
+
+// ─── FINISH ───
+document.getElementById('btn-finish').addEventListener('click', async () => {
+  if (!validateStep()) return;
+  saveDraft();
+
+  const btn = document.getElementById('btn-finish');
+  btn.disabled = true;
+  btn.textContent = 'A guardar...';
+
+  try {
+    const fd = getFormData();
+
+    if (!propostaId) {
+      await persistDraftToDb();
+    }
+
+    if (propostaId) {
+      // Upsert form responses
+      const { data: existing } = await sb.from('proposal_form_responses')
+        .select('id').eq('proposta_id', propostaId).single();
+
+      if (existing) {
+        await sb.from('proposal_form_responses').update(fd).eq('proposta_id', propostaId);
+      } else {
+        await sb.from('proposal_form_responses').insert({ proposta_id: propostaId, ...fd });
+      }
+
+      // Update proposta with client name
+      await sb.from('propostas').update({
+        nome: fd.nome_empresa,
+        cliente: fd.nome_empresa,
+        nicho: fd.nicho,
+        tipo_solucao: fd.tipo_solucao_final,
+      }).eq('id', propostaId);
+
+      localStorage.removeItem(DRAFT_KEY);
+      window.location.href = `proposta-comercial-detalhe.html?id=${propostaId}`;
+    }
+  } catch(e) {
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = 'Finalizar →';
+    alert('Erro ao guardar: ' + e.message);
+  }
+});
+
+// ─── AUTO-SAVE ON CHANGE ───
+document.querySelectorAll('input, textarea, select').forEach(el => {
+  el.addEventListener('change', saveDraft);
+});
+
+// ─── FILL FORM FROM DATA OBJECT ───
+function fillForm(fd, el, tl) {
+  equipasList = el || [];
+  tarefasList = tl || [];
+
+  const set = (id, val) => { const e = document.getElementById(id); if (e && val != null) e.value = val; };
+
+  set('s1-nome-empresa',        fd.nome_empresa);
+  set('s1-nicho',               fd.nicho);
+  set('s1-tipo-solucao-inicial', fd.tipo_solucao_inicial);
+  set('s1-nome-contacto',       fd.nome_contacto);
+  set('s1-cargo-contacto',      fd.cargo_contacto);
+  set('s1-email-contacto',      fd.email_contacto);
+  set('s1-telefone',            fd.telefone_contacto);
+  set('s1-localizacao',         fd.localizacao);
+  set('s2-area-negocio',        fd.area_negocio);
+  if (fd.numero_pessoas)        set('s2-numero-pessoas', fd.numero_pessoas);
+  set('s3-sistemas-integrados', fd.sistemas_integrados);
+  set('s4-documentos-padrao-quais', fd.documentos_padrao_quais);
+  set('s7-investiu-informatica-contexto', fd.investiu_informatica_contexto);
+  set('s4-dia-tipico',          fd.dia_tipico);
+  set('s4-tarefas-repetitivas', fd.tarefas_repetitivas);
+  set('s5-tres-tarefas',        fd.tres_tarefas_eliminar);
+  if (fd.custo_hora_colaboradores) set('s6-custo-hora', fd.custo_hora_colaboradores);
+  set('s6-impacto',             fd.impacto_mudanca);
+  set('s8-preocupacao',         fd.preocupacao_principal);
+  set('s8-tipo-solucao-final',  fd.tipo_solucao_final);
+  set('s8-notas',               fd.notas_internas);
+
+  if (fd.tipo_mercado)       setRadio('tipo-mercado', fd.tipo_mercado);
+  if (fd.equipas_separadas != null) {
+    setRadio('equipas-sep', String(fd.equipas_separadas));
+    if (fd.equipas_separadas) document.getElementById('s2-equipas-wrap').style.display = '';
+  }
+  if (fd.copiar_colar_nivel)       setRadio('copiar-colar', fd.copiar_colar_nivel);
+  if (fd.pedidos_manuais)          setRadio('pedidos-manuais', fd.pedidos_manuais);
+  if (fd.tempo_ferramentas)        setRadio('tempo-ferramentas', fd.tempo_ferramentas);
+  if (fd.experiencia_ferramentas)  setRadio('experiencia-ferramentas', fd.experiencia_ferramentas);
+  if (fd.documentos_padrao) {
+    setRadio('documentos-padrao', fd.documentos_padrao);
+    if (fd.documentos_padrao === 'Sim') document.getElementById('s4-documentos-padrao-wrap').style.display = '';
+  }
+  if (fd.investiu_informatica) {
+    setRadio('investiu-informatica', fd.investiu_informatica);
+    if (fd.investiu_informatica === 'Sim') document.getElementById('s7-investiu-informatica-wrap').style.display = '';
+  }
+  if (fd.crescimento_percepcao) setRadio('crescimento', fd.crescimento_percepcao);
+  if (fd.decisor)               setRadio('decisor', fd.decisor);
+  if (fd.orcamento_definido)    setRadio('orcamento', fd.orcamento_definido);
+  if (fd.urgencia)              setRadio('urgencia', fd.urgencia);
+
+  if (fd.ferramentas_digitais?.length) setCheckboxes('s3-ferramentas-group', fd.ferramentas_digitais);
+
+  renderEquipasTags();
+  renderTarefas();
+}
+
+// ─── INIT ───
+async function init() {
+  renderTarefas();
+
+  const urlParams  = new URLSearchParams(location.search);
+  const urlId      = urlParams.get('id');
+  const urlStep    = parseInt(urlParams.get('step')) || 1;
+
+  if (urlId) {
+    // Carrega dados existentes da DB (modo edição)
+    propostaId = urlId;
+    try {
+      const { data: fr } = await sb.from('proposal_form_responses')
+        .select('*').eq('proposta_id', urlId).single();
+
+      if (fr) {
+        const tarefasDb = Array.isArray(fr.tarefas_detalhadas) ? fr.tarefas_detalhadas : [];
+        const equipasDb = Array.isArray(fr.equipas_lista) ? fr.equipas_lista : [];
+        fillForm(fr, equipasDb, tarefasDb);
+        saveDraft();
+      }
+    } catch(e) {
+      console.warn('Erro ao carregar respostas da DB:', e);
+      loadDraft();
+    }
+
+    showStep(urlStep);
+  } else {
+    // Modo novo — começa sempre limpo
+    localStorage.removeItem(DRAFT_KEY);
+    showStep(1);
+  }
+
+  updateProgress();
+}
+
+init();
+</script>
+</div><!-- .page -->
+</main>
+</div><!-- .layout -->
+</body>
+</html>

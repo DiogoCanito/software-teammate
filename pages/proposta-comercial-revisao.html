@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamMate — Revisão da Proposta</title>
+<link rel="icon" type="image/png" href="../brand_assets/TeamMateLogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../auth.js"></script>
+<style>
+.revisao-wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.revisao-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.revisao-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.revisao-back:hover { color: var(--text); }
+
+.revisao-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+
+/* ─── SUMMARY CARDS ─── */
+.summary-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.summary-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt, rgba(255,255,255,0.03));
+}
+
+.summary-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.summary-edit-btn {
+  font-size: 11px;
+  color: var(--blue);
+  text-decoration: none;
+  padding: 3px 8px;
+  border: 1px solid var(--blue);
+  border-radius: 5px;
+  transition: background 0.15s;
+}
+.summary-edit-btn:hover { background: rgba(5,102,141,0.1); }
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0;
+  padding: 0;
+}
+
+.summary-field {
+  padding: 12px 20px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.summary-field:last-child { border-right: none; }
+
+.summary-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.summary-value.empty { color: var(--text-muted); font-style: italic; }
+
+/* ─── ROI CARDS ─── */
+.roi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.roi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.roi-card.highlight {
+  border-color: var(--blue);
+  background: rgba(5,102,141,0.06);
+}
+
+.roi-card-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.roi-card-value {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+
+.roi-card.highlight .roi-card-value { color: var(--blue); }
+
+.roi-card-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ─── LOADER ─── */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,10,10,0.85);
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.loader-overlay.active { display: flex; }
+
+.loader-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(5,102,141,0.2);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loader-title {
+  font-family: 'Funnel Display', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.loader-msg {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  max-width: 340px;
+  line-height: 1.5;
+  transition: opacity 0.4s;
+}
+
+/* ─── CTA AREA ─── */
+.cta-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.error-msg {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #ef4444;
+  margin-bottom: 16px;
+  display: none;
+}
+</style>
+</head>
+<body style="background:var(--bg);min-height:100vh">
+
+<div class="revisao-wrap">
+  <!-- HEADER -->
+  <div class="revisao-header">
+    <a class="revisao-back" id="back-link" href="proposta-comercial.html">← Propostas IA</a>
+    <div class="revisao-title">Revisão da Proposta</div>
+  </div>
+
+  <div id="revisao-content">
+    <!-- Carregando... -->
+    <div style="text-align:center;padding:60px 0;color:var(--text-muted)">
+      <div style="font-size:28px;margin-bottom:10px;opacity:0.3">💼</div>
+      <div>A carregar informação...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── LOADER ─── -->
+<div class="loader-overlay" id="loader-overlay">
+  <div class="loader-spinner"></div>
+  <div class="loader-title">A gerar propostas com IA...</div>
+  <div class="loader-msg" id="loader-msg">A analisar os processos da empresa</div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const params     = new URLSearchParams(location.search);
+const propostaId = params.get('id');
+
+if (!propostaId) {
+  window.location.href = 'proposta-comercial.html';
+}
+
+const LOADER_MESSAGES = [
+  'A analisar os processos da empresa',
+  'A calcular o ROI e poupanças estimadas',
+  'A definir as soluções mais adequadas',
+  'A preparar a proposta técnica',
+  'A preparar a proposta comercial',
+  'A gerar os documentos PDF',
+  'A fazer os últimos ajustes',
+  'Quase pronto...',
+];
+
+let loaderInterval = null;
+
+function startLoader() {
+  document.getElementById('loader-overlay').classList.add('active');
+  let i = 0;
+  document.getElementById('loader-msg').textContent = LOADER_MESSAGES[0];
+  loaderInterval = setInterval(() => {
+    i = (i + 1) % LOADER_MESSAGES.length;
+    const el = document.getElementById('loader-msg');
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = LOADER_MESSAGES[i];
+      el.style.opacity = '1';
+    }, 200);
+  }, 3500);
+}
+
+function stopLoader() {
+  clearInterval(loaderInterval);
+  document.getElementById('loader-overlay').classList.remove('active');
+}
+
+function fmtN(n) {
+  if (n == null || n === 0) return '—';
+  return Number(n).toLocaleString('pt-PT', { maximumFractionDigits: 0 });
+}
+
+function fmtEur(n) {
+  if (!n || n === 0) return '—';
+  return '€ ' + Number(n).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function field(label, value) {
+  const isEmpty = !value || value === '' || value === 'null';
+  return `<div class="summary-field">
+    <div class="summary-label">${label}</div>
+    <div class="summary-value ${isEmpty ? 'empty' : ''}">${isEmpty ? '—' : value}</div>
+  </div>`;
+}
+
+function calcROIPreview(fr) {
+  const tarefas = fr.tarefas_detalhadas || [];
+  const custoHora = parseFloat(fr.custo_hora_colaboradores) || 15;
+  let horasMes = 0;
+  tarefas.forEach(t => {
+    const freq = t.frequencia === 'Diária' ? 20 : t.frequencia === 'Mensal' ? 1 : 4;
+    horasMes += (parseInt(t.vezes) || 1) * freq * (parseInt(t.tempo_min) || 0) * (parseInt(t.pessoas) || 1) / 60;
+  });
+  const horasAno   = horasMes * 12;
+  const custoAnual = horasAno * custoHora;
+  const bandaMin   = Math.round(custoAnual * 0.10);
+  const bandaMax   = Math.round(custoAnual * 0.30);
+  const investMid  = Math.round((bandaMin + bandaMax) / 2);
+  const roi        = investMid > 0 ? Math.round((custoAnual / investMid) * 10) / 10 : 0;
+  return { horasMes: Math.round(horasMes), horasAno: Math.round(horasAno), custoAnual: Math.round(custoAnual), bandaMin, bandaMax, roi };
+}
+
+function renderRevisao(proposta, fr) {
+  const roi = calcROIPreview(fr);
+  const editUrl = id => `proposta-comercial-nova.html?id=${propostaId}&step=${id}`;
+
+  document.getElementById('back-link').href = `proposta-comercial.html`;
+
+  let html = '';
+
+  // ROI PREVIEW
+  html += `
+    <div style="margin-bottom:24px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px">Estimativa de Impacto</div>
+      <div class="roi-grid">
+        <div class="roi-card">
+          <div class="roi-card-label">Tempo perdido/mês</div>
+          <div class="roi-card-value">${roi.horasMes}h</div>
+          <div class="roi-card-sub">em tarefas manuais</div>
+        </div>
+        <div class="roi-card">
+          <div class="roi-card-label">Custo anual estimado</div>
+          <div class="roi-card-value">${fmtEur(roi.custoAnual)}</div>
+          <div class="roi-card-sub">em horas perdidas</div>
+        </div>
+        <div class="roi-card">
+          <div class="roi-card-label">Banda de investimento</div>
+          <div class="roi-card-value">${fmtEur(roi.bandaMin)}–${fmtEur(roi.bandaMax)}</div>
+          <div class="roi-card-sub">estimativa de proposta</div>
+        </div>
+        <div class="roi-card highlight">
+          <div class="roi-card-label">ROI Estimado</div>
+          <div class="roi-card-value">${roi.roi > 0 ? roi.roi + 'x' : '—'}</div>
+          <div class="roi-card-sub">retorno sobre investimento</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // RESPOSTAS SUMMARY
+  const sections = [
+    {
+      title: 'Empresa e Contacto', step: 1,
+      fields: [
+        ['Empresa',       fr.nome_empresa],
+        ['Nicho',         fr.nicho],
+        ['Contacto',      fr.nome_contacto],
+        ['Cargo',         fr.cargo_contacto],
+        ['Email',         fr.email_contacto],
+        ['Tipo Solução',  fr.tipo_solucao_inicial],
+      ]
+    },
+    {
+      title: 'O Negócio', step: 2,
+      fields: [
+        ['Atividade',     fr.area_negocio],
+        ['Colaboradores', fr.numero_pessoas],
+        ['Mercado',       fr.tipo_mercado],
+        ['Equipas',       fr.equipas_lista?.join(', ')],
+      ]
+    },
+    {
+      title: 'Ferramentas e Dia-a-Dia', step: 3,
+      fields: [
+        ['Ferramentas',   fr.ferramentas_digitais?.join(', ')],
+        ['Integração',    fr.sistemas_integrados],
+        ['Dia típico',    fr.dia_tipico],
+        ['Tarefas repetitivas', fr.tarefas_repetitivas],
+      ]
+    },
+    {
+      title: 'Tarefas a Eliminar', step: 5,
+      fields: [
+        ['Top 3 tarefas',  fr.tres_tarefas_eliminar],
+        ['Nº de tarefas detalhadas', (fr.tarefas_detalhadas || []).length + ' tarefas'],
+      ]
+    },
+    {
+      title: 'Impacto e Decisão', step: 6,
+      fields: [
+        ['Custo/hora',    fr.custo_hora_colaboradores ? '€' + fr.custo_hora_colaboradores + '/h' : null],
+        ['Impacto esperado', fr.impacto_mudanca],
+        ['Decisor',       fr.decisor],
+        ['Orçamento',     fr.orcamento_definido],
+        ['Urgência',      fr.urgencia],
+      ]
+    },
+    {
+      title: 'Notas e Configuração', step: 8,
+      fields: [
+        ['Preocupação principal', fr.preocupacao_principal],
+        ['Tipo de Solução Final', fr.tipo_solucao_final],
+        ['Notas internas', fr.notas_internas],
+      ]
+    }
+  ];
+
+  sections.forEach(sec => {
+    html += `
+      <div class="summary-section">
+        <div class="summary-section-header">
+          <div class="summary-section-title">${sec.title}</div>
+          <a class="summary-edit-btn" href="proposta-comercial-nova.html?id=${propostaId}&step=${sec.step}">Editar</a>
+        </div>
+        <div class="summary-grid">
+          ${sec.fields.map(([lbl, val]) => field(lbl, val)).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  // ERROR MSG
+  html += `<div class="error-msg" id="error-msg"></div>`;
+
+  // CTA
+  html += `
+    <div class="cta-area">
+      <a class="btn btn-ghost" href="proposta-comercial-nova.html?id=${propostaId}&step=8">← Voltar e Editar</a>
+      <button class="btn btn-coral" id="btn-gerar" style="min-width:160px;font-size:15px;padding:12px 28px">
+        ✦ Gerar Propostas
+      </button>
+    </div>
+  `;
+
+  document.getElementById('revisao-content').innerHTML = html;
+
+  document.getElementById('btn-gerar').addEventListener('click', gerarPropostas);
+}
+
+async function gerarPropostas() {
+  const btn = document.getElementById('btn-gerar');
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+
+  startLoader();
+
+  try {
+    const res = await fetch('/api/generate-proposal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proposta_id: propostaId })
+    });
+    const data = await res.json();
+
+    stopLoader();
+
+    if (!res.ok || data.error) {
+      errEl.textContent = 'Erro ao gerar propostas: ' + (data.error || data.stage || 'Erro desconhecido');
+      errEl.style.display = '';
+      btn.disabled = false;
+      return;
+    }
+
+    window.location.href = `proposta-comercial-detalhe.html?id=${propostaId}`;
+  } catch(e) {
+    stopLoader();
+    errEl.textContent = 'Erro de ligação: ' + e.message;
+    errEl.style.display = '';
+    btn.disabled = false;
+  }
+}
+
+async function init() {
+  if (!propostaId) return;
+
+  const [{ data: proposta }, { data: fr }] = await Promise.all([
+    sb.from('propostas').select('*').eq('id', propostaId).single(),
+    sb.from('proposal_form_responses').select('*').eq('proposta_id', propostaId).single()
+  ]);
+
+  if (!proposta || !fr) {
+    document.getElementById('revisao-content').innerHTML = `
+      <div style="text-align:center;padding:60px 0;color:var(--text-muted)">
+        <div style="font-size:28px;margin-bottom:10px;opacity:0.3">⚠</div>
+        <div>Proposta não encontrada.</div>
+        <a class="btn btn-ghost" href="proposta-comercial.html" style="margin-top:16px;display:inline-block">← Voltar</a>
+      </div>
+    `;
+    return;
+  }
+
+  renderRevisao(proposta, fr);
+}
+
+init();
+</script>
+</body>
+</html>
